@@ -1,0 +1,38 @@
+# Python Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python Bytecode & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# SQLite Database Files
+*.db
+*.sqlite
+*.sqlite3
+!database/.gitkeep
+
+# Archived Datasets
+data/archive/
+
+# macOS System Files
+.DS_Store
+.apple_double
+.LSOverride
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
