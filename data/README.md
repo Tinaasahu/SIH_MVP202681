@@ -137,6 +137,41 @@ Run `python api/validate_data.py` to execute all 7 checks:
 
 ---
 
+# Known Limitation: Lead-Time Bias in `forecast_history.csv`
+
+> **Important:** The Open-Meteo **Historical Forecast API** does _not_ return
+> forecasts keyed by issue time + lead time. Instead it **stitches the first
+> hours of each successive model run** into a single seamless timeseries.
+>
+> Because the four models we use update every 6–12 hours, every timestamp in
+> `forecast_history.csv` is effectively a **very short-range forecast (≈ 0–6 h
+> lead time for ECMWF/GFS/ICON, ≈ 0–12 h for GEM)**. There is no mix of
+> short-range and long-range predictions, and no `lead_hours` column—because
+> the true lead time cannot be determined from this API.
+>
+> **Consequences:**
+>
+> - Historical error metrics (MAE/RMSE) represent **best-case, short-lead
+>   model performance**, not the full degradation at 24 h, 48 h, or 72 h.
+> - The suspiciously low ECMWF MAE (~0.45 °C) is partly because ERA5 and
+>   ECMWF IFS share the same underlying model; comparing them at 0–6 h is
+>   nearly self-comparison.
+> - An ML blending model trained on this data will learn **short-range
+>   correction patterns only**.
+>
+> For true lead-time-stratified evaluation, use the
+> [Previous Runs API](https://open-meteo.com/en/docs/previous-runs-api)
+> (fixed 1–7 day offsets) or the
+> [Single Runs API](https://open-meteo.com/en/docs/single-runs-api)
+> (full individual model runs).
+>
+> **Source:**
+> [Open-Meteo Historical Forecast API docs](https://open-meteo.com/en/docs/historical-forecast-api) —
+> _"A continuous hourly timeseries built by stitching the first hours of each
+> successive model run."_
+
+---
+
 # Deprecated Files (Do NOT Use)
 
 | File | Reason |
