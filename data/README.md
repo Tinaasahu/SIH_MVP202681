@@ -2,21 +2,34 @@
 
 ## Member 1: Data Pipeline & Preprocessing Documentation
 
-This document describes the datasets, data pipeline flow, file structures, schemas, and SQLite database storage produced by Member 1 for the **Hybrid AI–NWP Forecast Blending Framework**.
+This document describes the datasets produced by Member 1 for the
+**Hybrid AI–NWP Forecast Blending Framework**.
 
 ---
 
 # Data Pipeline Overview
 
-The data collection, preprocessing, and storage workflow operates in five sequential stages:
+```
+Open-Meteo Historical Forecast API  ──►  forecast_history.csv   (60 days, 4 models)
+Open-Meteo Archive API (ERA5)       ──►  actual_history.csv     (60 days, ERA5 reanalysis)
+Open-Meteo Forecast API             ──►  forecast_current.csv   (72 hours, 4 models)
+```
 
-$$\text{Open-Meteo APIs} \longrightarrow \text{Raw Forecasts} \longrightarrow \text{Cleaning \& Feature Engineering} \longrightarrow \text{Processed Dataset} \longrightarrow \text{SQLite Database}$$
+1. **Historical Forecasts** (`api/fetch_history.py`): Retrieves 60 days of hourly
+   forecasts from four NWP models via the Open-Meteo Historical Forecast API.
+2. **ERA5 Observations** (`api/fetch_history.py`): Retrieves corresponding ERA5
+   reanalysis data via the Open-Meteo Archive API for the same 60-day window.
+3. **Current Forecasts** (`api/fetch_current.py`): Retrieves the next 72 hours
+   of forecasts from the same four NWP models via the Open-Meteo Forecast API.
+4. **Validation** (`api/validate_data.py`): Runs 7 integrity checks on all
+   three datasets (shape, dates, gaps, matching rows, diurnal sanity, error
+   metrics, NaN detection, and model-name consistency).
 
-1. **Open-Meteo APIs**: 6-day hourly weather forecasts are queried across multiple Numerical Weather Prediction (NWP) models (`ecmwf_ifs04`, `gfs_seamless`, `icon_seamless`, `gem_seamless`).
-2. **Raw Forecasts**: Model-specific raw datasets are stored separately in `data/raw_forecasts/`.
-3. **Cleaning**: Data parsing, deduplication, sorting, non-negative clipping, missing value forward-fill imputation, and feature engineering (`lead_hours`) are executed.
-4. **Processed Dataset**: Preprocessed individual model files and a unified merged dataset (`all_models_clean.csv`) are generated in `data/processed/`.
-5. **SQLite Database**: Datasets are stored in `database/weather.db` under `forecast_data` and `actual_data` tables for downstream analysis.
+NWP models used: `ecmwf_ifs025`, `gfs_seamless`, `icon_seamless`, `gem_seamless`
+
+**No forward-fill, interpolation, or imputation is applied.** Missing values
+are reported by the validation script and left as-is for the ML member to
+handle during model training.
 
 ---
 
@@ -24,68 +37,121 @@ $$\text{Open-Meteo APIs} \longrightarrow \text{Raw Forecasts} \longrightarrow \t
 
 ```text
 data/
-├── raw_forecasts/
-│   ├── ecmwf.csv
-│   ├── gfs.csv
-│   ├── icon.csv
-│   └── gem.csv
+├── forecast_history.csv      ← 60-day historical forecasts (4 models × 45 cities)
+├── actual_history.csv        ← 60-day ERA5 reanalysis observations (45 cities)
+├── forecast_current.csv      ← 72-hour live forecasts (4 models × 45 cities)
+├── cities.csv                ← Master list of 45 Indian cities (lat/lon)
 │
-├── processed/
-│   ├── ecmwf_clean.csv
-│   ├── gfs_clean.csv
-│   ├── icon_clean.csv
-│   ├── gem_clean.csv
-│   └── all_models_clean.csv
-│
-├── actual_weather.csv
-└── cities.csv
+├── raw_forecasts/            ← LEGACY (single-run forecasts, not used)
+├── processed/                ← LEGACY (not used)
+└── actual_weather.csv        ← DEPRECATED: contains future dates, likely a
+                                 forecast not real observations. Do NOT use
+                                 as ground truth.
 ```
 
 ---
 
-# Dataset Descriptions
+# Final Datasets
 
-- `cities.csv`: Master configuration file containing target cities and their latitude/longitude coordinates.
-- `raw_forecasts/*.csv`: Raw 6-day hourly forecast datasets retrieved directly from Open-Meteo for each individual NWP model (`ecmwf`, `gfs`, `icon`, `gem`).
-- `processed/*_clean.csv`: Preprocessed individual model datasets with standardized timestamps, deduplication, numeric validation, missing value imputation, and engineered `lead_hours`.
-- `processed/all_models_clean.csv`: Merged and cleaned dataset combining all preprocessed NWP models into a single file ready for model training.
-- `actual_weather.csv`: Ground-truth actual weather observations for evaluating NWP and AI model forecast accuracy.
+## 1. `forecast_history.csv`
 
----
-
-# Schema for all_models_clean.csv
+60-day historical hourly forecasts from 4 NWP models for 45 Indian cities.
+Produced by `api/fetch_history.py`.
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| `city` | string | Name of the target city/location |
-| `model` | string | Identifier of the NWP model (`ecmwf`, `gfs`, `icon`, `gem`) |
-| `datetime` | datetime | Timestamp of the forecast hour (`YYYY-MM-DDTHH:MM:SS`) |
-| `lead_hours` | integer | Forecast lead time in hours relative to the initial timestamp for each city |
-| `temperature` | float | Air temperature at 2 meters altitude (°C) |
-| `rainfall` | float | Precipitation amount (mm) |
-| `wind_speed` | float | Surface wind speed at 10 meters altitude (km/h) |
+| `city` | string | City name |
+| `model` | string | NWP model identifier (`ecmwf_ifs025`, `gfs_seamless`, `icon_seamless`, `gem_seamless`) |
+| `datetime` | string | Forecast timestamp in IST (`YYYY-MM-DDTHH:MM`) |
+| `temperature` | float | Air temperature at 2 m (°C) |
+| `rainfall` | float | Precipitation (mm) |
+| `wind_speed` | float | Wind speed at 10 m (km/h) |
+
+**Rows:** ~263,520 (45 cities × 4 models × ~1,464 hours)
 
 ---
 
-# Schema for actual_weather.csv
+## 2. `actual_history.csv`
+
+60-day hourly ERA5 reanalysis data for 45 Indian cities, covering the same
+date range as `forecast_history.csv`. Produced by `api/fetch_history.py`.
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| `city` | string | Name of the target city/location |
-| `datetime` | datetime | Timestamp of the actual weather observation |
-| `actual_temperature` | float | Observed ground-truth air temperature (°C) |
-| `actual_rainfall` | float | Observed ground-truth precipitation (mm) |
-| `actual_wind` | float | Observed ground-truth wind speed (km/h) |
+| `city` | string | City name |
+| `datetime` | string | Observation timestamp in IST (`YYYY-MM-DDTHH:MM`) |
+| `actual_temperature` | float | ERA5 temperature at 2 m (°C) |
+| `actual_rainfall` | float | ERA5 precipitation (mm) |
+| `actual_wind` | float | ERA5 wind speed at 10 m (km/h) |
+
+**Rows:** ~65,880 (45 cities × ~1,464 hours)
+
+> **Note:** ERA5 reanalysis is a model-based reconstruction, not raw station
+> observations. It is the best available gridded reference for these cities.
 
 ---
 
-# SQLite Tables
+## 3. `forecast_current.csv`
 
-The SQLite database stored at `database/weather.db` contains two primary tables:
+Next 72 hours of live forecasts from the same 4 NWP models for 45 cities.
+Produced by `api/fetch_current.py`. Re-run this script to refresh.
 
-1. `forecast_data`: Contains multi-model forecast records with numerical predictions across lead hours.
-2. `actual_data`: Contains ground-truth weather observations corresponding to forecast timestamps.
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `city` | string | City name |
+| `model` | string | NWP model identifier (same 4 as history) |
+| `datetime` | string | Forecast timestamp in IST (`YYYY-MM-DDTHH:MM`) |
+| `temperature` | float | Forecast temperature at 2 m (°C) |
+| `rainfall` | float | Forecast precipitation (mm) |
+| `wind_speed` | float | Forecast wind speed at 10 m (km/h) |
 
-### Downstream Usage
-- **Member 2**: Consumes `forecast_data` and `actual_data` tables to compute Root Mean Square Error (RMSE), bias, and performance metrics across NWP models for training hybrid machine learning blending algorithms.
-- **Member 3**: Queries `database/weather.db` to feed the interactive web dashboard visualization interface.
+**Rows:** 12,960 (45 cities × 4 models × 72 hours)
+
+---
+
+## 4. `cities.csv`
+
+Master list of 45 Indian cities with coordinates.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `city` | string | City name |
+| `latitude` | float | Latitude (decimal degrees) |
+| `longitude` | float | Longitude (decimal degrees) |
+
+---
+
+# Validation
+
+Run `python api/validate_data.py` to execute all 7 checks:
+
+| Check | Description |
+| :--- | :--- |
+| 1 | Shape, columns, missing values, duplicates |
+| 2 | Date ranges and future-date detection |
+| 3 | Hourly gap analysis per city/model |
+| 4 | Row matching between forecasts and actuals |
+| 5 | Diurnal temperature peak hour sanity |
+| 6 | Per-model MAE/RMSE against ERA5 |
+| 7 | NaN detection and model-name consistency |
+
+---
+
+# Deprecated Files (Do NOT Use)
+
+| File | Reason |
+| :--- | :--- |
+| `actual_weather.csv` | Contains dates beyond today (forecast data, not observations). Not real ground truth. |
+| `raw_forecasts/*.csv` | Single forecast run only, no lead-time or issue-time information. |
+| `processed/*_clean.csv` | Built from single-run data with forward-fill imputation. Not suitable for training. |
+| `processed/all_models_clean.csv` | Same issue; `lead_hours` is a row index (0–2327), not a real lead time. |
+
+---
+
+# Downstream Usage
+
+- **ML Member**: Join `forecast_history.csv` with `actual_history.csv` on
+  `(city, datetime)` to compute per-model errors and train blending models.
+  Use `forecast_current.csv` for live inference.
+- **Dashboard Member**: Query the final CSVs to display live and historical
+  forecast comparisons.
