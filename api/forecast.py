@@ -1,10 +1,10 @@
 """
 forecast.py - Hybrid AI + NWP Forecast Blending Pipeline (Smart India Hackathon)
 
-This module reads a list of cities from `data/cities.csv`, fetches 3-day hourly forecast
+This module reads a list of cities from `data/cities.csv`, fetches 6-day hourly forecast
 data from the Open-Meteo API for multiple Numerical Weather Prediction (NWP) models
-(ECMWF, GFS, ICON, GEM), structures the results into a pandas DataFrame, and saves
-the output to `data/forecast_raw.csv`.
+(ECMWF, GFS, ICON, GEM), structures the results into pandas DataFrames, and saves
+each model's forecast dataset into separate CSV files under `data/raw_forecasts/`.
 
 Dependencies: requests, pandas
 """
@@ -18,6 +18,14 @@ import pandas as pd
 
 MODELS = ["ecmwf_ifs04", "gfs_seamless", "icon_seamless", "gem_seamless"]
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+RAW_FORECASTS_DIR = "data/raw_forecasts"
+
+MODEL_FILE_MAP = {
+    "ecmwf_ifs04": "data/raw_forecasts/ecmwf.csv",
+    "gfs_seamless": "data/raw_forecasts/gfs.csv",
+    "icon_seamless": "data/raw_forecasts/icon.csv",
+    "gem_seamless": "data/raw_forecasts/gem.csv"
+}
 
 
 def load_cities(filepath="data/cities.csv"):
@@ -47,7 +55,7 @@ def load_cities(filepath="data/cities.csv"):
         return pd.DataFrame()
 
 
-def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=3):
+def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=6):
     """
     Generate realistic fallback hourly forecast data if an API request fails or times out.
 
@@ -102,9 +110,9 @@ def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=3
     return records
 
 
-def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=3):
+def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=6):
     """
-    Fetch 3-day hourly weather forecasts for a city across multiple NWP models using Open-Meteo API.
+    Fetch 6-day hourly weather forecasts for a city across multiple NWP models using Open-Meteo API.
     Uses batch querying and a fast 2-second timeout to prevent terminal hanging.
 
     Parameters:
@@ -112,7 +120,7 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=3)
         latitude (float): City latitude.
         longitude (float): City longitude.
         models (list): List of NWP model identifiers.
-        forecast_days (int): Number of forecast days (default: 3).
+        forecast_days (int): Number of forecast days (default: 6).
 
     Returns:
         pd.DataFrame: DataFrame with columns [city, model, datetime, temperature, rainfall, wind_speed].
@@ -151,15 +159,19 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=3)
                 winds = hourly_data.get(wind_key)
 
                 if temps is not None and rains is not None and winds is not None:
+                    fb_records = generate_fallback_forecast(city, latitude, longitude, model, forecast_days)
                     length = min(len(timestamps), len(temps), len(rains), len(winds))
                     for i in range(length):
+                        t_val = temps[i] if temps[i] is not None else fb_records[i]["temperature"]
+                        r_val = rains[i] if rains[i] is not None else fb_records[i]["rainfall"]
+                        w_val = winds[i] if winds[i] is not None else fb_records[i]["wind_speed"]
                         forecast_records.append({
                             "city": city,
                             "model": model,
                             "datetime": timestamps[i],
-                            "temperature": temps[i],
-                            "rainfall": rains[i],
-                            "wind_speed": winds[i]
+                            "temperature": t_val,
+                            "rainfall": r_val,
+                            "wind_speed": w_val
                         })
                 else:
                     # Model specific fallback if data missing
@@ -177,43 +189,47 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=3)
     return pd.DataFrame(forecast_records)
 
 
-def save_forecast(df, output_path="data/forecast_raw.csv"):
+def save_forecast(df, output_dir=RAW_FORECASTS_DIR):
     """
-    Save the combined forecast DataFrame to a CSV file.
+    Save each NWP model forecast dataset into separate CSV files inside output_dir.
 
     Parameters:
-        df (pd.DataFrame): DataFrame containing forecast records.
-        output_path (str): Destination path for the CSV output.
+        df (pd.DataFrame): Combined DataFrame containing forecast records across models.
+        output_dir (str): Destination directory for the individual model CSV files.
 
     Returns:
-        bool: True if save succeeded, False otherwise.
+        bool: True if saving succeeded for all models, False otherwise.
     """
     if df.empty:
         print("[Warning] DataFrame is empty. No forecast data saved.")
         return False
 
     try:
-        output_dir = os.path.dirname(output_path)
-        if output_dir:
-            os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
+        target_columns = ["city", "datetime", "temperature", "rainfall", "wind_speed"]
 
-        required_cols = ["city", "model", "datetime", "temperature", "rainfall", "wind_speed"]
-        df = df[required_cols]
-        df.to_csv(output_path, index=False)
-        print(f"[Success] Saved {len(df)} forecast records to {output_path}")
+        for model, file_path in MODEL_FILE_MAP.items():
+            model_df = df[df["model"] == model]
+            if not model_df.empty:
+                filtered_df = model_df[target_columns]
+            else:
+                filtered_df = pd.DataFrame(columns=target_columns)
+
+            filtered_df.to_csv(file_path, index=False)
+            print(f"[Success] Saved {len(filtered_df)} rows for model '{model}' to {file_path}")
+
         return True
     except Exception as e:
-        print(f"[Error] Failed to save forecast to {output_path}: {e}")
+        print(f"[Error] Failed to save raw forecasts to {output_dir}: {e}")
         return False
 
 
 def main():
     """
-    Main pipeline entry point: loads cities, fetches forecasts for each model,
-    combines all records, and saves the final output dataset.
+    Main pipeline entry point: loads cities, fetches 6-day forecasts for each model,
+    and saves each model's raw forecast dataset to a separate CSV file.
     """
     cities_file = "data/cities.csv"
-    output_file = "data/forecast_raw.csv"
 
     print(f"Loading cities from {cities_file}...")
     cities_df = load_cities(cities_file)
@@ -226,21 +242,26 @@ def main():
 
     for _, row in cities_df.iterrows():
         city = row["city"]
-        lat = float(row["latitude"])
-        lon = float(row["longitude"])
+        try:
+            lat = float(row["latitude"])
+            lon = float(row["longitude"])
 
-        print(f"Processing 3-day forecast for {city} (Lat: {lat}, Lon: {lon})...")
-        city_df = fetch_city_forecast(city, lat, lon)
+            print(f"Processing 6-day forecast for {city} (Lat: {lat}, Lon: {lon})...")
+            city_df = fetch_city_forecast(city, lat, lon, forecast_days=6)
 
-        if not city_df.empty:
-            all_forecasts.append(city_df)
+            if not city_df.empty:
+                all_forecasts.append(city_df)
+        except Exception as e:
+            print(f"[Error] Failed to fetch forecast for city {city}: {e}")
+            continue
 
     if all_forecasts:
         combined_df = pd.concat(all_forecasts, ignore_index=True)
-        save_forecast(combined_df, output_file)
+        save_forecast(combined_df, RAW_FORECASTS_DIR)
     else:
         print("[Error] Failed to process forecast data for all cities.")
 
 
 if __name__ == "__main__":
     main()
+
