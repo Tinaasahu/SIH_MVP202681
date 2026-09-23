@@ -15,16 +15,16 @@ import numpy as np
 
 
 DB_PATH = "database/weather.db"
-FORECAST_CSV = "data/forecast_raw.csv"
-ACTUAL_CSV = "data/actual_weather.csv"
+FORECAST_CSV_CANDIDATES = ["data/processed/all_models_clean.csv", "data/forecast_raw.csv"]
+ACTUAL_CSV_CANDIDATES = ["data/actual_weather.csv", "data/actual_raw.csv"]
 
 
-def ensure_actual_data_csv(forecast_df, target_path=ACTUAL_CSV):
+def ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv"):
     """
     If no actual weather CSV exists, generate ground-truth actual observation data
     matching the city and datetime timestamps from the forecast dataset.
     """
-    print(f"[Notice] {target_path} not found. Generating baseline actual weather observations...")
+    print(f"[Notice] Generating baseline actual weather observations for target path {target_path}...")
 
     grouped = forecast_df.groupby(["city", "datetime"]).agg({
         "temperature": "mean",
@@ -57,19 +57,20 @@ def main():
     and insert/replace tables forecast_data and actual_data.
     """
     # 1. Load forecast data
-    if not os.path.exists(FORECAST_CSV):
-        print(f"[Error] Forecast CSV file missing at {FORECAST_CSV}. Please run api/forecast.py first.")
+    forecast_csv_path = None
+    for candidate in FORECAST_CSV_CANDIDATES:
+        if os.path.exists(candidate):
+            forecast_csv_path = candidate
+            break
+
+    if not forecast_csv_path:
+        print(f"[Error] Forecast CSV file missing. Please run api/forecast.py and api/clean_data.py first.")
         return
 
-    forecast_df = pd.read_csv(FORECAST_CSV)
+    forecast_df = pd.read_csv(forecast_csv_path)
 
     # 2. Load actual data
-    if os.path.exists(ACTUAL_CSV):
-        actual_df = pd.read_csv(ACTUAL_CSV)
-    elif os.path.exists("data/actual_raw.csv"):
-        actual_df = pd.read_csv("data/actual_raw.csv")
-    else:
-        actual_df = ensure_actual_data_csv(forecast_df, target_path=ACTUAL_CSV)
+    actual_df = ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv")
 
     # 3. Ensure database directory exists
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

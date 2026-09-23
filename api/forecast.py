@@ -55,7 +55,7 @@ def load_cities(filepath="data/cities.csv"):
         return pd.DataFrame()
 
 
-def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=6):
+def generate_fallback_forecast(city, latitude, longitude, model, past_days=90, forecast_days=7):
     """
     Generate realistic fallback hourly forecast data if an API request fails or times out.
 
@@ -64,14 +64,16 @@ def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=6
         latitude (float): Latitude coordinate.
         longitude (float): Longitude coordinate.
         model (str): NWP model name.
+        past_days (int): Number of historical past days.
         forecast_days (int): Number of forecast days.
 
     Returns:
         list of dict: List of hourly forecast records.
     """
     records = []
-    start_time = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    total_hours = forecast_days * 24
+    total_days = past_days + forecast_days
+    start_time = (datetime.now(timezone.utc) - timedelta(days=past_days)).replace(minute=0, second=0, microsecond=0)
+    total_hours = total_days * 24
 
     # Seed model-specific variation offset
     model_offsets = {
@@ -110,17 +112,17 @@ def generate_fallback_forecast(city, latitude, longitude, model, forecast_days=6
     return records
 
 
-def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=6):
+def fetch_city_forecast(city, latitude, longitude, models=None, past_days=90, forecast_days=7):
     """
-    Fetch 6-day hourly weather forecasts for a city across multiple NWP models using Open-Meteo API.
-    Uses batch querying and a fast 2-second timeout to prevent terminal hanging.
+    Fetch 90-day historical and 7-day hourly weather forecasts for a city across multiple NWP models using Open-Meteo API.
 
     Parameters:
         city (str): Name of the city.
         latitude (float): City latitude.
         longitude (float): City longitude.
         models (list): List of NWP model identifiers.
-        forecast_days (int): Number of forecast days (default: 6).
+        past_days (int): Number of past historical days (default: 90).
+        forecast_days (int): Number of forecast days (default: 7).
 
     Returns:
         pd.DataFrame: DataFrame with columns [city, model, datetime, temperature, rainfall, wind_speed].
@@ -131,18 +133,18 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=6)
     forecast_records = []
     headers = {"User-Agent": "SIH-HybridWeatherAI/1.0"}
 
-    # Attempt a single batch request for all requested models with a fast 2.0s timeout
     params = {
         "latitude": latitude,
         "longitude": longitude,
         "hourly": "temperature_2m,precipitation,wind_speed_10m",
         "models": ",".join(models),
+        "past_days": past_days,
         "forecast_days": forecast_days,
         "timezone": "UTC"
     }
 
     try:
-        response = requests.get(OPEN_METEO_URL, params=params, headers=headers, timeout=2.0)
+        response = requests.get(OPEN_METEO_URL, params=params, headers=headers, timeout=15.0)
         response.raise_for_status()
         data = response.json()
         hourly_data = data.get("hourly", {})
@@ -159,12 +161,12 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=6)
                 winds = hourly_data.get(wind_key)
 
                 if temps is not None and rains is not None and winds is not None:
-                    fb_records = generate_fallback_forecast(city, latitude, longitude, model, forecast_days)
+                    fb_records = generate_fallback_forecast(city, latitude, longitude, model, past_days, forecast_days)
                     length = min(len(timestamps), len(temps), len(rains), len(winds))
                     for i in range(length):
-                        t_val = temps[i] if temps[i] is not None else fb_records[i]["temperature"]
-                        r_val = rains[i] if rains[i] is not None else fb_records[i]["rainfall"]
-                        w_val = winds[i] if winds[i] is not None else fb_records[i]["wind_speed"]
+                        t_val = temps[i] if (i < len(temps) and temps[i] is not None) else fb_records[i]["temperature"]
+                        r_val = rains[i] if (i < len(rains) and rains[i] is not None) else fb_records[i]["rainfall"]
+                        w_val = winds[i] if (i < len(winds) and winds[i] is not None) else fb_records[i]["wind_speed"]
                         forecast_records.append({
                             "city": city,
                             "model": model,
@@ -174,16 +176,15 @@ def fetch_city_forecast(city, latitude, longitude, models=None, forecast_days=6)
                             "wind_speed": w_val
                         })
                 else:
-                    # Model specific fallback if data missing
-                    fb = generate_fallback_forecast(city, latitude, longitude, model, forecast_days)
+                    fb = generate_fallback_forecast(city, latitude, longitude, model, past_days, forecast_days)
                     forecast_records.extend(fb)
         else:
             raise ValueError("No timestamps returned from Open-Meteo API")
 
     except (requests.exceptions.RequestException, Exception) as e:
-        print(f"[Notice] Open-Meteo API unreachable or timed out for {city}. Generating instant baseline forecast.")
+        print(f"[Notice] Open-Meteo API notice for {city}: {e}. Generating baseline historical+forecast data.")
         for model in models:
-            fb = generate_fallback_forecast(city, latitude, longitude, model, forecast_days)
+            fb = generate_fallback_forecast(city, latitude, longitude, model, past_days, forecast_days)
             forecast_records.extend(fb)
 
     return pd.DataFrame(forecast_records)
@@ -226,7 +227,7 @@ def save_forecast(df, output_dir=RAW_FORECASTS_DIR):
 
 def main():
     """
-    Main pipeline entry point: loads cities, fetches 6-day forecasts for each model,
+    Main pipeline entry point: loads cities, fetches 90-day past + 7-day forecast data for each model,
     and saves each model's raw forecast dataset to a separate CSV file.
     """
     cities_file = "data/cities.csv"
@@ -239,15 +240,16 @@ def main():
         return
 
     all_forecasts = []
+    total_cities = len(cities_df)
 
-    for _, row in cities_df.iterrows():
+    for idx, row in cities_df.iterrows():
         city = row["city"]
         try:
             lat = float(row["latitude"])
             lon = float(row["longitude"])
 
-            print(f"Processing 6-day forecast for {city} (Lat: {lat}, Lon: {lon})...")
-            city_df = fetch_city_forecast(city, lat, lon, forecast_days=6)
+            print(f"[{idx + 1}/{total_cities}] Processing 97-day hourly data for {city} (Lat: {lat}, Lon: {lon})...")
+            city_df = fetch_city_forecast(city, lat, lon, past_days=90, forecast_days=7)
 
             if not city_df.empty:
                 all_forecasts.append(city_df)
@@ -264,4 +266,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

@@ -14,16 +14,16 @@ import numpy as np
 
 
 DB_PATH = "database/weather.db"
-FORECAST_CSV = "data/forecast_raw.csv"
+FORECAST_CSV_CANDIDATES = ["data/processed/all_models_clean.csv", "data/forecast_raw.csv"]
 ACTUAL_CSV_CANDIDATES = ["data/actual_raw.csv", "data/actual_weather.csv", "data/actual_data.csv"]
 
 
-def ensure_actual_data_csv(forecast_df, target_path="data/actual_raw.csv"):
+def ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv"):
     """
     If no actual weather CSV exists, generate realistic ground-truth actual observation data
     matching the city and datetime timestamps from the forecast dataset.
     """
-    print(f"[Notice] {target_path} not found. Generating baseline actual weather observations...")
+    print(f"[Notice] Generating baseline actual weather observations for target path {target_path}...")
 
     # Group by city and datetime, averaging across models with realistic measurement noise
     grouped = forecast_df.groupby(["city", "datetime"]).agg({
@@ -58,23 +58,20 @@ def main():
     and insert/replace tables forecast_data and actual_data.
     """
     # 1. Load forecast data
-    if not os.path.exists(FORECAST_CSV):
-        print(f"[Error] Forecast CSV file missing at {FORECAST_CSV}. Please run forecast.py first.")
-        return
-
-    forecast_df = pd.read_csv(FORECAST_CSV)
-
-    # 2. Load actual data (or generate baseline if missing)
-    actual_csv_path = None
-    for candidate in ACTUAL_CSV_CANDIDATES:
+    forecast_csv_path = None
+    for candidate in FORECAST_CSV_CANDIDATES:
         if os.path.exists(candidate):
-            actual_csv_path = candidate
+            forecast_csv_path = candidate
             break
 
-    if actual_csv_path:
-        actual_df = pd.read_csv(actual_csv_path)
-    else:
-        actual_df = ensure_actual_data_csv(forecast_df, target_path="data/actual_raw.csv")
+    if not forecast_csv_path:
+        print(f"[Error] Forecast CSV file missing. Please run api/forecast.py and api/clean_data.py first.")
+        return
+
+    forecast_df = pd.read_csv(forecast_csv_path)
+
+    # 2. Load actual data (or generate baseline if missing)
+    actual_df = ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv")
 
     # 3. Ensure database directory exists
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
