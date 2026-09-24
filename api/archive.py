@@ -40,7 +40,7 @@ def archive_forecast_csv(source_csv="data/forecast_raw.csv"):
         return None
 
 
-def archive_actual_csv(source_csv="data/actual_weather.csv"):
+def archive_actual_csv(source_csv="data/actual_history.csv"):
     """
     Create a timestamped archive copy of the actual weather observations dataset.
     """

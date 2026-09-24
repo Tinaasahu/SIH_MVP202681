@@ -1,14 +1,17 @@
 """
-save_db.py - SQLite Database Storage Pipeline (Smart India Hackathon)
+save_db.py - SQLite Database Builder (Smart India Hackathon)
 
-This script reads forecast and actual weather CSV files (data/forecast_raw.csv
-and data/actual_weather.csv) and stores them into database/weather.db in tables
-`forecast_data` and `actual_data`.
+Loads the 4 final CSV datasets into database/weather.db:
 
-Actual observations are sourced from the Open-Meteo archive API via
-api/fetch_actuals.py. If data/actual_weather.csv does not exist, this script
-will attempt to fetch it automatically. See api/fetch_actuals.py for details
-on why independent ground truth matters for honest skill scoring.
+  Table                    Source CSV
+  ─────────────────────    ──────────────────────────────
+  forecast_history         data/forecast_history.csv
+  actual_history           data/actual_history.csv
+  forecast_history_lead    data/forecast_history_lead.csv
+  forecast_current         data/forecast_current.csv
+
+All source CSVs are direct API output — no noise, no simulation, no
+interpolation. See data/README.md for column schemas.
 
 Dependencies: sqlite3, pandas
 """
@@ -20,64 +23,68 @@ import pandas as pd
 
 
 DB_PATH = "database/weather.db"
-FORECAST_CSV_CANDIDATES = ["data/processed/all_models_clean.csv", "data/forecast_raw.csv"]
-ACTUAL_CSV_PATH = "data/actual_weather.csv"
+
+# Mapping: table_name → CSV path
+TABLES = {
+    "forecast_history":      "data/forecast_history.csv",
+    "actual_history":        "data/actual_history.csv",
+    "forecast_history_lead": "data/forecast_history_lead.csv",
+    "forecast_current":      "data/forecast_current.csv",
+}
 
 
 def main():
     """
-    Read forecast and actual CSV files, connect to database/weather.db,
-    and insert/replace tables forecast_data and actual_data.
+    Read the 4 final CSV files and load them into database/weather.db,
+    replacing any existing tables.
     """
-    # 1. Load forecast data
-    forecast_csv_path = None
-    for candidate in FORECAST_CSV_CANDIDATES:
-        if os.path.exists(candidate):
-            forecast_csv_path = candidate
-            break
+    # 1. Verify all CSVs exist
+    missing = [f for f in TABLES.values() if not os.path.exists(f)]
+    if missing:
+        print("[Error] Missing CSV files:")
+        for f in missing:
+            print(f"  - {f}")
+        print("\nRun the fetch scripts first:")
+        print("  python api/fetch_history.py")
+        print("  python api/fetch_history_lead.py")
+        print("  python api/fetch_current.py")
+        sys.exit(1)
 
-    if not forecast_csv_path:
-        print(f"[Error] Forecast CSV file missing. Please run api/forecast.py and api/clean_data.py first.")
-        return
-
-    forecast_df = pd.read_csv(forecast_csv_path)
-
-    # 2. Load actual data — fetch from Open-Meteo archive if missing
-    if not os.path.exists(ACTUAL_CSV_PATH):
-        print(f"[Notice] {ACTUAL_CSV_PATH} not found. Fetching real actuals from Open-Meteo archive API...")
-        try:
-            # Import the fetcher from the same project
-            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-            from api.fetch_actuals import fetch_all_actuals
-
-            actual_df = fetch_all_actuals(output_csv=ACTUAL_CSV_PATH)
-            if actual_df.empty:
-                print("[Error] Failed to fetch actual weather data. "
-                      "Run 'python api/fetch_actuals.py' manually to debug.")
-                return
-        except Exception as e:
-            print(f"[Error] Could not auto-fetch actuals: {e}")
-            print("[Hint] Run 'python api/fetch_actuals.py' manually before running save_db.py.")
-            return
-    else:
-        actual_df = pd.read_csv(ACTUAL_CSV_PATH)
-        print(f"[Info] Loaded {len(actual_df)} rows from {ACTUAL_CSV_PATH}")
+    # 2. Load all CSVs
+    dataframes = {}
+    for table_name, csv_path in TABLES.items():
+        df = pd.read_csv(csv_path)
+        dataframes[table_name] = df
+        print(f"[Loaded] {csv_path} → {len(df):,} rows")
 
     # 3. Ensure database directory exists
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-    # 4. Save to SQLite database
+    # 4. Remove old database to start fresh
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+        print(f"\n[Info] Removed old {DB_PATH}")
+
+    # 5. Write to SQLite
     conn = sqlite3.connect(DB_PATH)
     try:
-        forecast_df.to_sql("forecast_data", conn, if_exists="replace", index=False)
-        actual_df.to_sql("actual_data", conn, if_exists="replace", index=False)
+        for table_name, df in dataframes.items():
+            df.to_sql(table_name, conn, if_exists="replace", index=False)
+            print(f"[Saved] {table_name}: {len(df):,} rows")
         conn.commit()
     finally:
         conn.close()
 
-    # 5. Output expected insertion log
-    print(f"Forecast rows inserted: {len(forecast_df)}")
-    print(f"Actual rows inserted: {len(actual_df)}")
+    # 6. Summary
+    print(f"\n{'=' * 60}")
+    print(f"  DATABASE REBUILT: {DB_PATH}")
+    print(f"{'=' * 60}")
+    total = sum(len(df) for df in dataframes.values())
+    for table_name, df in dataframes.items():
+        print(f"  {table_name:28s}  {len(df):>10,} rows")
+    print(f"  {'─' * 40}")
+    print(f"  {'TOTAL':28s}  {total:>10,} rows")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":

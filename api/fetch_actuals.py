@@ -38,7 +38,7 @@ import pandas as pd
 
 ARCHIVE_API_URL = "https://archive-api.open-meteo.com/v1/archive"
 CITIES_CSV = "data/cities.csv"
-OUTPUT_CSV = "data/actual_weather.csv"
+OUTPUT_CSV = "data/actual_history.csv"
 
 # Candidates for auto-detecting the date range from existing forecast data
 FORECAST_CSV_CANDIDATES = [
