@@ -21,7 +21,27 @@ SIH_MVP202681/
    pip install -r requirements.txt
    ```
 
-2. **Run Application:**
+2. **Fetch NWP Forecasts:**
+   ```bash
+   python api/forecast.py
+   ```
+
+3. **Fetch Real Historical Actuals (ERA5 reanalysis via Open-Meteo archive API):**
+   ```bash
+   python api/fetch_actuals.py
+   ```
+   This downloads independent ground-truth observations for all cities in `data/cities.csv`.
+   The date range is auto-detected from the forecast data. You can also specify dates manually:
+   ```bash
+   python api/fetch_actuals.py --start-date 2026-06-25 --end-date 2026-09-23
+   ```
+
+4. **Save to Database (optional):**
+   ```bash
+   python save_db.py
+   ```
+
+5. **Run Application:**
    ```bash
    python app.py
    ```

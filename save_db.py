@@ -5,50 +5,23 @@ This script reads forecast and actual weather CSV files (data/forecast_raw.csv
 and data/actual_weather.csv) and stores them into database/weather.db in tables
 `forecast_data` and `actual_data`.
 
-Dependencies: sqlite3, pandas, numpy
+Actual observations are sourced from the Open-Meteo archive API via
+api/fetch_actuals.py. If data/actual_weather.csv does not exist, this script
+will attempt to fetch it automatically. See api/fetch_actuals.py for details
+on why independent ground truth matters for honest skill scoring.
+
+Dependencies: sqlite3, pandas
 """
 
 import os
+import sys
 import sqlite3
 import pandas as pd
-import numpy as np
 
 
 DB_PATH = "database/weather.db"
 FORECAST_CSV_CANDIDATES = ["data/processed/all_models_clean.csv", "data/forecast_raw.csv"]
-ACTUAL_CSV_CANDIDATES = ["data/actual_weather.csv", "data/actual_raw.csv"]
-
-
-def ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv"):
-    """
-    If no actual weather CSV exists, generate ground-truth actual observation data
-    matching the city and datetime timestamps from the forecast dataset.
-    """
-    print(f"[Notice] Generating baseline actual weather observations for target path {target_path}...")
-
-    grouped = forecast_df.groupby(["city", "datetime"]).agg({
-        "temperature": "mean",
-        "rainfall": "mean",
-        "wind_speed": "mean"
-    }).reset_index()
-
-    np.random.seed(42)
-    temp_noise = np.random.normal(0.0, 0.4, len(grouped))
-    rain_noise = np.random.exponential(0.1, len(grouped)) * (grouped["rainfall"] > 0)
-    wind_noise = np.random.normal(0.0, 0.8, len(grouped))
-
-    actual_df = pd.DataFrame({
-        "city": grouped["city"],
-        "datetime": grouped["datetime"],
-        "actual_temperature": (grouped["temperature"] + temp_noise).round(1),
-        "actual_rainfall": np.maximum(0.0, (grouped["rainfall"] + rain_noise)).round(1),
-        "actual_wind": np.maximum(0.0, (grouped["wind_speed"] + wind_noise)).round(1)
-    })
-
-    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-    actual_df.to_csv(target_path, index=False)
-    print(f"[Success] Generated {len(actual_df)} actual observation records at {target_path}")
-    return actual_df
+ACTUAL_CSV_PATH = "data/actual_weather.csv"
 
 
 def main():
@@ -69,8 +42,26 @@ def main():
 
     forecast_df = pd.read_csv(forecast_csv_path)
 
-    # 2. Load actual data
-    actual_df = ensure_actual_data_csv(forecast_df, target_path="data/actual_weather.csv")
+    # 2. Load actual data — fetch from Open-Meteo archive if missing
+    if not os.path.exists(ACTUAL_CSV_PATH):
+        print(f"[Notice] {ACTUAL_CSV_PATH} not found. Fetching real actuals from Open-Meteo archive API...")
+        try:
+            # Import the fetcher from the same project
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from api.fetch_actuals import fetch_all_actuals
+
+            actual_df = fetch_all_actuals(output_csv=ACTUAL_CSV_PATH)
+            if actual_df.empty:
+                print("[Error] Failed to fetch actual weather data. "
+                      "Run 'python api/fetch_actuals.py' manually to debug.")
+                return
+        except Exception as e:
+            print(f"[Error] Could not auto-fetch actuals: {e}")
+            print("[Hint] Run 'python api/fetch_actuals.py' manually before running save_db.py.")
+            return
+    else:
+        actual_df = pd.read_csv(ACTUAL_CSV_PATH)
+        print(f"[Info] Loaded {len(actual_df)} rows from {ACTUAL_CSV_PATH}")
 
     # 3. Ensure database directory exists
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
