@@ -1,13 +1,41 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, Info } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { MOCK_MODEL_WEIGHTS } from '@/data/mockData';
+import { getModelWeightsData, MOCK_MODEL_WEIGHTS } from '@/lib/api';
+import type { ModelWeight } from '@/types';
 
-export function ModelContribution() {
+interface ModelContributionProps {
+  selectedCity?: string | null;
+}
+
+export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContributionProps) {
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
-  const weights = MOCK_MODEL_WEIGHTS;
+  const [weights, setWeights] = useState<ModelWeight[]>(MOCK_MODEL_WEIGHTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getModelWeightsData(selectedCity || 'Kanpur', 'temperature')
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setWeights(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCity]);
+
   const total = weights.reduce((s, w) => s + w.weight, 0);
 
   return (

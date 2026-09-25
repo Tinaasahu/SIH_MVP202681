@@ -1,7 +1,8 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, XCircle, Activity, Clock } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { MOCK_DATA_SOURCES, ENGINE_STATUS } from '@/data/mockData';
+import { MOCK_DATA_SOURCES, ENGINE_STATUS, getForecast } from '@/lib/api';
 import { DataSource } from '@/types';
 
 const STATUS_CONFIG: Record<DataSource['status'], { icon: React.ElementType; color: string; label: string }> = {
@@ -11,7 +12,30 @@ const STATUS_CONFIG: Record<DataSource['status'], { icon: React.ElementType; col
 };
 
 export function DataHealthPanel() {
-  const sources = MOCK_DATA_SOURCES;
+  const [sources, setSources] = useState<DataSource[]>(MOCK_DATA_SOURCES);
+  const [engineStatus, setEngineStatus] = useState(ENGINE_STATUS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getForecast()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const healthyCount = sources.filter(s => s.status === 'healthy').length;
 
   return (
@@ -82,9 +106,9 @@ export function DataHealthPanel() {
         style={{ background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.12)' }}
       >
         {[
-          { label: 'Last Refresh', value: ENGINE_STATUS.lastDataRefresh },
-          { label: 'Last Blending', value: ENGINE_STATUS.lastRecalculation },
-          { label: 'Next Cycle', value: ENGINE_STATUS.nextUpdate },
+          { label: 'Last Refresh', value: engineStatus.lastDataRefresh },
+          { label: 'Last Blending', value: engineStatus.lastRecalculation },
+          { label: 'Next Cycle', value: engineStatus.nextUpdate },
         ].map(t => (
           <div key={t.label} className="p-1">
             <div className="text-[10px] text-slate-400 mb-0.5">{t.label}</div>

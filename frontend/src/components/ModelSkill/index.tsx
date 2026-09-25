@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Info, Award, BarChart2 } from 'lucide-react';
-import { MOCK_SKILL_METRICS } from '@/data/mockData';
+import { getSkillMetricsData, MOCK_SKILL_METRICS } from '@/lib/api';
+import type { SkillMetric } from '@/types';
 
 type Period = 'Today' | '7 Days' | '30 Days' | 'Season';
 
@@ -17,7 +18,31 @@ const MODELS = [
 
 export function ModelSkillPanel() {
   const [period, setPeriod] = useState<Period>('Today');
-  const data = MOCK_SKILL_METRICS.find(m => m.period === period) || MOCK_SKILL_METRICS[0];
+  const [metrics, setMetrics] = useState<SkillMetric[]>(MOCK_SKILL_METRICS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getSkillMetricsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setMetrics(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const data = metrics.find(m => m.period.toLowerCase().includes(period.toLowerCase())) || metrics[0];
 
   const tableRows = MODELS.map(m => ({
     ...m,

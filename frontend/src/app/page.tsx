@@ -44,7 +44,7 @@ export default function Home() {
         return (
           <div className="space-y-6">
             {/* Top Forecast Decision Hero */}
-            <ForecastHero />
+            <ForecastHero selectedCity={selectedCity} />
 
             {/* Core Operational Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -54,19 +54,19 @@ export default function Home() {
                   selectedCity={selectedCity}
                   onSelectCity={handleCitySelect}
                 />
-                <ForecastTimeline />
+                <ForecastTimeline selectedCity={selectedCity} />
                 
                 {/* 2-Column Equal Height Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ModelComparison />
-                  <ExtremeWeatherPanel />
+                  <ModelComparison selectedCity={selectedCity} />
+                  <ExtremeWeatherPanel selectedCity={selectedCity} />
                 </div>
               </div>
 
               {/* Right Column (Controls & Deep Intelligence) - 5 cols */}
               <div className="lg:col-span-5 space-y-6">
-                <RegionSelector onSelectCity={handleCitySelect} />
-                <ModelContribution />
+                <RegionSelector selectedCity={selectedCity} onSelectCity={handleCitySelect} />
+                <ModelContribution selectedCity={selectedCity} />
                 <ModelSkillPanel />
                 <DataHealthPanel />
               </div>

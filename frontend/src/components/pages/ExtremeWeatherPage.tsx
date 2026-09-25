@@ -1,12 +1,38 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { ExtremeWeatherPanel } from '@/components/ExtremeWeather';
 import { AlertDrawer } from '@/components/AlertCenter';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { WeatherMap } from '@/components/WeatherMap';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
-import { MOCK_ALERTS } from '@/data/mockData';
+import { getAlertsData, MOCK_ALERTS } from '@/lib/api';
+import type { Alert } from '@/types';
 
 export function ExtremeWeatherPage() {
+  const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getAlertsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setAlerts(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -33,7 +59,7 @@ export function ExtremeWeatherPage() {
           </h2>
         </div>
         <div className="space-y-2">
-          {MOCK_ALERTS.map((alert) => (
+          {alerts.map((alert) => (
             <div
               key={alert.id}
               className="flex items-center justify-between p-3 rounded-xl"

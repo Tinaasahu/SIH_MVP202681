@@ -1,7 +1,8 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { X, AlertCircle, AlertTriangle, Info } from 'lucide-react';
-import { MOCK_ALERTS } from '@/data/mockData';
-import { Alert } from '@/types';
+import { getAlertsData, MOCK_ALERTS } from '@/lib/api';
+import type { Alert } from '@/types';
 
 interface AlertDrawerProps {
   open: boolean;
@@ -15,6 +16,30 @@ const alertStyles: Record<Alert['type'], { bg: string; border: string; icon: Rea
 };
 
 export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
+  const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getAlertsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setAlerts(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   if (!open) return null;
 
   return (
@@ -41,7 +66,7 @@ export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {MOCK_ALERTS.map((alert) => {
+          {alerts.map((alert) => {
             const s = alertStyles[alert.type];
             const Icon = s.icon;
             return (

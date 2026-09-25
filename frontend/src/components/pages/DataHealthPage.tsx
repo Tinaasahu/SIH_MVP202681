@@ -2,7 +2,7 @@
 import { DataHealthPanel } from '@/components/DataHealth';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Activity, Server } from 'lucide-react';
-import { ENGINE_STATUS } from '@/data/mockData';
+import { ENGINE_STATUS } from '@/lib/api';
 
 export function DataHealthPage() {
   return (

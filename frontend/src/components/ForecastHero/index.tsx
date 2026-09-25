@@ -5,7 +5,8 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { WhyForecastModal } from '@/components/WhyForecast';
-import { MOCK_FORECAST } from '@/data/mockData';
+import { getForecastMetrics, MOCK_FORECAST } from '@/lib/api';
+import type { ForecastMetrics } from '@/types';
 
 function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
   const [display, setDisplay] = useState(0);
@@ -32,7 +33,17 @@ function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: num
   return <span>{display.toFixed(decimals)}</span>;
 }
 
-function ConfidenceRing({ value }: { value: number }) {
+function ConfidenceRing({
+  value,
+  label,
+  dominantModel,
+  explanation,
+}: {
+  value: number;
+  label?: string;
+  dominantModel?: string;
+  explanation?: string;
+}) {
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
@@ -41,16 +52,30 @@ function ConfidenceRing({ value }: { value: number }) {
   return (
     <Tooltip
       content={
-        <div className="space-y-1.5 p-1 max-w-[220px]">
-          <p className="font-bold text-slate-800 text-xs">Confidence Formulation:</p>
-          <ul className="space-y-1 text-slate-600 text-[11px]">
-            {['Historical regional skill', 'Inter-model consensus', 'Lead-time decay curve', 'Active weather regime', 'Uncertainty band spread'].map(f => (
-              <li key={f} className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="space-y-1.5 p-1 max-w-[240px]">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+            <span className="font-bold text-slate-800 text-xs">ECE Confidence</span>
+            <span className="font-bold text-xs text-blue-600">{label || 'High'}</span>
+          </div>
+          {dominantModel && (
+            <div className="text-[11px] text-slate-600">
+              Dominant Model: <span className="font-semibold text-slate-800">{dominantModel}</span>
+            </div>
+          )}
+          {explanation ? (
+            <p className="text-[11px] text-slate-600 leading-snug italic bg-blue-50/70 p-1.5 rounded-lg border border-blue-100/70">
+              &quot;{explanation}&quot;
+            </p>
+          ) : (
+            <ul className="space-y-1 text-slate-600 text-[11px]">
+              {['Historical regional skill (50%)', 'Inter-model agreement (30%)', 'Lead-time decay curve (20%)'].map(f => (
+                <li key={f} className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       }
     >
@@ -71,16 +96,47 @@ function ConfidenceRing({ value }: { value: number }) {
             {value}%
           </text>
         </svg>
-        <span className="text-[11px] font-semibold text-slate-700 mt-1">Blend Reliability</span>
-        <span className="text-[10px] text-slate-400">High Agreement</span>
+        <span className="text-[11px] font-semibold text-slate-700 mt-1">
+          {label ? `${label} Confidence` : 'Blend Reliability'}
+        </span>
+        <span className="text-[10px] text-slate-400">
+          {dominantModel ? `Dominant: ${dominantModel}` : 'High Agreement'}
+        </span>
       </div>
     </Tooltip>
   );
 }
 
-export function ForecastHero() {
+interface ForecastHeroProps {
+  selectedCity?: string | null;
+}
+
+export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
+  const city = selectedCity || 'Kanpur';
   const [whyOpen, setWhyOpen] = useState(false);
-  const forecast = MOCK_FORECAST;
+  const [forecast, setForecast] = useState<ForecastMetrics>(MOCK_FORECAST);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getForecastMetrics(city)
+      .then((data) => {
+        if (mounted && data) {
+          setForecast(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [city]);
 
   const metrics = [
     {
@@ -204,7 +260,12 @@ export function ForecastHero() {
                 boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
               }}
             >
-              <ConfidenceRing value={forecast.confidence} />
+              <ConfidenceRing
+                value={forecast.confidence}
+                label={forecast.confidenceLabel}
+                dominantModel={forecast.dominantModel}
+                explanation={forecast.explanation}
+              />
             </div>
           </div>
 
@@ -215,7 +276,7 @@ export function ForecastHero() {
               <span>Blending run completed {forecast.updatedMinutesAgo} minutes ago</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="font-medium text-slate-700">Target Station: Kanpur, UP</span>
+              <span className="font-medium text-slate-700">Target Station: {city}</span>
               <span className="text-slate-300">·</span>
               <span>Lead Time: 24h</span>
               <span className="text-slate-300">·</span>
@@ -225,7 +286,7 @@ export function ForecastHero() {
         </div>
       </GlassCard>
 
-      <WhyForecastModal open={whyOpen} onClose={() => setWhyOpen(false)} />
+      <WhyForecastModal open={whyOpen} onClose={() => setWhyOpen(false)} selectedCity={city} />
     </>
   );
 }

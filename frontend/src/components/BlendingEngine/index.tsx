@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { ENGINE_STATUS, MOCK_MODEL_WEIGHTS } from '@/data/mockData';
+import { getCities, ENGINE_STATUS } from '@/lib/api';
 
 interface BlendingEngineModalProps {
   open: boolean;
@@ -17,13 +17,35 @@ const PIPELINE = [
 
 export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps) {
   const [animStep, setAnimStep] = useState(0);
+  const [status, setStatus] = useState(ENGINE_STATUS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     if (!open) { setAnimStep(0); return; }
     const interval = setInterval(() => {
       setAnimStep(s => (s + 1) % (PIPELINE.length + 2));
     }, 400);
-    return () => clearInterval(interval);
+
+    let mounted = true;
+    getCities()
+      .then((cities) => {
+        if (mounted && cities && cities.length > 0) {
+          setStatus(prev => ({ ...prev, regionsEvaluated: cities.length }));
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      clearInterval(interval);
+      mounted = false;
+    };
   }, [open]);
 
   return (
@@ -32,12 +54,12 @@ export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps)
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { label: 'Models analyzed', value: ENGINE_STATUS.modelsAnalyzed },
-            { label: 'Regions evaluated', value: ENGINE_STATUS.regionsEvaluated },
-            { label: 'Lead time', value: ENGINE_STATUS.leadTime },
-            { label: 'Current regime', value: ENGINE_STATUS.currentRegime },
+            { label: 'Models analyzed', value: status.modelsAnalyzed },
+            { label: 'Regions evaluated', value: status.regionsEvaluated },
+            { label: 'Lead time', value: status.leadTime },
+            { label: 'Current regime', value: status.currentRegime },
             { label: 'Adaptive weighting', value: 'Enabled' },
-            { label: 'Confidence', value: `${ENGINE_STATUS.confidence}%` },
+            { label: 'Confidence', value: `${status.confidence}%` },
           ].map(s => (
             <div key={s.label}
               className="rounded-xl p-3"
@@ -97,9 +119,9 @@ export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps)
         {/* Timing */}
         <div className="grid grid-cols-3 gap-3 text-xs">
           {[
-            { label: 'Last recalculation', value: ENGINE_STATUS.lastRecalculation },
-            { label: 'Last data refresh', value: ENGINE_STATUS.lastDataRefresh },
-            { label: 'Next update', value: ENGINE_STATUS.nextUpdate },
+            { label: 'Last recalculation', value: status.lastRecalculation },
+            { label: 'Last data refresh', value: status.lastDataRefresh },
+            { label: 'Next update', value: status.nextUpdate },
           ].map(t => (
             <div key={t.label} className="text-center">
               <div className="text-slate-400 mb-0.5">{t.label}</div>

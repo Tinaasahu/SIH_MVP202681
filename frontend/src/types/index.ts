@@ -9,6 +9,9 @@ export interface ForecastMetrics {
   temperature: number;
   wind: number;
   confidence: number;
+  confidenceLabel?: string;
+  dominantModel?: string;
+  explanation?: string;
   rainfallUncertainty: number;
   temperatureUncertainty: number;
   windUncertainty: number;
@@ -89,6 +92,21 @@ export interface CityForecast {
   confidence: number;
   dominantModel: string;
   risk: 'low' | 'moderate' | 'high' | 'severe';
+  confidenceLabel?: string;
+  explanation?: string;
+}
+
+export interface ConfidenceRecord {
+  city: string;
+  datetime: string;
+  lead_day: number;
+  confidence: number;
+  confidence_label: string;
+  skill_score: number;
+  agreement_score: number;
+  lead_score: number;
+  dominant_model: string;
+  explanation: string;
 }
 
 export interface SkillMetric {

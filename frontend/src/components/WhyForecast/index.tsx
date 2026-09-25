@@ -1,15 +1,46 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { MOCK_MODEL_WEIGHTS } from '@/data/mockData';
+import { getModelWeightsData, getConfidence, MOCK_MODEL_WEIGHTS } from '@/lib/api';
+import type { ModelWeight, ConfidenceRecord } from '@/types';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 
 interface WhyForecastModalProps {
   open: boolean;
   onClose: () => void;
+  selectedCity?: string | null;
 }
 
-export function WhyForecastModal({ open, onClose }: WhyForecastModalProps) {
-  const weights = MOCK_MODEL_WEIGHTS;
+export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: WhyForecastModalProps) {
+  const [weights, setWeights] = useState<ModelWeight[]>(MOCK_MODEL_WEIGHTS);
+  const [conf, setConf] = useState<ConfidenceRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let mounted = true;
+    Promise.all([
+      getModelWeightsData(selectedCity || 'Kanpur', 'temperature'),
+      getConfidence(selectedCity || 'Kanpur', 1),
+    ])
+      .then(([weightsData, confData]) => {
+        if (mounted) {
+          if (weightsData && weightsData.length > 0) setWeights(weightsData);
+          if (confData && confData.length > 0) setConf(confData[0]);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [open, selectedCity]);
 
   return (
     <Modal open={open} onClose={onClose} title="WHY THIS FORECAST?" size="md">
@@ -17,10 +48,10 @@ export function WhyForecastModal({ open, onClose }: WhyForecastModalProps) {
         {/* Context grid */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Current weather regime', value: 'Heavy Rainfall', highlight: true },
-            { label: 'Lead time', value: '24 hours', highlight: false },
-            { label: 'Historical regional skill', value: 'High', highlight: false },
-            { label: 'Model agreement', value: 'Moderate', highlight: false },
+            { label: 'Dominant Model', value: conf?.dominant_model || 'ECMWF', highlight: true },
+            { label: 'Lead time', value: '24 hours (Day 1)', highlight: false },
+            { label: 'Historical regional skill', value: conf ? `${Math.round(conf.skill_score)}% (${conf.skill_score >= 80 ? 'High' : 'Moderate'})` : 'High', highlight: false },
+            { label: 'Model agreement', value: conf ? `${Math.round(conf.agreement_score)}% (${conf.agreement_score >= 80 ? 'Strong' : 'Moderate'})` : 'Moderate', highlight: false },
           ].map(item => (
             <div
               key={item.label}
@@ -58,9 +89,17 @@ export function WhyForecastModal({ open, onClose }: WhyForecastModalProps) {
           className="rounded-xl p-4"
           style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.1)' }}
         >
-          <h3 className="text-xs font-semibold text-blue-600 mb-2">Reasoning</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-blue-600">Explainable Confidence Reasoning (ECE)</h3>
+            {conf && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {conf.confidence}% · {conf.confidence_label}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-slate-600 leading-relaxed">
-            AI Model currently demonstrates stronger historical performance for this region and lead time, while NWP contributes additional physical consistency. Ensemble components are weighted lower due to moderate agreement under active monsoon conditions.
+            {conf?.explanation ||
+              "AI Model currently demonstrates stronger historical performance for this region and lead time, while NWP contributes additional physical consistency. Ensemble components are weighted lower due to moderate agreement under active monsoon conditions."}
           </p>
         </div>
 

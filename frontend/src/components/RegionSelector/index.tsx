@@ -1,46 +1,95 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import { MOCK_STATES, MOCK_CITIES } from '@/data/mockData';
-
-const DISTRICTS: Record<string, string[]> = {
-  'Uttar Pradesh': ['All Districts', 'Kanpur', 'Lucknow', 'Varanasi', 'Agra', 'Ghaziabad'],
-  'Maharashtra': ['All Districts', 'Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Thane'],
-  'Rajasthan': ['All Districts', 'Jaipur', 'Jodhpur', 'Kota'],
-  'Gujarat': ['All Districts', 'Ahmedabad', 'Surat', 'Vadodara'],
-  'Madhya Pradesh': ['All Districts', 'Bhopal', 'Indore', 'Jabalpur'],
-  'Tamil Nadu': ['All Districts', 'Chennai', 'Coimbatore', 'Madurai'],
-  'Karnataka': ['All Districts', 'Bengaluru'],
-  'West Bengal': ['All Districts', 'Kolkata'],
-  'Delhi': ['Delhi Central', 'New Delhi'],
-};
+import { getCityForecastsData, MOCK_CITIES } from '@/lib/api';
+import type { CityForecast } from '@/types';
 
 interface RegionSelectorProps {
+  selectedCity?: string | null;
   onSelectCity?: (city: string) => void;
 }
 
-export function RegionSelector({ onSelectCity }: RegionSelectorProps) {
+export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorProps) {
+  const [cities, setCities] = useState<CityForecast[]>(MOCK_CITIES);
   const [state, setState] = useState('Uttar Pradesh');
   const [district, setDistrict] = useState('Kanpur');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
-  const districts = DISTRICTS[state] || ['All Districts'];
+  // 1. Fetch dynamic cities list from API
+  useEffect(() => {
+    let mounted = true;
+    getCityForecastsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setCities(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
+  // 2. Extract unique states dynamically from the 45 stations dataset
+  const states = useMemo(() => {
+    const unique = Array.from(new Set(cities.map((c) => c.state).filter(Boolean)));
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [cities]);
+
+  // 3. Extract districts/forecast stations belonging to the selected state dynamically
+  const districts = useMemo(() => {
+    const stateCities = cities
+      .filter((c) => c.state.toLowerCase() === state.toLowerCase())
+      .map((c) => c.city)
+      .sort((a, b) => a.localeCompare(b));
+    return ['All Districts', ...stateCities];
+  }, [cities, state]);
+
+  // 4. Two-way synchronization: when selectedCity prop updates (e.g. from Leaflet map click)
+  useEffect(() => {
+    if (!selectedCity || cities.length === 0) return;
+    const match = cities.find((c) => c.city.toLowerCase() === selectedCity.toLowerCase());
+    if (match) {
+      setState(match.state);
+      setDistrict(match.city);
+    }
+  }, [selectedCity, cities]);
+
+  // 5. State selection handler
   const handleStateChange = (newState: string) => {
     setState(newState);
-    const available = DISTRICTS[newState] || ['All Districts'];
-    const newDistrict = available.length > 1 ? available[1] : available[0];
+    const available = cities
+      .filter((c) => c.state.toLowerCase() === newState.toLowerCase())
+      .map((c) => c.city)
+      .sort((a, b) => a.localeCompare(b));
+
+    const newDistrict = available.length > 0 ? available[0] : 'All Districts';
     setDistrict(newDistrict);
+
     if (newDistrict !== 'All Districts' && onSelectCity) {
       onSelectCity(newDistrict);
     }
   };
 
+  // 6. District / Station selection handler
   const handleDistrictChange = (newDistrict: string) => {
     setDistrict(newDistrict);
     if (newDistrict !== 'All Districts' && onSelectCity) {
       onSelectCity(newDistrict);
+    } else if (newDistrict === 'All Districts' && onSelectCity) {
+      const available = cities.filter((c) => c.state.toLowerCase() === state.toLowerCase()).map((c) => c.city);
+      if (available.length > 0) {
+        onSelectCity(available[0]);
+      }
     }
   };
 
@@ -70,7 +119,7 @@ export function RegionSelector({ onSelectCity }: RegionSelectorProps) {
 
         <CustomDropdown
           label="State / Union Territory"
-          options={MOCK_STATES}
+          options={states}
           value={state}
           onChange={handleStateChange}
         />

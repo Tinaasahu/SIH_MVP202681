@@ -1,9 +1,10 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, CloudRain, Thermometer, Wind, ChevronRight, ShieldAlert } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { MOCK_EXTREME_EVENTS } from '@/data/mockData';
-import { ExtremeEvent } from '@/types';
+import { getExtremeEventsData, MOCK_EXTREME_EVENTS } from '@/lib/api';
+import type { ExtremeEvent } from '@/types';
 
 const EVENT_ICONS: Record<ExtremeEvent['type'], React.ElementType> = {
   heavy_rainfall: CloudRain,
@@ -43,8 +44,34 @@ function ProbabilityArc({ value, color }: { value: number; color: string }) {
   );
 }
 
-export function ExtremeWeatherPanel() {
-  const events = MOCK_EXTREME_EVENTS;
+interface ExtremeWeatherPanelProps {
+  selectedCity?: string | null;
+}
+
+export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherPanelProps) {
+  const [events, setEvents] = useState<ExtremeEvent[]>(MOCK_EXTREME_EVENTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getExtremeEventsData(selectedCity || 'Kanpur')
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setEvents(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCity]);
 
   return (
     <GlassCard padding="md" className="flex flex-col justify-between h-full">
