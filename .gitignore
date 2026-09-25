@@ -36,3 +36,9 @@ data/archive/
 .idea/
 *.swp
 *.swo
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
