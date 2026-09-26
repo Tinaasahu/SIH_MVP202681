@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { getCities, ENGINE_STATUS } from '@/lib/api';
+import { getCities, getMetadata, formatLastUpdated, ENGINE_STATUS } from '@/lib/api';
 
 interface BlendingEngineModalProps {
   open: boolean;
@@ -41,6 +41,19 @@ export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps)
           setIsLoading(false);
         }
       });
+
+    getMetadata()
+      .then((meta) => {
+        if (mounted && meta?.last_updated) {
+          const formatted = formatLastUpdated(meta.last_updated);
+          setStatus(prev => ({
+            ...prev,
+            lastDataRefresh: formatted,
+            lastRecalculation: formatted,
+          }));
+        }
+      })
+      .catch(() => {});
 
     return () => {
       clearInterval(interval);

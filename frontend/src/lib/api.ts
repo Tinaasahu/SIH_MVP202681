@@ -142,7 +142,58 @@ export interface CityRecord {
   lon?: number;
 }
 
+export interface MetadataRecord {
+  last_updated: string;
+  cities: number;
+  models: number;
+  city_count?: number;
+  model_count?: number;
+}
+
 export type { ConfidenceRecord };
+
+/**
+ * Formats an ISO datetime string into:
+ * "26 Sep 2026 • 11:45 PM"
+ */
+export function formatLastUpdated(isoString?: string): string {
+  if (!isoString) {
+    return '26 Sep 2026 • 11:45 PM';
+  }
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+
+    const day = d.getDate();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    return `${day} ${month} ${year} • ${hours}:${minutes} ${ampm}`;
+  } catch {
+    return '26 Sep 2026 • 11:45 PM';
+  }
+}
+
+/**
+ * GET /api/metadata
+ * Returns last_updated timestamp, city count, and model count.
+ */
+export async function getMetadata(): Promise<MetadataRecord> {
+  return fetchFromApi<MetadataRecord>('/metadata', {
+    last_updated: '2026-09-26T23:45:12',
+    cities: 45,
+    models: 4,
+    city_count: 45,
+    model_count: 4,
+  });
+}
 
 /**
  * GET /api/confidence
