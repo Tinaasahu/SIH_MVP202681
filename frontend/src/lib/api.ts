@@ -58,18 +58,28 @@ export {
   ENGINE_STATUS,
 };
 
-const API_BASES: string[] = process.env.NEXT_PUBLIC_API_URL
-  ? [process.env.NEXT_PUBLIC_API_URL]
-  : ['http://localhost:5001/api', 'http://localhost:5000/api'];
+function getApiBases(): string[] {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const raw = process.env.NEXT_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+    const formatted = raw.endsWith('/api') ? raw : `${raw}/api`;
+    return [formatted];
+  }
+  return ['http://localhost:5001/api', 'http://localhost:5000/api'];
+}
+
+const API_BASES: string[] = getApiBases();
 
 /**
  * Generic safe fetch with multi-port detection, timeout, and fallback.
  */
 async function fetchFromApi<T>(endpoint: string, fallback: T): Promise<T> {
+  const isCloud = API_BASES.some(b => !b.includes('localhost'));
+  const timeoutMs = isCloud ? 8000 : 2500;
+
   for (const base of API_BASES) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const res = await fetch(`${base}${endpoint}`, {
         signal: controller.signal,
