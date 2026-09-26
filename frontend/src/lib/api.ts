@@ -59,8 +59,9 @@ export {
 };
 
 function getApiBases(): string[] {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const raw = process.env.NEXT_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envUrl) {
+    const raw = envUrl.trim().replace(/\/+$/, '');
     const formatted = raw.endsWith('/api') ? raw : `${raw}/api`;
     return [formatted];
   }
