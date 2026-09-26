@@ -17,19 +17,26 @@
   --danger: #ef4444;
 }
 
-/* Force Custom Cursor on All Elements & Prevent Native Cursor from leaking */
+/* Force Custom Cursor on All Elements & Prevent Native Cursor from leaking (Fine pointers only) */
+@media (pointer: fine) {
+  *,
+  *::before,
+  *::after,
+  html,
+  body,
+  button,
+  select,
+  input,
+  option,
+  a,
+  [role="button"] {
+    cursor: none !important;
+  }
+}
+
 *,
 *::before,
-*::after,
-html,
-body,
-button,
-select,
-input,
-option,
-a,
-[role="button"] {
-  cursor: none !important;
+*::after {
   box-sizing: border-box;
 }
 
