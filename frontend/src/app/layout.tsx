@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hybrid WX — Forecast Intelligence | PS 202681',
+  title: 'नभदृष्टि — Forecast Intelligence | PS 202681',
   description:
-    'AI–NWP Multi-Model Forecast Blending System. Dynamically blended weather forecasts for India. Built for Smart India Hackathon 2026, Ministry of Earth Sciences.',
-  keywords: 'weather forecast, NWP, AI, blending, NCMRWF, MoES, India',
+    'नभदृष्टि: AI–NWP Multi-Model Forecast Blending System. Dynamically blended weather forecasts for India. Built for Smart India Hackathon 2026, Ministry of Earth Sciences.',
+  keywords: 'नभदृष्टि, NabhDrishti, weather forecast, NWP, AI, blending, NCMRWF, MoES, India',
 };
 
 export default function RootLayout({

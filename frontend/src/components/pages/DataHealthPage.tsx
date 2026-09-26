@@ -19,7 +19,7 @@ export function DataHealthPage() {
 
       <DataHealthPanel />
 
-      <GlassCard padding="md">
+      <GlassCard padding="md" variant="grey">
         <div className="flex items-center gap-2 mb-4">
           <Server size={15} className="text-slate-500" />
           <h2 className="text-xs font-semibold tracking-widest text-slate-500" style={{ letterSpacing: '0.12em' }}>

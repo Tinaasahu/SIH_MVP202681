@@ -50,7 +50,7 @@ export function ModelIntelligencePage() {
       </div>
 
       {/* Regional dominance */}
-      <GlassCard padding="md">
+      <GlassCard padding="md" variant="blue">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500 mb-4" style={{ letterSpacing: '0.12em' }}>
           REGIONAL MODEL DOMINANCE
         </h2>

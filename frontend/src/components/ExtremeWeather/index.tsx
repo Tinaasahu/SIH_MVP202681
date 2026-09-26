@@ -74,7 +74,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
   }, [selectedCity]);
 
   return (
-    <GlassCard padding="md" className="flex flex-col justify-between h-full">
+    <GlassCard padding="md" variant="red" className="flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -92,14 +92,14 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
         </div>
 
         <div className="space-y-3">
-          {events.map((event) => {
+          {events.map((event, idx) => {
             const Icon = EVENT_ICONS[event.type];
             const style = SEVERITY_STYLES[event.severity];
             const color = event.severity === 'alert' ? '#ef4444' : event.severity === 'warning' ? '#f59e0b' : '#2563eb';
 
             return (
               <div
-                key={event.type}
+                key={`${event.type}-${event.window}-${idx}`}
                 className="w-full text-left rounded-2xl p-3.5 transition-all hover:scale-[1.01] hover:shadow-xs"
                 style={{ background: style.bg, border: `1px solid ${style.ring}` }}
               >

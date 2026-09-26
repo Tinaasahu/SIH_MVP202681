@@ -1,5 +1,5 @@
 /**
- * Map Configuration for Hybrid WX
+ * Map Configuration for नभदृष्टि
  * 
  * MAPBOX SATELLITE & TERRAIN TILES:
  * Configured securely via NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN environment variable.

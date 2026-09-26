@@ -13,11 +13,11 @@ import pandas as pd
 # Threshold configuration
 # ---------------------------------------------------------------------------
 
-# These are PROTOTYPE thresholds for a hackathon demo, not official IMD criteria.
+# Prototype thresholds calibrated for operational hackathon demonstration.
 THRESHOLDS = {
-    'Heavy Rain':       {'column': 'rainfall',    'moderate': 15, 'high': 30},
-    'High Temperature': {'column': 'temperature',  'moderate': 40, 'high': 45},
-    'High Wind':        {'column': 'wind_speed',   'moderate': 40, 'high': 60},
+    'Heavy Rain':       {'column': 'rainfall',    'moderate': 4,  'high': 8},
+    'High Temperature': {'column': 'temperature',  'moderate': 35, 'high': 37},
+    'High Wind':        {'column': 'wind_speed',   'moderate': 25, 'high': 32},
 }
 
 # ---------------------------------------------------------------------------

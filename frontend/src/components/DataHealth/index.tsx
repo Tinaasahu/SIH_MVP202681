@@ -39,7 +39,7 @@ export function DataHealthPanel() {
   const healthyCount = sources.filter(s => s.status === 'healthy').length;
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="grey">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">

@@ -2,7 +2,7 @@ export type Variable = 'rainfall' | 'temperature' | 'wind';
 export type LeadTime = '6h' | '12h' | '24h' | '48h' | '72h';
 export type MapLayer = 'rainfall' | 'temperature' | 'wind' | 'extreme_risk' | 'model_dominance' | 'confidence' | 'anomaly';
 export type ModelMode = 'blended' | 'ai' | 'nwp' | 'ensemble';
-export type NavPage = 'overview' | 'forecast' | 'model-intelligence' | 'extreme-weather' | 'model-performance' | 'data-health';
+export type NavPage = 'overview' | 'forecast' | 'model-intelligence' | 'extreme-weather' | 'model-performance' | 'data-health' | 'rpi';
 
 export interface ForecastMetrics {
   rainfall: number;
@@ -54,6 +54,7 @@ export interface Alert {
   type: 'danger' | 'warning' | 'info';
   title: string;
   location: string;
+  state?: string;
   window: string;
   timestamp: string;
 }
@@ -116,4 +117,42 @@ export interface SkillMetric {
   nwpA: number;
   nwpB: number;
   ensemble: number;
+}
+
+export type RpiPriority = 'Low' | 'Moderate' | 'High' | 'Critical';
+
+export interface ResourceAction {
+  id: string;
+  title: string;
+  description: string;
+  category: 'rain' | 'heat' | 'wind' | 'general';
+  priority: 'critical' | 'high' | 'medium' | 'routine';
+  department: string;
+  status: 'Ready' | 'Standby' | 'Dispatched' | 'Active';
+  actionCode: string;
+}
+
+export interface RpiData {
+  city: string;
+  state: string;
+  lat: number;
+  lon: number;
+  rainfall: number;
+  temperature: number;
+  wind: number;
+  confidence: number;
+  rainRisk: number;
+  heatRisk: number;
+  windRisk: number;
+  rpiScore: number;
+  priority: RpiPriority;
+  dominantModel: string;
+  modelWeights: {
+    ecmwf: number;
+    icon: number;
+    gfs: number;
+    gem: number;
+  };
+  recommendations: ResourceAction[];
+  updatedAt: string;
 }

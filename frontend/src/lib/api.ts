@@ -24,6 +24,8 @@ import type {
   CityForecast,
   SkillMetric,
   ConfidenceRecord,
+  RpiData,
+  ResourceAction,
 } from '@/types';
 
 import {
@@ -507,6 +509,75 @@ export async function getCityForecastsData(): Promise<CityForecast[]> {
   }
 }
 
+export const CITY_TO_STATE: Record<string, string> = {
+  Delhi: 'Delhi',
+  Mumbai: 'Maharashtra',
+  Chennai: 'Tamil Nadu',
+  Kolkata: 'West Bengal',
+  Jaipur: 'Rajasthan',
+  Guwahati: 'Assam',
+  Bengaluru: 'Karnataka',
+  Hyderabad: 'Telangana',
+  Ahmedabad: 'Gujarat',
+  Pune: 'Maharashtra',
+  Surat: 'Gujarat',
+  Lucknow: 'Uttar Pradesh',
+  Kanpur: 'Uttar Pradesh',
+  Nagpur: 'Maharashtra',
+  Indore: 'Madhya Pradesh',
+  Thane: 'Maharashtra',
+  Bhopal: 'Madhya Pradesh',
+  Visakhapatnam: 'Andhra Pradesh',
+  Patna: 'Bihar',
+  Vadodara: 'Gujarat',
+  Ghaziabad: 'Uttar Pradesh',
+  Ludhiana: 'Punjab',
+  Agra: 'Uttar Pradesh',
+  Nashik: 'Maharashtra',
+  Ranchi: 'Jharkhand',
+  Varanasi: 'Uttar Pradesh',
+  Srinagar: 'Jammu & Kashmir',
+  Amritsar: 'Punjab',
+  Coimbatore: 'Tamil Nadu',
+  Vijayawada: 'Andhra Pradesh',
+  Jodhpur: 'Rajasthan',
+  Madurai: 'Tamil Nadu',
+  Raipur: 'Chhattisgarh',
+  Kota: 'Rajasthan',
+  Chandigarh: 'Punjab',
+  Dehradun: 'Uttarakhand',
+  Shimla: 'Himachal Pradesh',
+  Thiruvananthapuram: 'Kerala',
+  Kochi: 'Kerala',
+  Bhubaneswar: 'Odisha',
+  Goa: 'Goa',
+  Imphal: 'Manipur',
+  Shillong: 'Meghalaya',
+  Agartala: 'Tripura',
+  Jabalpur: 'Madhya Pradesh',
+};
+
+export function getAlertState(location?: string): string {
+  if (!location) return 'Other';
+  if (location.includes(',')) {
+    const parts = location.split(',').map((s) => s.trim());
+    const city = parts[0];
+    if (CITY_TO_STATE[city]) return CITY_TO_STATE[city];
+    const candidate = parts[1];
+    if (candidate === 'UP') return 'Uttar Pradesh';
+    if (candidate === 'MP') return 'Madhya Pradesh';
+    return candidate;
+  }
+  if (CITY_TO_STATE[location]) {
+    return CITY_TO_STATE[location];
+  }
+  const match = Object.keys(CITY_TO_STATE).find(
+    (c) => c.toLowerCase() === location.trim().toLowerCase()
+  );
+  if (match) return CITY_TO_STATE[match];
+  return 'Other';
+}
+
 /**
  * Helper to get Alert[] for AlertCenter and ExtremeWeatherPage.
  */
@@ -514,17 +585,30 @@ export async function getAlertsData(city?: string): Promise<Alert[]> {
   try {
     const rawAlerts = await getAlerts(city);
     if (!rawAlerts || rawAlerts.length === 0) {
+      if (city) {
+        return [];
+      }
       return MOCK_ALERTS;
     }
 
-    return rawAlerts.map((a, i) => ({
-      id: `live-alert-${i}`,
-      type: a.severity.toLowerCase() === 'high' ? 'danger' : 'warning',
-      title: `${a.event} Alert`,
-      location: a.city,
-      window: `${a.datetime} IST`,
-      timestamp: 'Active Cycle',
-    }));
+    return rawAlerts.map((a, i) => {
+      const isRain = a.event.toLowerCase().includes('rain');
+      const isWind = a.event.toLowerCase().includes('wind');
+      const unit = isRain ? 'mm/hr' : isWind ? 'km/h' : '°C';
+      const timeStr = a.datetime ? a.datetime.slice(11, 16) : '00:00';
+      const dateStr = a.datetime ? a.datetime.slice(5, 10) : '';
+      const state = getAlertState(a.city);
+
+      return {
+        id: `live-alert-${i}`,
+        type: a.severity.toLowerCase() === 'high' ? 'danger' : 'warning',
+        title: `${a.event} Alert`,
+        location: `${a.city}, ${state}`,
+        state: state,
+        window: `${timeStr} IST (${dateStr})`,
+        timestamp: `${a.forecast_value} ${unit}`,
+      };
+    });
   } catch {
     return MOCK_ALERTS;
   }
@@ -537,18 +621,38 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
   try {
     const rawAlerts = await getAlerts(city);
     if (!rawAlerts || rawAlerts.length === 0) {
-      return MOCK_EXTREME_EVENTS;
+      return [
+        {
+          type: 'heavy_rainfall',
+          label: 'Safe Conditions',
+          probability: 5,
+          window: 'Next 72 Hours',
+          confidence: 94,
+          severity: 'watch',
+          description: `All forecast parameters for ${city || 'this station'} remain safely below severe hazard thresholds.`,
+        }
+      ];
     }
 
-    return rawAlerts.map((a) => ({
-      type: a.event.toLowerCase().includes('rain') ? 'heavy_rainfall' : a.event.toLowerCase().includes('temp') ? 'heatwave' : 'high_wind',
-      label: a.event,
-      probability: a.severity.toLowerCase() === 'high' ? 85 : 65,
-      window: `${a.datetime} IST`,
-      confidence: 82,
-      severity: a.severity.toLowerCase() === 'high' ? 'alert' : 'warning',
-      description: `Forecast value: ${a.forecast_value} (Threshold: ${a.threshold})`,
-    }));
+    return rawAlerts.slice(0, 4).map((a) => {
+      const isRain = a.event.toLowerCase().includes('rain');
+      const isTemp = a.event.toLowerCase().includes('temp');
+      const isWind = a.event.toLowerCase().includes('wind');
+      const unit = isRain ? 'mm/hr' : isWind ? 'km/h' : '°C';
+      const type = isRain ? 'heavy_rainfall' : isTemp ? 'heatwave' : 'high_wind';
+      const isHigh = a.severity.toLowerCase() === 'high';
+      const timeStr = a.datetime ? a.datetime.slice(11, 16) : '00:00';
+
+      return {
+        type,
+        label: a.event,
+        probability: isHigh ? 88 : 72,
+        window: `${timeStr} IST`,
+        confidence: 86,
+        severity: isHigh ? 'alert' : 'warning',
+        description: `Predicted: ${a.forecast_value} ${unit} (Exceeds ${a.threshold} ${unit} threshold)`,
+      };
+    });
   } catch {
     return MOCK_EXTREME_EVENTS;
   }
@@ -584,4 +688,302 @@ export async function getSkillMetricsData(): Promise<SkillMetric[]> {
   } catch {
     return MOCK_SKILL_METRICS;
   }
+}
+
+/**
+ * Generates dynamic Government Resource Recommendations based on weather thresholds.
+ */
+export function generateResourceRecommendations(city: string, rainfall: number, temp: number, wind: number): ResourceAction[] {
+  const cKey = city.toLowerCase();
+  const recs: ResourceAction[] = [];
+
+  // Heavy Rain Rules
+  if (rainfall > 40) {
+    recs.push({
+      id: `${cKey}-rain-sdrf`,
+      title: 'Deploy SDRF & NDRF Water Rescue Battalions',
+      description: `Pre-position State Disaster Response Force inflatable motor boats, diving units, and rescue personnel at low-lying riverine basins. Projected rainfall at ${rainfall} mm/24h.`,
+      category: 'rain',
+      priority: rainfall > 70 ? 'critical' : 'high',
+      department: 'State Disaster Management Authority (SDMA / DDMA)',
+      status: 'Ready',
+      actionCode: 'SDRF-DEPL-01',
+    });
+    recs.push({
+      id: `${cKey}-rain-shelter`,
+      title: 'Open Emergency Relief Shelters & Stock Rations',
+      description: 'Activate cyclone/flood community shelters and primary healthcare relief camps with drinking water, dry rations, and medical emergency kits.',
+      category: 'rain',
+      priority: 'high',
+      department: 'Revenue & Civil Supplies Dept',
+      status: 'Standby',
+      actionCode: 'SHELTER-ACT-04',
+    });
+    recs.push({
+      id: `${cKey}-rain-drain`,
+      title: 'Continuous Drainage & Sump Pump Monitoring',
+      description: 'Deploy high-capacity dewatering pump sets at major urban underpasses, storm drains, railway culverts, and water-logging vulnerable hotspots.',
+      category: 'rain',
+      priority: rainfall > 60 ? 'high' : 'medium',
+      department: 'Municipal Corporation / PWD Works',
+      status: 'Active',
+      actionCode: 'DRAIN-PUMP-02',
+    });
+  }
+
+  // Heatwave Rules
+  if (temp >= 36) {
+    recs.push({
+      id: `${cKey}-heat-adv`,
+      title: 'Issue Heatwave Red Alert & Public Health Advisory',
+      description: `Broadcast urgent heat advisories via SMS, local radio, and state channels. Restrict heavy physical outdoor work between 11:30 AM and 03:30 PM. Current temp: ${temp}°C.`,
+      category: 'heat',
+      priority: temp >= 40 ? 'critical' : 'high',
+      department: 'Dept of Public Health & Family Welfare',
+      status: 'Active',
+      actionCode: 'HEAT-ADV-01',
+    });
+    recs.push({
+      id: `${cKey}-heat-cool`,
+      title: 'Activate Air-Cooled Public Relief Centres',
+      description: 'Open air-conditioned civic centers, bus terminuses, public libraries, and religious shelters as designated heat relief sanctuaries with ORS hydration kiosks.',
+      category: 'heat',
+      priority: 'high',
+      department: 'District Administration / Urban Local Bodies',
+      status: 'Ready',
+      actionCode: 'COOL-CTR-02',
+    });
+    recs.push({
+      id: `${cKey}-heat-water`,
+      title: 'Mobilize Emergency Drinking Water Tankers',
+      description: 'Dispatch municipal drinking water tankers to informal settlements, construction laborer clusters, and water-stressed urban wards.',
+      category: 'heat',
+      priority: 'medium',
+      department: 'Water Supply & Sewerage Board',
+      status: 'Dispatched',
+      actionCode: 'WATER-MOB-03',
+    });
+  }
+
+  // High Wind Rules
+  if (wind >= 22) {
+    recs.push({
+      id: `${cKey}-wind-infra`,
+      title: 'Secure Critical Infrastructure & Commercial Hoardings',
+      description: `Mandate structural inspection and immediate dismantling of unauthorized billboards, overhead hoardings, and construction scaffolding facing wind gusts of ${wind} km/h.`,
+      category: 'wind',
+      priority: wind > 35 ? 'high' : 'medium',
+      department: 'Municipal Town Planning / Safety Wing',
+      status: 'Active',
+      actionCode: 'WIND-SEC-01',
+    });
+    recs.push({
+      id: `${cKey}-wind-ops`,
+      title: 'Suspend Vulnerable High-Altitude & Marine Operations',
+      description: 'Issue immediate no-sail advisory for artisanal fishing boats, harbor ferries, and halt towering construction tower cranes and rooftop maintenance.',
+      category: 'wind',
+      priority: wind > 35 ? 'high' : 'medium',
+      department: 'Port Authority / Labour Enforcement',
+      status: 'Standby',
+      actionCode: 'OPS-HALT-02',
+    });
+  }
+
+  if (recs.length === 0) {
+    recs.push({
+      id: `${cKey}-std-readiness`,
+      title: 'Standard Operational Readiness & Sensor Verification',
+      description: 'All synoptic parameters within baseline thresholds. Maintain automated Doppler radar, automatic weather stations (AWS), and rain-gauge calibration.',
+      category: 'general',
+      priority: 'routine',
+      department: 'State Meteorological Control Cell',
+      status: 'Active',
+      actionCode: 'EOC-STBY-00',
+    });
+  }
+
+  return recs;
+}
+
+/**
+ * Calculates RPI Data for a given city with API-first and local fallback.
+ */
+export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
+  try {
+    const raw = await fetchFromApi<RpiData | null>(`/rpi?city=${encodeURIComponent(city)}`, null);
+    if (raw && raw.rpiScore !== undefined) {
+      return raw;
+    }
+  } catch {
+    // Proceed to local robust calculation
+  }
+
+  const [metrics, cities, confRecords] = await Promise.all([
+    getForecastMetrics(city),
+    getCityForecastsData(),
+    getConfidence(city, 1).catch(() => null),
+  ]);
+
+  const matchCity = cities.find(c => c.city.toLowerCase() === city.toLowerCase()) || cities[0];
+  const rain = metrics.rainfall ?? matchCity.rainfall ?? 15;
+  const temp = metrics.temperature ?? matchCity.temperature ?? 30;
+  const wind = metrics.wind ?? matchCity.wind ?? 15;
+  const conf = metrics.confidence ?? matchCity.confidence ?? 85;
+
+  const rainRisk = Math.min(100, Math.max(0, Math.round((rain / 80) * 100 * 10) / 10));
+  const heatRisk = Math.min(100, Math.max(0, Math.round(((temp - 25) / 20) * 100 * 10) / 10));
+  const windRisk = Math.min(100, Math.max(0, Math.round((wind / 65) * 100 * 10) / 10));
+  const confScore = Math.min(100, Math.max(0, conf));
+
+  // Formula: RPI = 35% Rain Risk + 25% Heat Risk + 20% Wind Risk + 20% Confidence
+  const rpiScore = Math.round((0.35 * rainRisk + 0.25 * heatRisk + 0.20 * windRisk + 0.20 * confScore) * 10) / 10;
+
+  let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
+  if (rpiScore > 75) priority = 'Critical';
+  else if (rpiScore > 55) priority = 'High';
+  else if (rpiScore > 30) priority = 'Moderate';
+
+  let domModel = confRecords && confRecords.length > 0 ? confRecords[0].dominant_model : matchCity.dominantModel || 'ECMWF';
+  if (domModel === 'AI') domModel = 'ECMWF';
+  if (!['ECMWF', 'ICON', 'GFS', 'GEM'].includes(domModel)) {
+    domModel = rain > 45 ? 'ECMWF' : temp > 35 ? 'ICON' : 'GFS';
+  }
+
+  const weights =
+    domModel === 'ECMWF'
+      ? { ecmwf: 45, icon: 25, gfs: 18, gem: 12 }
+      : domModel === 'ICON'
+      ? { ecmwf: 25, icon: 45, gfs: 18, gem: 12 }
+      : domModel === 'GFS'
+      ? { ecmwf: 20, icon: 22, gfs: 46, gem: 12 }
+      : { ecmwf: 22, icon: 20, gfs: 18, gem: 40 };
+
+  const recs = generateResourceRecommendations(matchCity.city, rain, temp, wind);
+
+  return {
+    city: matchCity.city,
+    state: matchCity.state || 'Uttar Pradesh',
+    lat: matchCity.lat,
+    lon: matchCity.lon,
+    rainfall: Math.round(rain * 10) / 10,
+    temperature: Math.round(temp * 10) / 10,
+    wind: Math.round(wind * 10) / 10,
+    confidence: confScore,
+    rainRisk,
+    heatRisk,
+    windRisk,
+    rpiScore,
+    priority,
+    dominantModel: domModel,
+    modelWeights: weights,
+    recommendations: recs,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Returns RPI Data for all 45 Indian Synoptic stations.
+ */
+export async function getAllRpiData(): Promise<RpiData[]> {
+  try {
+    const raw = await fetchFromApi<RpiData[]>('/rpi', []);
+    if (raw && Array.isArray(raw) && raw.length > 0) {
+      return raw;
+    }
+  } catch {}
+
+  const cities = await getCityForecastsData();
+  return cities.map(c => {
+    const rain = c.rainfall;
+    const temp = c.temperature;
+    const wind = c.wind;
+    const conf = c.confidence;
+
+    const rainRisk = Math.min(100, Math.max(0, Math.round((rain / 80) * 100 * 10) / 10));
+    const heatRisk = Math.min(100, Math.max(0, Math.round(((temp - 25) / 20) * 100 * 10) / 10));
+    const windRisk = Math.min(100, Math.max(0, Math.round((wind / 65) * 100 * 10) / 10));
+
+    const rpiScore = Math.round((0.35 * rainRisk + 0.25 * heatRisk + 0.20 * windRisk + 0.20 * conf) * 10) / 10;
+
+    let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
+    if (rpiScore > 75) priority = 'Critical';
+    else if (rpiScore > 55) priority = 'High';
+    else if (rpiScore > 30) priority = 'Moderate';
+
+    let domModel = c.dominantModel || 'ECMWF';
+    if (domModel === 'AI' || domModel === 'Ensemble') {
+      domModel = rain > 50 ? 'ECMWF' : temp > 34 ? 'ICON' : 'GFS';
+    }
+
+    const weights =
+      domModel === 'ECMWF'
+        ? { ecmwf: 45, icon: 25, gfs: 18, gem: 12 }
+        : domModel === 'ICON'
+        ? { ecmwf: 25, icon: 45, gfs: 18, gem: 12 }
+        : domModel === 'GFS'
+        ? { ecmwf: 20, icon: 22, gfs: 46, gem: 12 }
+        : { ecmwf: 22, icon: 20, gfs: 18, gem: 40 };
+
+    return {
+      city: c.city,
+      state: c.state || 'India',
+      lat: c.lat,
+      lon: c.lon,
+      rainfall: rain,
+      temperature: temp,
+      wind: wind,
+      confidence: conf,
+      rainRisk,
+      heatRisk,
+      windRisk,
+      rpiScore,
+      priority,
+      dominantModel: domModel,
+      modelWeights: weights,
+      recommendations: generateResourceRecommendations(c.city, rain, temp, wind),
+      updatedAt: new Date().toISOString(),
+    };
+  });
+}
+
+export interface GeoJsonStationFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: {
+    city: string;
+    state: string;
+    rpiScore: number;
+    priority: 'Low' | 'Moderate' | 'High' | 'Critical';
+    dominantModel: string;
+    rainfall: number;
+    temperature: number;
+    wind: number;
+    confidence: number;
+  };
+}
+
+export interface RpiMapGeoJson {
+  type: 'FeatureCollection';
+  features: GeoJsonStationFeature[];
+  metadata: {
+    totalStations: number;
+    generatedAt: string;
+    crs: string;
+  };
+}
+
+/**
+ * Fetches GeoJSON Map FeatureCollection for RPI Map APIs.
+ */
+export async function getRpiMapGeoJson(): Promise<RpiMapGeoJson | null> {
+  try {
+    const raw = await fetchFromApi<RpiMapGeoJson | null>('/rpi/map', null);
+    if (raw && raw.features && raw.features.length > 0) {
+      return raw;
+    }
+  } catch {}
+  return null;
 }

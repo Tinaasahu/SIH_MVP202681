@@ -46,7 +46,7 @@ export function ModelPerformancePage() {
       <ModelSkillPanel />
 
       {/* Historical skill summary */}
-      <GlassCard padding="md">
+      <GlassCard padding="md" variant="green">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500 mb-4" style={{ letterSpacing: '0.12em' }}>
           SKILL SCORES OVER TIME (RMSE mm)
         </h2>

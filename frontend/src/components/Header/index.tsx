@@ -14,6 +14,7 @@ interface HeaderProps {
 const NAV_ITEMS: { id: NavPage; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'forecast', label: 'Forecast' },
+  { id: 'rpi', label: 'RPI' },
   { id: 'model-intelligence', label: 'Model Intelligence' },
   { id: 'extreme-weather', label: 'Extreme Weather' },
   { id: 'model-performance', label: 'Performance' },
@@ -63,8 +64,8 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold tracking-wider text-slate-800" style={{ letterSpacing: '0.1em' }}>
-                    HYBRID WX
+                  <span className="text-base font-extrabold text-slate-900 tracking-tight">
+                    नभदृष्टि
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 font-semibold border border-blue-200/50">
                     MoES · NCMRWF

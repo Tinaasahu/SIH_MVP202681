@@ -90,7 +90,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
   }));
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="blue">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">

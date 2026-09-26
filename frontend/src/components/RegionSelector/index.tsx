@@ -94,7 +94,7 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
   };
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="orange">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">

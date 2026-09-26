@@ -159,6 +159,9 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       uncertainty: `±${forecast.rainfallUncertainty} mm`,
       color: '#0284c7',
       decimals: 0,
+      bg: 'linear-gradient(145deg, rgba(239, 246, 255, 0.94) 0%, rgba(219, 234, 254, 0.78) 100%)',
+      border: 'rgba(186, 230, 253, 0.9)',
+      shadow: '0 8px 24px -2px rgba(2, 132, 199, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
     },
     {
       icon: Thermometer,
@@ -166,8 +169,11 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       value: forecast.temperature,
       unit: '°C',
       uncertainty: `±${forecast.temperatureUncertainty} °C`,
-      color: '#f97316',
+      color: '#ea580c',
       decimals: 1,
+      bg: 'linear-gradient(145deg, rgba(255, 247, 237, 0.94) 0%, rgba(254, 237, 213, 0.78) 100%)',
+      border: 'rgba(254, 215, 170, 0.9)',
+      shadow: '0 8px 24px -2px rgba(234, 88, 12, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
     },
     {
       icon: Wind,
@@ -175,19 +181,22 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       value: forecast.wind,
       unit: 'km/h',
       uncertainty: `±${forecast.windUncertainty} km/h`,
-      color: '#8b5cf6',
+      color: '#dc2626',
       decimals: 0,
+      bg: 'linear-gradient(145deg, rgba(254, 242, 242, 0.94) 0%, rgba(254, 226, 226, 0.78) 100%)',
+      border: 'rgba(254, 202, 202, 0.9)',
+      shadow: '0 8px 24px -2px rgba(220, 38, 38, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
     },
   ];
 
   return (
     <>
-      <GlassCard padding="lg" className="relative overflow-hidden">
+      <GlassCard padding="lg" variant="default" className="relative overflow-hidden">
         {/* Subtle Atmospheric Refraction Glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 70% 60% at 85% 15%, rgba(14,165,233,0.06) 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse 70% 60% at 85% 15%, rgba(14,165,233,0.08) 0%, transparent 65%)',
           }}
         />
 
@@ -226,18 +235,18 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
             </Button>
           </div>
 
-          {/* Metrics Grid with 15% Translucent Glass Cards */}
+          {/* Metrics Grid with Blue, Orange, Red & Yellow Glass Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {metrics.map((m) => (
               <div
                 key={m.label}
                 className="rounded-2xl p-5 transition-all hover:translate-y-[-2px] hover:shadow-md"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.65)',
+                  background: m.bg,
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255, 255, 255, 0.75)',
-                  boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+                  border: `1px solid ${m.border}`,
+                  boxShadow: m.shadow,
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
@@ -247,29 +256,29 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                   >
                     <m.icon size={15} style={{ color: m.color }} />
                   </div>
-                  <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{m.label}</span>
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-wider">{m.label}</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-4xl font-extrabold text-slate-800 tracking-tight">
                     <AnimatedNumber value={m.value} decimals={m.decimals} />
                   </span>
-                  <span className="text-base font-bold text-slate-400">{m.unit}</span>
+                  <span className="text-base font-bold text-slate-500">{m.unit}</span>
                 </div>
-                <div className="mt-2.5 text-xs text-slate-400 font-medium">
-                  Uncertainty: <span className="font-semibold text-slate-600">{m.uncertainty}</span>
+                <div className="mt-2.5 text-xs text-slate-500 font-medium">
+                  Uncertainty: <span className="font-semibold text-slate-700">{m.uncertainty}</span>
                 </div>
               </div>
             ))}
 
-            {/* Confidence Ring Card */}
+            {/* Confidence Ring Card - Yellow/Gold Accent */}
             <div
               className="rounded-2xl p-5 flex flex-col items-center justify-center transition-all hover:translate-y-[-2px] hover:shadow-md"
               style={{
-                background: 'rgba(255, 255, 255, 0.65)',
+                background: 'linear-gradient(145deg, rgba(254, 252, 232, 0.94) 0%, rgba(254, 249, 195, 0.78) 100%)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.75)',
-                boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+                border: '1px solid rgba(253, 224, 71, 0.9)',
+                boxShadow: '0 8px 24px -2px rgba(202, 138, 4, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
               }}
             >
               <ConfidenceRing

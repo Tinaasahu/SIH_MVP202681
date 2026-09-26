@@ -39,7 +39,7 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
   const total = weights.reduce((s, w) => s + w.weight, 0);
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="blue">
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="flex items-center gap-2">

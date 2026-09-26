@@ -75,10 +75,10 @@ export const MOCK_EXTREME_EVENTS: ExtremeEvent[] = [
 ];
 
 export const MOCK_ALERTS: Alert[] = [
-  { id: 'a1', type: 'danger', title: 'Heavy rainfall risk', location: 'Kanpur, UP', window: '02:00–10:00 IST', timestamp: '2 min ago' },
-  { id: 'a2', type: 'warning', title: 'High wind probability', location: 'Jaipur, Rajasthan', window: 'Next 24h', timestamp: '14 min ago' },
-  { id: 'a3', type: 'info', title: 'Temperature anomaly', location: 'Central India', window: 'Next 48h', timestamp: '31 min ago' },
-  { id: 'a4', type: 'warning', title: 'Elevated rainfall', location: 'Guwahati, Assam', window: '+6h – +18h', timestamp: '45 min ago' },
+  { id: 'a1', type: 'danger', title: 'Heavy rainfall risk', location: 'Kanpur, Uttar Pradesh', state: 'Uttar Pradesh', window: '02:00–10:00 IST', timestamp: '2 min ago' },
+  { id: 'a2', type: 'warning', title: 'High wind probability', location: 'Jaipur, Rajasthan', state: 'Rajasthan', window: 'Next 24h', timestamp: '14 min ago' },
+  { id: 'a3', type: 'info', title: 'Temperature anomaly', location: 'Bhopal, Madhya Pradesh', state: 'Madhya Pradesh', window: 'Next 48h', timestamp: '31 min ago' },
+  { id: 'a4', type: 'warning', title: 'Elevated rainfall', location: 'Guwahati, Assam', state: 'Assam', window: '+6h – +18h', timestamp: '45 min ago' },
 ];
 
 export const MOCK_DATA_SOURCES: DataSource[] = [

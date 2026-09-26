@@ -50,7 +50,7 @@ export function ModelSkillPanel() {
   })).sort((a, b) => a.rmse - b.rmse);
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="green">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">

@@ -54,7 +54,7 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
   }));
 
   return (
-    <GlassCard padding="md" className="flex flex-col justify-between h-full">
+    <GlassCard padding="md" variant="yellow" className="flex flex-col justify-between h-full">
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>
