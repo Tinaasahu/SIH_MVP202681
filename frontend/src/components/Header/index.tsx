@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Settings, ChevronDown, Wind, ShieldAlert, Cpu } from 'lucide-react';
 import { NavPage } from '@/types';
 import { BlendingEngineModal } from '@/components/BlendingEngine';
 import { AlertDrawer } from '@/components/AlertCenter';
+import { getMetadata, formatLastUpdated } from '@/lib/api';
 
 interface HeaderProps {
   currentPage: NavPage;
@@ -13,6 +14,7 @@ interface HeaderProps {
 const NAV_ITEMS: { id: NavPage; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'forecast', label: 'Forecast' },
+  { id: 'rpi', label: 'RPI' },
   { id: 'model-intelligence', label: 'Model Intelligence' },
   { id: 'extreme-weather', label: 'Extreme Weather' },
   { id: 'model-performance', label: 'Performance' },
@@ -22,7 +24,19 @@ const NAV_ITEMS: { id: NavPage; label: string }[] = [
 export function Header({ currentPage, onNavigate }: HeaderProps) {
   const [engineOpen, setEngineOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const [lastUpdated, setLastUpdated] = useState<string>('2026-09-26T23:45:12');
+
+  useEffect(() => {
+    let mounted = true;
+    getMetadata().then((data) => {
+      if (mounted && data?.last_updated) {
+        setLastUpdated(data.last_updated);
+      }
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  const lastUpdatedDisplay = formatLastUpdated(lastUpdated);
 
   return (
     <>
@@ -50,8 +64,8 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold tracking-wider text-slate-800" style={{ letterSpacing: '0.1em' }}>
-                    HYBRID WX
+                  <span className="text-base font-extrabold text-slate-900 tracking-tight">
+                    नभदृष्टि
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 font-semibold border border-blue-200/50">
                     MoES · NCMRWF
@@ -70,8 +84,8 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
                 <span className="font-semibold text-slate-700">All-India Gridded</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/70 border border-slate-200/60">
-                <span className="text-slate-400">Cycle:</span>
-                <span className="font-semibold text-slate-700">{today} · 00 UTC Blend</span>
+                <span className="text-slate-400">Last Updated</span>
+                <span className="font-semibold text-slate-700">{lastUpdatedDisplay}</span>
               </div>
             </div>
 

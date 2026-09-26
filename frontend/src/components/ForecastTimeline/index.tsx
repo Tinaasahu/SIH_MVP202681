@@ -5,9 +5,10 @@ import {
   ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { MOCK_TIMELINE } from '@/data/mockData';
-import { Variable } from '@/types';
+import { getTimelineData, MOCK_TIMELINE } from '@/lib/api';
+import type { TimelinePoint, Variable } from '@/types';
 import { Calendar, TrendingUp } from 'lucide-react';
+import { useEffect } from 'react';
 
 const VARIABLE_CONFIG: Record<Variable, { label: string; unit: string; color: string; key: string; uncertaintyHigh?: string; uncertaintyLow?: string }> = {
   rainfall: { label: 'Rainfall', unit: 'mm', color: '#0284c7', key: 'rainfall', uncertaintyHigh: 'rainfallUncertaintyHigh', uncertaintyLow: 'rainfallUncertaintyLow' },
@@ -15,9 +16,10 @@ const VARIABLE_CONFIG: Record<Variable, { label: string; unit: string; color: st
   wind: { label: 'Wind Speed', unit: 'km/h', color: '#8b5cf6', key: 'wind' },
 };
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string }) => {
+const CustomTooltip = ({ active, payload, label, dataList }: { active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string; dataList?: TimelinePoint[] }) => {
   if (!active || !payload?.length) return null;
-  const data = MOCK_TIMELINE.find(t => t.time === label);
+  const list = dataList || MOCK_TIMELINE;
+  const data = list.find(t => t.time === label);
   return (
     <div
       className="rounded-xl px-4 py-3 shadow-xl"
@@ -46,11 +48,39 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   );
 };
 
-export function ForecastTimeline() {
+interface ForecastTimelineProps {
+  selectedCity?: string | null;
+}
+
+export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelineProps) {
   const [variable, setVariable] = useState<Variable>('rainfall');
+  const [timeline, setTimeline] = useState<TimelinePoint[]>(MOCK_TIMELINE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getTimelineData(selectedCity || 'Kanpur')
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setTimeline(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCity]);
+
   const config = VARIABLE_CONFIG[variable];
 
-  const chartData = MOCK_TIMELINE.map(t => ({
+  const chartData = timeline.map(t => ({
     time: t.time,
     label: t.label,
     value: t[config.key as keyof typeof t] as number,
@@ -60,7 +90,7 @@ export function ForecastTimeline() {
   }));
 
   return (
-    <GlassCard padding="md">
+    <GlassCard padding="md" variant="blue">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">

@@ -1,10 +1,36 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { ModelSkillPanel } from '@/components/ModelSkill';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { BarChart3, TrendingDown } from 'lucide-react';
-import { MOCK_SKILL_METRICS } from '@/data/mockData';
+import { getSkillMetricsData, MOCK_SKILL_METRICS } from '@/lib/api';
+import type { SkillMetric } from '@/types';
 
 export function ModelPerformancePage() {
+  const [metrics, setMetrics] = useState<SkillMetric[]>(MOCK_SKILL_METRICS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getSkillMetricsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setMetrics(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -20,7 +46,7 @@ export function ModelPerformancePage() {
       <ModelSkillPanel />
 
       {/* Historical skill summary */}
-      <GlassCard padding="md">
+      <GlassCard padding="md" variant="green">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500 mb-4" style={{ letterSpacing: '0.12em' }}>
           SKILL SCORES OVER TIME (RMSE mm)
         </h2>
@@ -37,7 +63,7 @@ export function ModelPerformancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {MOCK_SKILL_METRICS.map((row) => (
+              {metrics.map((row) => (
                 <tr key={row.period} className="text-slate-700">
                   <td className="py-2.5 font-medium">{row.period}</td>
                   <td className="py-2.5 text-right font-bold text-blue-600">{row.blended}</td>

@@ -1,12 +1,37 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { ModelContribution } from '@/components/ModelContribution';
 import { ModelComparison } from '@/components/ModelComparison';
 import { ModelSkillPanel } from '@/components/ModelSkill';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { MOCK_MODEL_WEIGHTS, MOCK_REGION_DOMINANCE } from '@/data/mockData';
+import { getWeights, MOCK_REGION_DOMINANCE } from '@/lib/api';
+import type { RegionModelDominance } from '@/types';
 import { MapPin, BrainCircuit } from 'lucide-react';
 
 export function ModelIntelligencePage() {
+  const [dominance, setDominance] = useState<RegionModelDominance[]>(MOCK_REGION_DOMINANCE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getWeights()
+      .then((records) => {
+        if (mounted && records && records.length > 0) {
+          // Live model weights successfully fetched
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -25,12 +50,12 @@ export function ModelIntelligencePage() {
       </div>
 
       {/* Regional dominance */}
-      <GlassCard padding="md">
+      <GlassCard padding="md" variant="blue">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500 mb-4" style={{ letterSpacing: '0.12em' }}>
           REGIONAL MODEL DOMINANCE
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {MOCK_REGION_DOMINANCE.map((r) => (
+          {dominance.map((r) => (
             <div
               key={r.region}
               className="rounded-xl p-3.5"

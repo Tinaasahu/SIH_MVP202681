@@ -1,9 +1,10 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, CloudRain, Thermometer, Wind, ChevronRight, ShieldAlert } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { MOCK_EXTREME_EVENTS } from '@/data/mockData';
-import { ExtremeEvent } from '@/types';
+import { getExtremeEventsData, MOCK_EXTREME_EVENTS } from '@/lib/api';
+import type { ExtremeEvent } from '@/types';
 
 const EVENT_ICONS: Record<ExtremeEvent['type'], React.ElementType> = {
   heavy_rainfall: CloudRain,
@@ -43,11 +44,37 @@ function ProbabilityArc({ value, color }: { value: number; color: string }) {
   );
 }
 
-export function ExtremeWeatherPanel() {
-  const events = MOCK_EXTREME_EVENTS;
+interface ExtremeWeatherPanelProps {
+  selectedCity?: string | null;
+}
+
+export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherPanelProps) {
+  const [events, setEvents] = useState<ExtremeEvent[]>(MOCK_EXTREME_EVENTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getExtremeEventsData(selectedCity || 'Kanpur')
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setEvents(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCity]);
 
   return (
-    <GlassCard padding="md" className="flex flex-col justify-between h-full">
+    <GlassCard padding="md" variant="red" className="flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -65,14 +92,14 @@ export function ExtremeWeatherPanel() {
         </div>
 
         <div className="space-y-3">
-          {events.map((event) => {
+          {events.map((event, idx) => {
             const Icon = EVENT_ICONS[event.type];
             const style = SEVERITY_STYLES[event.severity];
             const color = event.severity === 'alert' ? '#ef4444' : event.severity === 'warning' ? '#f59e0b' : '#2563eb';
 
             return (
               <div
-                key={event.type}
+                key={`${event.type}-${event.window}-${idx}`}
                 className="w-full text-left rounded-2xl p-3.5 transition-all hover:scale-[1.01] hover:shadow-xs"
                 style={{ background: style.bg, border: `1px solid ${style.ring}` }}
               >

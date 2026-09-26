@@ -40,7 +40,7 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
   const [layerMenuOpen, setLayerMenuOpen] = useState(false);
 
   return (
-    <GlassCard padding="none" className="overflow-hidden">
+    <GlassCard padding="none" variant="blue" className="overflow-hidden">
       {/* Controls Bar */}
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
