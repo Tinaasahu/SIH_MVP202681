@@ -75,7 +75,7 @@ function getFormattedApiBase(): string {
 }
 
 const MAX_RETRIES = 3;
-const TIMEOUT_MS = 35000; // 35-second timeout allowing Render free tier sufficient time to wake up
+const TIMEOUT_MS = 60000; // 60-second (1 minute) timeout allowing Render free tier sufficient time to wake up
 
 export const RENDER_COLD_START_MSG = "Backend is waking up. Please wait a few seconds.";
 
@@ -102,7 +102,7 @@ function setWakingUpStatus(waking: boolean) {
 /**
  * Generic safe fetch with Render cold-start handling:
  * - Retries failed requests up to 3 times
- * - 35-second timeout per attempt to accommodate Render free-tier container spins
+ * - 60-second (1 minute) timeout per attempt to accommodate Render free-tier container spins
  * - Friendly error: "Backend is waking up. Please wait a few seconds."
  * - Returns fallback on persistent error without crashing the page
  */
