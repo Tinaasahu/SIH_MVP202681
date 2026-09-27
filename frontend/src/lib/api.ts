@@ -159,8 +159,8 @@ export async function fetchWithReconnect<T = any>(
     const totalRemaining = totalTimeout - (Date.now() - startTime);
     if (totalRemaining <= 0) break;
 
-    const currentTimeout = Math.min(retryInterval, totalRemaining);
-    const controller = new AbortController();
+// Allow one request to wait for the full remaining time
+const currentTimeout = totalRemaining;    const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
 
     if (options?.signal) {
