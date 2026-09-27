@@ -28,6 +28,9 @@ export function StatusStrip() {
     models: 4,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isWakingUp, setIsWakingUp] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -35,19 +38,52 @@ export function StatusStrip() {
       .then((data) => {
         if (mounted && data) {
           setMetadata(data);
+          setIsWakingUp(false);
+          setIsError(false);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (mounted) {
+          setIsError(true);
+          setIsWakingUp(false);
+          setStatusMessage(err?.message || 'Server is waking up. Please try again.');
+        }
+      });
+
+    const handleStatus = (e: Event) => {
+      const customEvent = e as CustomEvent<{ wakingUp?: boolean; error?: boolean; message?: string }>;
+      if (mounted && customEvent.detail) {
+        setIsWakingUp(!!customEvent.detail.wakingUp);
+        setIsError(!!customEvent.detail.error);
+        if (customEvent.detail.message) {
+          setStatusMessage(customEvent.detail.message);
+        }
+      }
+    };
+
+    window.addEventListener('backend-status', handleStatus);
+
     return () => {
       mounted = false;
+      window.removeEventListener('backend-status', handleStatus);
     };
   }, []);
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
+    setIsError(false);
     getMetadata()
       .then((data) => {
-        if (data) setMetadata(data);
+        if (data) {
+          setMetadata(data);
+          setIsError(false);
+          setIsWakingUp(false);
+        }
+      })
+      .catch((err) => {
+        setIsError(true);
+        setIsWakingUp(false);
+        setStatusMessage(err?.message || 'Server is waking up. Please try again.');
       })
       .finally(() => {
         setTimeout(() => setIsRefreshing(false), 600);
@@ -72,17 +108,40 @@ export function StatusStrip() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Item 1: Operational Status */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/60 shadow-2xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-[11px] font-bold text-emerald-700 tracking-wide uppercase">
-              Operational Status
-            </span>
-          </div>
-          <span className="text-xs font-extrabold text-slate-800 hidden sm:inline">
-            Active · Auto-Updating
+          {isWakingUp ? (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-50/90 border border-amber-200/80 shadow-2xs">
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin inline-block" />
+              <span className="text-[11px] font-bold text-amber-700 tracking-wide uppercase">
+                Connecting
+              </span>
+            </div>
+          ) : isError ? (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-red-50/90 border border-red-200/80 shadow-2xs">
+              <span className="relative flex h-2 w-2">
+                <span className="inline-flex rounded-full h-2 w-2 bg-red-500" />
+              </span>
+              <span className="text-[11px] font-bold text-red-700 tracking-wide uppercase">
+                Standby
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/60 shadow-2xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-[11px] font-bold text-emerald-700 tracking-wide uppercase">
+                Operational Status
+              </span>
+            </div>
+          )}
+
+          <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-800' : isError ? 'text-red-700' : 'text-slate-800 hidden sm:inline'}`}>
+            {isWakingUp
+              ? 'Starting AI weather engine… This may take up to 60 seconds.'
+              : isError
+              ? (statusMessage || 'Server is waking up. Please try again.')
+              : 'Active · Auto-Updating'}
           </span>
         </div>
 

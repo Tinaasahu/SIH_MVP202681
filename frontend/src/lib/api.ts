@@ -65,95 +65,213 @@ export {
 export const API = "https://sih-mvp202681.onrender.com";
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_URL ??
-  (process.env.NODE_ENV === "production" ? API : "http://localhost:5000");
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === "production" ? API : "http://localhost:5001");
 
-function getFormattedApiBase(): string {
-  const raw = API_BASE.trim().replace(/\/+$/, '');
-  return raw.endsWith('/api') ? raw : `${raw}/api`;
+export function buildApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+  const rawBase = API_BASE.trim().replace(/\/+$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  if (rawBase.endsWith('/api')) {
+    if (cleanEndpoint.startsWith('/api/')) {
+      return `${rawBase}${cleanEndpoint.slice(4)}`;
+    }
+    return `${rawBase}${cleanEndpoint}`;
+  }
+
+  if (cleanEndpoint.startsWith('/api/')) {
+    return `${rawBase}${cleanEndpoint}`;
+  }
+  return `${rawBase}/api${cleanEndpoint}`;
 }
 
-const MAX_RETRIES = 3;
-const TIMEOUT_MS = 60000; // 60-second (1 minute) timeout allowing Render free tier sufficient time to wake up
+export const RETRY_TIMEOUT_MS = 60000; // 60 seconds total retry duration
+export const RETRY_INTERVAL_MS = 8000; // Retry every 8 seconds
 
-export const RENDER_COLD_START_MSG = "Backend is waking up. Please wait a few seconds.";
+export const STARTING_AI_WEATHER_ENGINE_MSG = "Starting AI weather engine… This may take up to 60 seconds.";
+export const SERVER_WAKING_UP_MSG = "Server is waking up. Please try again.";
+
+// Backward compatibility constants
+export const RENDER_COLD_START_MSG = STARTING_AI_WEATHER_ENGINE_MSG;
+export const RENDER_COLD_START_LOADING_MSG = STARTING_AI_WEATHER_ENGINE_MSG;
+export const RENDER_COLD_START_ERROR_MSG = SERVER_WAKING_UP_MSG;
 
 let backendWakingUp = false;
+let backendError = false;
 
 export function isBackendWakingUp(): boolean {
   return backendWakingUp;
 }
 
-function setWakingUpStatus(waking: boolean) {
+export function isBackendError(): boolean {
+  return backendError;
+}
+
+export function setBackendStatus(waking: boolean, isError: boolean = false, message?: string) {
   backendWakingUp = waking;
+  backendError = isError;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new CustomEvent('backend-status', {
         detail: {
           wakingUp: waking,
-          message: waking ? RENDER_COLD_START_MSG : '',
+          error: isError,
+          message: message ?? (waking ? STARTING_AI_WEATHER_ENGINE_MSG : isError ? SERVER_WAKING_UP_MSG : ''),
         },
       })
     );
   }
 }
 
-/**
- * Generic safe fetch with Render cold-start handling:
- * - Retries failed requests up to 3 times
- * - 60-second (1 minute) timeout per attempt to accommodate Render free-tier container spins
- * - Friendly error: "Backend is waking up. Please wait a few seconds."
- * - Returns fallback on persistent error without crashing the page
- */
-async function fetchFromApi<T>(endpoint: string, fallback: T): Promise<T> {
-  const base = getFormattedApiBase();
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${base}${cleanEndpoint}`;
+export interface FetchOptions extends RequestInit {
+  timeoutMs?: number;
+  totalTimeoutMs?: number;
+  retryIntervalMs?: number;
+}
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+let coldStartLogged = false;
+let coldStartExhaustedLogged = false;
+
+/**
+ * Reusable fetch helper with Render cold start auto-reconnect:
+ * - Uses NEXT_PUBLIC_API_URL
+ * - Retries automatically for up to 60 seconds
+ * - Retries every 8 seconds
+ * - Retries on: network failure, timeout, HTTP 502, HTTP 503, HTTP 504
+ * - As soon as one request succeeds, returns the response normally
+ * - If all retries fail, throws a clean error: "Server is waking up. Please try again."
+ */
+export async function fetchWithReconnect<T = any>(
+  endpoint: string,
+  options?: FetchOptions
+): Promise<T> {
+  const totalTimeout = options?.totalTimeoutMs ?? RETRY_TIMEOUT_MS;
+  const retryInterval = options?.retryIntervalMs ?? RETRY_INTERVAL_MS;
+  const startTime = Date.now();
+  let attempt = 0;
+
+  while (Date.now() - startTime < totalTimeout) {
+    attempt++;
+    const totalRemaining = totalTimeout - (Date.now() - startTime);
+    if (totalRemaining <= 0) break;
+
+    const currentTimeout = Math.min(retryInterval, totalRemaining);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
+
+    if (options?.signal) {
+      if (options.signal.aborted) {
+        controller.abort();
+      } else {
+        options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
+
+    const attemptStart = Date.now();
+    let isRetryable = false;
+    let reason = '';
 
     try {
+      const url = buildApiUrl(endpoint);
       const res = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-        },
-      });
+  ...options,
+  signal: controller.signal,
+
+  // Force a fresh request to Render
+  cache: "no-store",
+
+  headers: {
+    Accept: "application/json",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+    ...(options?.headers || {}),
+  },
+});
 
       clearTimeout(timeoutId);
 
+      // Requirement 3: As soon as one request succeeds, return the response normally
       if (res.ok) {
-        if (backendWakingUp) {
-          setWakingUpStatus(false);
+        coldStartLogged = false;
+        coldStartExhaustedLogged = false;
+        if (backendWakingUp || backendError) {
+          setBackendStatus(false, false, '');
         }
         const data = await res.json();
         return data as T;
       }
 
-      // If server returned 5xx (e.g. Render 502/503 during wake-up)
-      if (res.status >= 500) {
-        console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (HTTP ${res.status}): ${RENDER_COLD_START_MSG}`);
-        setWakingUpStatus(true);
+      // Check HTTP 502, 503, 504
+      if (res.status === 502 || res.status === 503 || res.status === 504) {
+        isRetryable = true;
+        reason = `HTTP ${res.status}`;
+      } else {
+        const errorText = await res.text().catch(() => res.statusText);
+        throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
       }
     } catch (err: unknown) {
       clearTimeout(timeoutId);
-      const isAbort = err instanceof Error && err.name === 'AbortError';
-      const reason = isAbort ? 'Timeout reached' : (err instanceof Error ? err.message : String(err));
-      console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (${reason}): ${RENDER_COLD_START_MSG}`);
-      setWakingUpStatus(true);
+
+      if (err instanceof Error && err.name === 'AbortError') {
+        isRetryable = true;
+        reason = 'Timeout';
+      } else if (err instanceof TypeError) {
+        // Network failure
+        isRetryable = true;
+        reason = 'Network failure';
+      } else if (isRetryable) {
+        // Already marked retryable
+      } else {
+        throw err;
+      }
     }
 
-    // Delay between retries to give Render time to spin up (2s, 4s)
-    if (attempt < MAX_RETRIES) {
-      await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+    if (isRetryable) {
+      setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG);
+      if (!coldStartLogged) {
+        coldStartLogged = true;
+        console.info(`[NabhDrishti] Backend is waking up. ${STARTING_AI_WEATHER_ENGINE_MSG}`);
+      }
+
+      const elapsed = Date.now() - attemptStart;
+      const delay = Math.max(0, retryInterval - elapsed);
+      const remainingWindow = totalTimeout - (Date.now() - startTime);
+
+      if (remainingWindow <= 0) break;
+
+      const waitTime = Math.min(delay, remainingWindow);
+      if (waitTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
     }
   }
 
-  // Gracefully return fallback so components show valid UI without crashing
-  return fallback;
+  // Requirement 4: If all retries fail, throw clean error
+  setBackendStatus(false, true, SERVER_WAKING_UP_MSG);
+  if (!coldStartExhaustedLogged) {
+    coldStartExhaustedLogged = true;
+    console.warn(`[NabhDrishti] Cold start retries exhausted after ${Math.round((Date.now() - startTime) / 1000)}s: ${SERVER_WAKING_UP_MSG}`);
+  }
+  throw new Error(SERVER_WAKING_UP_MSG);
+}
+
+/**
+ * Generic fetch with Render cold-start handling that delegates to fetchWithReconnect.
+ * When a fallback is provided, returns the fallback on error so components do not crash.
+ */
+export async function fetchFromApi<T>(endpoint: string, fallback?: T): Promise<T> {
+  try {
+    return await fetchWithReconnect<T>(endpoint);
+  } catch (err) {
+    if (fallback !== undefined) {
+      return fallback;
+    }
+    throw err;
+  }
 }
 
 // ============================================================================

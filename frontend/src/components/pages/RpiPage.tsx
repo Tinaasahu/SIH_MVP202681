@@ -7,7 +7,7 @@ import { RpiHero } from '@/components/RPI/RpiHero';
 import { ResourceRecommendation } from '@/components/RPI/ResourceRecommendation';
 import { ModelTrustAtlas } from '@/components/RPI/ModelTrustAtlas';
 import { RegionSelector } from '@/components/RegionSelector';
-import { getRpiData, getAllRpiData } from '@/lib/api';
+import { getRpiData, getAllRpiData, SERVER_WAKING_UP_MSG } from '@/lib/api';
 import { RpiData } from '@/types';
 
 interface RpiPageProps {
@@ -21,6 +21,7 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
   const [stations, setStations] = useState<RpiData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Sync with prop when parent updates selectedCity
   useEffect(() => {
@@ -48,18 +49,21 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
   useEffect(() => {
     let mounted = true;
     setIsLoading(true);
+    setErrorMessage(null);
     getRpiData(currentCity)
       .then((data) => {
         if (mounted && data) {
           setRpiData(data);
           setIsLoading(false);
           setIsRefreshing(false);
+          setErrorMessage(null);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (mounted) {
           setIsLoading(false);
           setIsRefreshing(false);
+          setErrorMessage(err?.message || SERVER_WAKING_UP_MSG);
         }
       });
 
@@ -75,12 +79,17 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    setErrorMessage(null);
     getRpiData(currentCity)
       .then((data) => {
         setRpiData(data);
         setIsRefreshing(false);
+        setErrorMessage(null);
       })
-      .catch(() => setIsRefreshing(false));
+      .catch((err) => {
+        setIsRefreshing(false);
+        setErrorMessage(err?.message || SERVER_WAKING_UP_MSG);
+      });
   };
 
   return (
@@ -130,11 +139,31 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
         {/* Left Column: Section 1 Hero + Section 2 Recommendations + Section 3 Model Trust Atlas (12 or 8/4) */}
         <div className="lg:col-span-12 space-y-7">
           {/* Section 1 — Risk Priority Index Hero Card */}
-          {isLoading || !rpiData ? (
+          {isLoading ? (
             <div className="w-full h-72 rounded-2xl bg-slate-100/70 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
               <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
               <span className="text-xs font-medium tracking-wide">
-                Computing Risk Priority Index for {currentCity}...
+                Starting AI weather engine… This may take up to 60 seconds.
+              </span>
+            </div>
+          ) : errorMessage && !rpiData ? (
+            <div className="w-full h-72 rounded-2xl bg-slate-50 flex flex-col items-center justify-center text-slate-500 gap-3 border border-slate-200/60 p-6 text-center">
+              <span className="text-xs font-medium text-slate-700">
+                {errorMessage}
+              </span>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 text-slate-700 cursor-pointer"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : !rpiData ? (
+            <div className="w-full h-72 rounded-2xl bg-slate-100/70 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
+              <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+              <span className="text-xs font-medium tracking-wide">
+                Starting AI weather engine… This may take up to 60 seconds.
               </span>
             </div>
           ) : (
