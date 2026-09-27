@@ -100,26 +100,59 @@ export const RENDER_COLD_START_MSG = STARTING_AI_WEATHER_ENGINE_MSG;
 export const RENDER_COLD_START_LOADING_MSG = STARTING_AI_WEATHER_ENGINE_MSG;
 export const RENDER_COLD_START_ERROR_MSG = SERVER_WAKING_UP_MSG;
 
+export type BackendStatusType = 'idle' | 'connecting' | 'connected' | 'error';
+
 let backendWakingUp = false;
 let backendError = false;
+let backendStatus: BackendStatusType = 'idle';
+let hasConnectedOnce = false;
+
+export function getBackendStatus(): BackendStatusType {
+  return backendStatus;
+}
 
 export function isBackendWakingUp(): boolean {
-  return backendWakingUp;
+  return backendWakingUp || backendStatus === 'connecting';
 }
 
 export function isBackendError(): boolean {
-  return backendError;
+  return backendError || backendStatus === 'error';
 }
 
-export function setBackendStatus(waking: boolean, isError: boolean = false, message?: string) {
+export function isBackendConnected(): boolean {
+  return backendStatus === 'connected' || hasConnectedOnce;
+}
+
+export function setBackendStatus(
+  waking: boolean,
+  isError: boolean = false,
+  message?: string,
+  status?: BackendStatusType
+) {
   backendWakingUp = waking;
   backendError = isError;
+  if (status) {
+    backendStatus = status;
+  } else if (isError) {
+    backendStatus = 'error';
+  } else if (waking) {
+    backendStatus = 'connecting';
+  } else {
+    backendStatus = 'connected';
+  }
+
+  if (backendStatus === 'connected') {
+    hasConnectedOnce = true;
+  }
+
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new CustomEvent('backend-status', {
         detail: {
           wakingUp: waking,
           error: isError,
+          status: backendStatus,
+          connected: backendStatus === 'connected',
           message: message ?? (waking ? STARTING_AI_WEATHER_ENGINE_MSG : isError ? SERVER_WAKING_UP_MSG : ''),
         },
       })
@@ -164,6 +197,11 @@ export async function fetchWithReconnect<T = any>(
     const startTime = Date.now();
     let attempt = 0;
 
+    // Notify connecting status on initial fetch before first connection
+    if (!hasConnectedOnce && backendStatus !== 'connecting') {
+      setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG, 'connecting');
+    }
+
     while (Date.now() - startTime < totalTimeout) {
       attempt++;
       const totalRemaining = totalTimeout - (Date.now() - startTime);
@@ -204,9 +242,7 @@ export async function fetchWithReconnect<T = any>(
         if (res.ok) {
           coldStartLogged = false;
           coldStartExhaustedLogged = false;
-          if (backendWakingUp || backendError) {
-            setBackendStatus(false, false, '');
-          }
+          setBackendStatus(false, false, '', 'connected');
           const data = await res.json();
           return data as T;
         }
@@ -237,7 +273,7 @@ export async function fetchWithReconnect<T = any>(
       }
 
       if (isRetryable) {
-        setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG);
+        setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG, 'connecting');
         if (!coldStartLogged) {
           coldStartLogged = true;
           console.info(`[NabhDrishti] Backend is waking up. ${STARTING_AI_WEATHER_ENGINE_MSG}`);
@@ -257,7 +293,7 @@ export async function fetchWithReconnect<T = any>(
     }
 
     // Requirement 4: If all retries fail, throw clean error
-    setBackendStatus(false, true, SERVER_WAKING_UP_MSG);
+    setBackendStatus(false, true, SERVER_WAKING_UP_MSG, 'error');
     if (!coldStartExhaustedLogged) {
       coldStartExhaustedLogged = true;
       console.warn(`[NabhDrishti] Cold start retries exhausted after ${Math.round((Date.now() - startTime) / 1000)}s: ${SERVER_WAKING_UP_MSG}`);
