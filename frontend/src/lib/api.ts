@@ -58,48 +58,98 @@ export {
   ENGINE_STATUS,
 };
 
-function getApiBases(): string[] {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (envUrl) {
-    const raw = envUrl.trim().replace(/\/+$/, '');
-    const formatted = raw.endsWith('/api') ? raw : `${raw}/api`;
-    return [formatted];
-  }
-  return ['http://localhost:5001/api', 'http://localhost:5000/api'];
+/**
+ * Centralized API Base Configuration
+ * Backend Render URL: https://sih-mvp202681.onrender.com
+ */
+export const API = "https://sih-mvp202681.onrender.com";
+
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === "production" ? API : "http://localhost:5000");
+
+function getFormattedApiBase(): string {
+  const raw = API_BASE.trim().replace(/\/+$/, '');
+  return raw.endsWith('/api') ? raw : `${raw}/api`;
 }
 
-const API_BASES: string[] = getApiBases();
+const MAX_RETRIES = 3;
+const TIMEOUT_MS = 15000; // 15-second timeout for Render cold start
+
+export const RENDER_COLD_START_MSG = "Backend is waking up. Please wait a few seconds.";
+
+let backendWakingUp = false;
+
+export function isBackendWakingUp(): boolean {
+  return backendWakingUp;
+}
+
+function setWakingUpStatus(waking: boolean) {
+  backendWakingUp = waking;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('backend-status', {
+        detail: {
+          wakingUp: waking,
+          message: waking ? RENDER_COLD_START_MSG : '',
+        },
+      })
+    );
+  }
+}
 
 /**
- * Generic safe fetch with multi-port detection, timeout, and fallback.
+ * Generic safe fetch with Render cold-start handling:
+ * - Retries failed requests up to 3 times
+ * - 15-second timeout per attempt
+ * - Friendly error: "Backend is waking up. Please wait a few seconds."
+ * - Returns fallback on persistent error without crashing the page
  */
 async function fetchFromApi<T>(endpoint: string, fallback: T): Promise<T> {
-  const isCloud = API_BASES.some(b => !b.includes('localhost'));
-  const timeoutMs = isCloud ? 8000 : 2500;
+  const base = getFormattedApiBase();
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${base}${cleanEndpoint}`;
 
-  for (const base of API_BASES) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-      const res = await fetch(`${base}${endpoint}`, {
+      const res = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
 
       clearTimeout(timeoutId);
 
       if (res.ok) {
+        if (backendWakingUp) {
+          setWakingUpStatus(false);
+        }
         const data = await res.json();
         return data as T;
       }
+
+      // If server returned 5xx (e.g. Render 502/503 during wake-up)
+      if (res.status >= 500) {
+        console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (${res.status}): ${RENDER_COLD_START_MSG}`);
+        setWakingUpStatus(true);
+      }
     } catch {
-      // Continue to next candidate base URL
+      clearTimeout(timeoutId);
+      console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES}: ${RENDER_COLD_START_MSG}`);
+      setWakingUpStatus(true);
+    }
+
+    // Delay 1.5s between retries to give Render time to spin up
+    if (attempt < MAX_RETRIES) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     }
   }
 
+  // Gracefully return fallback so components show valid UI without crashing
   return fallback;
 }
 
