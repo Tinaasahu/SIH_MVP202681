@@ -158,9 +158,9 @@ export async function fetchWithReconnect<T = any>(
     attempt++;
     const totalRemaining = totalTimeout - (Date.now() - startTime);
     if (totalRemaining <= 0) break;
-
-// Allow one request to wait for the full remaining time
-const currentTimeout = totalRemaining;    const controller = new AbortController();
+    // Allow request to wait for the remaining window so in-flight requests are not cancelled prematurely during Render cold start
+    const currentTimeout = totalRemaining;
+    const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
 
     if (options?.signal) {
@@ -178,19 +178,15 @@ const currentTimeout = totalRemaining;    const controller = new AbortController
     try {
       const url = buildApiUrl(endpoint);
       const res = await fetch(url, {
-  ...options,
-  signal: controller.signal,
-
-  // Force a fresh request to Render
-  cache: "no-store",
-
-  headers: {
-    Accept: "application/json",
-    "Cache-Control": "no-cache",
-    Pragma: "no-cache",
-    ...(options?.headers || {}),
-  },
-});
+        ...options,
+        signal: controller.signal,
+        // Force fresh response without sending non-safelisted headers that trigger OPTIONS preflight
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+          ...(options?.headers || {}),
+        },
+      });
 
       clearTimeout(timeoutId);
 
