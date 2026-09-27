@@ -136,6 +136,8 @@ export interface FetchOptions extends RequestInit {
 let coldStartLogged = false;
 let coldStartExhaustedLogged = false;
 
+const inFlightRequests = new Map<string, Promise<any>>();
+
 /**
  * Reusable fetch helper with Render cold start auto-reconnect:
  * - Uses NEXT_PUBLIC_API_URL
@@ -149,110 +151,129 @@ export async function fetchWithReconnect<T = any>(
   endpoint: string,
   options?: FetchOptions
 ): Promise<T> {
-  const totalTimeout = options?.totalTimeoutMs ?? RETRY_TIMEOUT_MS;
-  const retryInterval = options?.retryIntervalMs ?? RETRY_INTERVAL_MS;
-  const startTime = Date.now();
-  let attempt = 0;
+  const isGet = !options?.method || options.method.toUpperCase() === 'GET';
+  const cacheKey = isGet ? buildApiUrl(endpoint) : null;
 
-  while (Date.now() - startTime < totalTimeout) {
-    attempt++;
-    const totalRemaining = totalTimeout - (Date.now() - startTime);
-    if (totalRemaining <= 0) break;
-    // Allow request to wait for the remaining window so in-flight requests are not cancelled prematurely during Render cold start
-    const currentTimeout = totalRemaining;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
+  if (cacheKey && inFlightRequests.has(cacheKey)) {
+    return inFlightRequests.get(cacheKey) as Promise<T>;
+  }
 
-    if (options?.signal) {
-      if (options.signal.aborted) {
-        controller.abort();
-      } else {
-        options.signal.addEventListener('abort', () => controller.abort(), { once: true });
-      }
-    }
+  const executeFetch = async (): Promise<T> => {
+    const totalTimeout = options?.totalTimeoutMs ?? RETRY_TIMEOUT_MS;
+    const retryInterval = options?.retryIntervalMs ?? RETRY_INTERVAL_MS;
+    const startTime = Date.now();
+    let attempt = 0;
 
-    const attemptStart = Date.now();
-    let isRetryable = false;
-    let reason = '';
+    while (Date.now() - startTime < totalTimeout) {
+      attempt++;
+      const totalRemaining = totalTimeout - (Date.now() - startTime);
+      if (totalRemaining <= 0) break;
+      // Allow request to wait for the remaining window so in-flight requests are not cancelled prematurely during Render cold start
+      const currentTimeout = totalRemaining;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
 
-    try {
-      const url = buildApiUrl(endpoint);
-      const res = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-        // Force fresh response without sending non-safelisted headers that trigger OPTIONS preflight
-        cache: 'no-store',
-        headers: {
-          Accept: 'application/json',
-          ...(options?.headers || {}),
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      // Requirement 3: As soon as one request succeeds, return the response normally
-      if (res.ok) {
-        coldStartLogged = false;
-        coldStartExhaustedLogged = false;
-        if (backendWakingUp || backendError) {
-          setBackendStatus(false, false, '');
+      if (options?.signal) {
+        if (options.signal.aborted) {
+          controller.abort();
+        } else {
+          options.signal.addEventListener('abort', () => controller.abort(), { once: true });
         }
-        const data = await res.json();
-        return data as T;
       }
 
-      // Check HTTP 502, 503, 504
-      if (res.status === 502 || res.status === 503 || res.status === 504) {
-        isRetryable = true;
-        reason = `HTTP ${res.status}`;
-      } else {
-        const errorText = await res.text().catch(() => res.statusText);
-        throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
-      }
-    } catch (err: unknown) {
-      clearTimeout(timeoutId);
+      const attemptStart = Date.now();
+      let isRetryable = false;
+      let reason = '';
 
-      if (err instanceof Error && err.name === 'AbortError') {
-        isRetryable = true;
-        reason = 'Timeout';
-      } else if (err instanceof TypeError) {
-        // Network failure
-        isRetryable = true;
-        reason = 'Network failure';
-      } else if (isRetryable) {
-        // Already marked retryable
-      } else {
-        throw err;
+      try {
+        const url = buildApiUrl(endpoint);
+        const res = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          // Force fresh response without sending non-safelisted headers that trigger OPTIONS preflight
+          cache: 'no-store',
+          headers: {
+            Accept: 'application/json',
+            ...(options?.headers || {}),
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        // Requirement 3: As soon as one request succeeds, return the response normally
+        if (res.ok) {
+          coldStartLogged = false;
+          coldStartExhaustedLogged = false;
+          if (backendWakingUp || backendError) {
+            setBackendStatus(false, false, '');
+          }
+          const data = await res.json();
+          return data as T;
+        }
+
+        // Check HTTP 502, 503, 504
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          isRetryable = true;
+          reason = `HTTP ${res.status}`;
+        } else {
+          const errorText = await res.text().catch(() => res.statusText);
+          throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+        }
+      } catch (err: unknown) {
+        clearTimeout(timeoutId);
+
+        if (err instanceof Error && err.name === 'AbortError') {
+          isRetryable = true;
+          reason = 'Timeout';
+        } else if (err instanceof TypeError) {
+          // Network failure
+          isRetryable = true;
+          reason = 'Network failure';
+        } else if (isRetryable) {
+          // Already marked retryable
+        } else {
+          throw err;
+        }
+      }
+
+      if (isRetryable) {
+        setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG);
+        if (!coldStartLogged) {
+          coldStartLogged = true;
+          console.info(`[NabhDrishti] Backend is waking up. ${STARTING_AI_WEATHER_ENGINE_MSG}`);
+        }
+
+        const elapsed = Date.now() - attemptStart;
+        const delay = Math.max(0, retryInterval - elapsed);
+        const remainingWindow = totalTimeout - (Date.now() - startTime);
+
+        if (remainingWindow <= 0) break;
+
+        const waitTime = Math.min(delay, remainingWindow);
+        if (waitTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
       }
     }
 
-    if (isRetryable) {
-      setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG);
-      if (!coldStartLogged) {
-        coldStartLogged = true;
-        console.info(`[NabhDrishti] Backend is waking up. ${STARTING_AI_WEATHER_ENGINE_MSG}`);
-      }
-
-      const elapsed = Date.now() - attemptStart;
-      const delay = Math.max(0, retryInterval - elapsed);
-      const remainingWindow = totalTimeout - (Date.now() - startTime);
-
-      if (remainingWindow <= 0) break;
-
-      const waitTime = Math.min(delay, remainingWindow);
-      if (waitTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-      }
+    // Requirement 4: If all retries fail, throw clean error
+    setBackendStatus(false, true, SERVER_WAKING_UP_MSG);
+    if (!coldStartExhaustedLogged) {
+      coldStartExhaustedLogged = true;
+      console.warn(`[NabhDrishti] Cold start retries exhausted after ${Math.round((Date.now() - startTime) / 1000)}s: ${SERVER_WAKING_UP_MSG}`);
     }
+    throw new Error(SERVER_WAKING_UP_MSG);
+  };
+
+  const promise = executeFetch();
+  if (cacheKey) {
+    inFlightRequests.set(cacheKey, promise);
+    promise.finally(() => {
+      inFlightRequests.delete(cacheKey);
+    });
   }
 
-  // Requirement 4: If all retries fail, throw clean error
-  setBackendStatus(false, true, SERVER_WAKING_UP_MSG);
-  if (!coldStartExhaustedLogged) {
-    coldStartExhaustedLogged = true;
-    console.warn(`[NabhDrishti] Cold start retries exhausted after ${Math.round((Date.now() - startTime) / 1000)}s: ${SERVER_WAKING_UP_MSG}`);
-  }
-  throw new Error(SERVER_WAKING_UP_MSG);
+  return promise;
 }
 
 /**
@@ -387,16 +408,67 @@ export async function getConfidence(city?: string, lead_day?: number): Promise<C
   return fetchFromApi<ConfidenceRecord[]>(`/confidence${query}`, []);
 }
 
+// Active in-flight singleton and memory cache for forecast records
+let activeForecastPromise: Promise<ForecastRecord[]> | null = null;
+let cachedForecastRecords: ForecastRecord[] | null = null;
+let lastForecastFetchTime = 0;
+const FORECAST_CACHE_TTL_MS = 60000; // 60 seconds
+
+function filterForecastRecords(records: ForecastRecord[], city?: string, lead_days?: number): ForecastRecord[] {
+  if (!records || !Array.isArray(records)) return [];
+  let result = records;
+  if (city) {
+    const cityLower = city.trim().toLowerCase();
+    result = result.filter((r) => (r.city || '').trim().toLowerCase() === cityLower);
+  }
+  if (lead_days !== undefined && lead_days !== null) {
+    const ld = Number(lead_days);
+    result = result.filter((r) => Number(r.lead_days) === ld);
+  }
+  return result;
+}
+
+export function clearForecastCache(): void {
+  cachedForecastRecords = null;
+  lastForecastFetchTime = 0;
+  activeForecastPromise = null;
+}
+
 /**
  * GET /api/forecast
- * Returns hybrid_forecast.csv records
+ * Returns hybrid_forecast.csv records.
+ * Uses a singleton in-flight promise and memory cache to guarantee:
+ * 1. Only ONE forecast request is active at a time.
+ * 2. Zero duplicate forecast requests during mount or StrictMode re-mount.
+ * 3. Never cancelled while Render wakes up.
  */
 export async function getForecast(city?: string, lead_days?: number): Promise<ForecastRecord[]> {
-  const params = new URLSearchParams();
-  if (city) params.append('city', city);
-  if (lead_days) params.append('lead_days', String(lead_days));
-  const query = params.toString() ? `?${params.toString()}` : '';
-  return fetchFromApi<ForecastRecord[]>(`/forecast${query}`, []);
+  const now = Date.now();
+  if (cachedForecastRecords && now - lastForecastFetchTime < FORECAST_CACHE_TTL_MS) {
+    return filterForecastRecords(cachedForecastRecords, city, lead_days);
+  }
+
+  if (!activeForecastPromise) {
+    activeForecastPromise = (async () => {
+      try {
+        const records = await fetchFromApi<ForecastRecord[]>('/forecast', []);
+        if (records && records.length > 0) {
+          cachedForecastRecords = records;
+          lastForecastFetchTime = Date.now();
+        }
+        return records || [];
+      } finally {
+        activeForecastPromise = null;
+      }
+    })();
+  }
+
+  try {
+    const allRecords = await activeForecastPromise;
+    return filterForecastRecords(allRecords, city, lead_days);
+  } catch {
+    return [];
+  }
 }
 
 /**
