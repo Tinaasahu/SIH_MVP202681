@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { MOCK_MODEL_COMPARISON } from '@/data/mockData';
-import { Variable } from '@/types';
+import { getModelComparisonData, MOCK_MODEL_COMPARISON } from '@/lib/api';
+import type { ModelComparison as ModelComparisonType, Variable } from '@/types';
 import { BarChart3 } from 'lucide-react';
 
 const VARIABLE_CONFIG: Record<Variable, { label: string; unit: string; color: string }> = {
@@ -15,18 +15,46 @@ const VARIABLE_CONFIG: Record<Variable, { label: string; unit: string; color: st
   wind: { label: 'Wind', unit: 'km/h', color: '#8b5cf6' },
 };
 
-export function ModelComparison() {
+interface ModelComparisonProps {
+  selectedCity?: string | null;
+}
+
+export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProps) {
   const [variable, setVariable] = useState<Variable>('rainfall');
+  const [comparison, setComparison] = useState<ModelComparisonType[]>(MOCK_MODEL_COMPARISON);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getModelComparisonData(selectedCity || 'Kanpur')
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setComparison(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCity]);
+
   const config = VARIABLE_CONFIG[variable];
 
-  const chartData = MOCK_MODEL_COMPARISON.map(m => ({
+  const chartData = comparison.map(m => ({
     model: m.model,
     value: m[variable],
     isBlended: m.isBlended,
   }));
 
   return (
-    <GlassCard padding="md" className="flex flex-col justify-between h-full">
+    <GlassCard padding="md" variant="yellow" className="flex flex-col justify-between h-full">
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>

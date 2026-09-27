@@ -1,5 +1,6 @@
 'use client';
 import { ModelSkillPanel } from '@/components/ModelSkill';
+import { PerformanceMatrix3D } from '@/components/PerformanceMatrix3D';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { BarChart3, TrendingDown } from 'lucide-react';
 import { MOCK_SKILL_METRICS } from '@/data/mockData';
@@ -18,6 +19,9 @@ export function ModelPerformancePage() {
       </div>
 
       <ModelSkillPanel />
+
+      {/* 3D Performance Matrix */}
+      <PerformanceMatrix3D />
 
       {/* Historical skill summary */}
       <GlassCard padding="md">

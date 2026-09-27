@@ -1,0 +1,571 @@
+/* ==========================================================================
+   Atmosphere Layer - Ultra-Visible 60 FPS Context-Aware Weather Environment
+   Features Dual-Layer Rendering:
+     1. Deep Sky Environmental Backdrop (z-index: 0, behind cards)
+     2. Immersive Precipitation & Particle Overlay (z-index: 25, non-blocking)
+   ========================================================================== */
+
+/* Fullscreen Background Sky Layer (Underneath all cards & UI) */
+.backdropContainer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), background 1.5s ease;
+  will-change: opacity, background;
+}
+
+/* Fullscreen Foreground Weather Particles & Lighting Layer (Over cards, non-blocking) */
+.foregroundContainer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 25;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+/* ==========================================================================
+   0. SIMPLE UI THEME (Classic Clean Mode)
+   Original gentle gradient background without any weather animations or particles
+   ========================================================================== */
+.simpleBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 15% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 60% at 85% 25%, rgba(14, 165, 233, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 80% at 50% 85%, rgba(99, 102, 241, 0.05) 0%, transparent 70%),
+    linear-gradient(180deg, #f4f7fb 0%, #edf2f8 100%);
+}
+
+/* ==========================================================================
+   1. SUNNY THEME
+   Warm yellow ambient background with sun rays rotating BEHIND dashboard cards.
+   Zero foreground clutter so cards, charts, and data stay 100% clean and pristine.
+   ========================================================================== */
+.sunnyBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle 950px at 85% 10%, rgba(251, 191, 36, 0.42) 0%, rgba(245, 158, 11, 0.18) 45%, transparent 75%),
+    radial-gradient(circle 800px at 15% 35%, rgba(254, 240, 138, 0.35) 0%, transparent 70%),
+    linear-gradient(180deg, #fef08a 0%, #fef9c3 35%, #fef3c7 75%, #fef08a 100%);
+}
+
+.sunDisc {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 15%, #fef08a 45%, #fbbf24 75%, transparent 100%);
+  box-shadow: 0 0 120px rgba(251, 191, 36, 0.75), 0 0 60px rgba(245, 158, 11, 0.5);
+  opacity: 0.85;
+}
+
+.sunRays {
+  position: absolute;
+  top: -300px;
+  right: -300px;
+  width: 1400px;
+  height: 1400px;
+  opacity: 0.55; /* Soft golden beams rotating behind cards */
+  transform-origin: center center;
+  animation: rotateRays 85s linear infinite;
+  will-change: transform;
+}
+
+@keyframes rotateRays {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   2. CLOUDY THEME
+   Dramatic overcast sky, dense drifting cumulus cloud decks
+   ========================================================================== */
+.cloudyBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 75% at 50% 10%, rgba(148, 163, 184, 0.6) 0%, transparent 80%),
+    linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 45%, #f1f5f9 100%);
+}
+
+.cloudLayer1 {
+  position: absolute;
+  top: 2%;
+  left: -25%;
+  width: 150%;
+  height: 380px;
+  opacity: 0.72;
+  filter: drop-shadow(0 15px 25px rgba(71, 85, 105, 0.25));
+  animation: driftRight 50s linear infinite;
+  will-change: transform;
+}
+
+.cloudLayer2 {
+  position: absolute;
+  top: 20%;
+  left: -35%;
+  width: 170%;
+  height: 420px;
+  opacity: 0.62;
+  filter: drop-shadow(0 15px 30px rgba(100, 116, 139, 0.2));
+  animation: driftRight 75s linear infinite;
+  animation-delay: -25s;
+  will-change: transform;
+}
+
+.cloudLayer3 {
+  position: absolute;
+  top: 45%;
+  left: -20%;
+  width: 150%;
+  height: 380px;
+  opacity: 0.52;
+  filter: drop-shadow(0 15px 30px rgba(148, 163, 184, 0.2));
+  animation: driftRight 110s linear infinite;
+  animation-delay: -55s;
+  will-change: transform;
+}
+
+@keyframes driftRight {
+  0% {
+    transform: translate3d(-18%, 0, 0);
+  }
+  50% {
+    transform: translate3d(8%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-18%, 0, 0);
+  }
+}
+
+/* ==========================================================================
+   3. RAIN THEME
+   Atmospheric dark slate tempest sky, dense high-visibility falling rain downpour
+   ========================================================================== */
+.rainBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 110% 75% at 50% 0%, rgba(30, 41, 59, 0.85) 0%, rgba(51, 65, 85, 0.55) 50%, transparent 90%),
+    linear-gradient(180deg, #334155 0%, #475569 45%, #64748b 80%, #94a3b8 100%);
+}
+
+.rainCloudCanopy {
+  position: absolute;
+  top: -30px;
+  left: -10%;
+  width: 120%;
+  height: 320px;
+  opacity: 0.85;
+  filter: drop-shadow(0 20px 35px rgba(15, 23, 42, 0.4));
+  animation: driftCanopy 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes driftCanopy {
+  from {
+    transform: translate3d(-4%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+.rainContainer {
+  position: absolute;
+  inset: -150px;
+  opacity: 0.88;
+  overflow: hidden;
+  transform: rotate(-15deg);
+}
+
+.rainDrop {
+  position: absolute;
+  top: -140px;
+  width: 1.2px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, transparent 0%, rgba(147, 197, 253, 0.25) 30%, rgba(186, 230, 253, 0.65) 80%, rgba(241, 245, 249, 0.85) 100%);
+  box-shadow: 0 0 1px rgba(186, 230, 253, 0.35);
+  animation: fallRain 0.75s linear infinite;
+  will-change: transform;
+}
+
+.rainDropHeavy {
+  position: absolute;
+  top: -160px;
+  width: 1.8px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, transparent 0%, rgba(125, 178, 226, 0.3) 30%, rgba(186, 230, 253, 0.75) 85%, rgba(241, 245, 249, 0.9) 100%);
+  box-shadow: 0 0 1.5px rgba(186, 230, 253, 0.45);
+  animation: fallRain 0.65s linear infinite;
+  will-change: transform;
+}
+
+@keyframes fallRain {
+  0% {
+    transform: translate3d(0, -140px, 0);
+  }
+  100% {
+    transform: translate3d(0, 130vh, 0);
+  }
+}
+
+.rainMist {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(180deg, transparent 0%, rgba(219, 234, 254, 0.2) 100%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   4. THUNDERSTORM THEME
+   Midnight charcoal sky, violent torrential downpour, high-voltage lightning flashes
+   ========================================================================== */
+.stormBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 110% 85% at 50% 0%, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, transparent 95%),
+    linear-gradient(180deg, #0f172a 0%, #1e1b4b 40%, #1e293b 80%, #334155 100%);
+}
+
+.lightningFlash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 65% 20%, rgba(255, 255, 255, 1) 0%, rgba(191, 219, 254, 0.95) 40%, rgba(147, 197, 253, 0.6) 75%, transparent 100%);
+  opacity: 0;
+  animation: lightningCycle 7s infinite ease-out;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+@keyframes lightningCycle {
+  0%, 88%, 100% {
+    opacity: 0;
+  }
+  89% {
+    opacity: 0.85; /* Dazzling primary strike */
+  }
+  90% {
+    opacity: 0.15;
+  }
+  91% {
+    opacity: 0.75; /* Secondary return stroke */
+  }
+  92% {
+    opacity: 0.05;
+  }
+  93% {
+    opacity: 0.55; /* Tertiary flare */
+  }
+  94% {
+    opacity: 0;
+  }
+}
+
+.lightningBolt {
+  position: absolute;
+  top: 0;
+  right: 18%;
+  width: 240px;
+  height: 480px;
+  opacity: 0;
+  animation: boltStrike 7s infinite linear;
+  filter: drop-shadow(0 0 25px #60a5fa) drop-shadow(0 0 50px #ffffff);
+  will-change: opacity, transform;
+}
+
+@keyframes boltStrike {
+  0%, 88%, 100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  89% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  90% {
+    opacity: 0.1;
+  }
+  91% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  92% {
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   5. HEATWAVE THEME
+   Fiery copper/crimson thermal atmosphere, active shimmering SVG distortion & embers
+   ========================================================================== */
+.heatwaveBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 110% 85% at 50% 10%, rgba(234, 88, 12, 0.65) 0%, rgba(249, 115, 22, 0.35) 45%, transparent 85%),
+    linear-gradient(180deg, #fdba74 0%, #fed7aa 40%, #ffedd5 80%, #fff7ed 100%);
+}
+
+.heatShimmer {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55; /* Prominently visible convective heat ripples */
+  filter: url(#heat-shimmer-filter);
+  background: radial-gradient(ellipse at 50% 30%, rgba(251, 146, 60, 0.6) 0%, rgba(239, 68, 68, 0.35) 60%, transparent 100%);
+  animation: shimmerDrift 6s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes shimmerDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(0, -25px, 0) scale(1.04);
+  }
+}
+
+.heatEmber {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #fbbf24 50%, #ea580c 100%);
+  box-shadow: 0 0 12px #f97316, 0 0 4px #ffffff;
+  animation: floatEmber 9s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes floatEmber {
+  0% {
+    transform: translate3d(0, 100vh, 0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(60px, -20vh, 0) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   6. FOG THEME
+   Dynamic rolling mist banks in the background that roll across and clear away.
+   Never overlays or blurs dashboard cards so important info remains 100% clear.
+   ========================================================================== */
+.fogBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 75% at 50% 20%, rgba(148, 163, 184, 0.35) 0%, transparent 85%),
+    linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 45%, #f1f5f9 85%, #ffffff 100%);
+}
+
+.fogMist1 {
+  position: absolute;
+  top: 4%;
+  left: -25%;
+  width: 150%;
+  height: 480px;
+  filter: blur(24px);
+  opacity: 0.32;
+  background: radial-gradient(ellipse at center, rgba(241, 245, 249, 0.95) 0%, rgba(203, 213, 225, 0.55) 60%, transparent 100%);
+  animation: fogRollAndClear1 28s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.fogMist2 {
+  position: absolute;
+  top: 40%;
+  right: -25%;
+  width: 150%;
+  height: 500px;
+  filter: blur(28px);
+  opacity: 0.28;
+  background: radial-gradient(ellipse at center, rgba(248, 250, 252, 0.95) 0%, rgba(226, 232, 240, 0.5) 60%, transparent 100%);
+  animation: fogRollAndClear2 34s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes fogRollAndClear1 {
+  0% {
+    transform: translate3d(-70px, -20px, 0);
+    opacity: 0.12;
+  }
+  35% {
+    transform: translate3d(30px, 15px, 0);
+    opacity: 0.38; /* Soft peak mist */
+  }
+  70% {
+    transform: translate3d(110px, 25px, 0);
+    opacity: 0.12; /* Clears away */
+  }
+  100% {
+    transform: translate3d(170px, 35px, 0);
+    opacity: 0.04; /* Completely clear info */
+  }
+}
+
+@keyframes fogRollAndClear2 {
+  0% {
+    transform: translate3d(80px, 20px, 0);
+    opacity: 0.06; /* Completely clear info */
+  }
+  40% {
+    transform: translate3d(-20px, -10px, 0);
+    opacity: 0.32;
+  }
+  75% {
+    transform: translate3d(-90px, -20px, 0);
+    opacity: 0.14;
+  }
+  100% {
+    transform: translate3d(-150px, -30px, 0);
+    opacity: 0.04;
+  }
+}
+
+/* ==========================================================================
+   7. SNOW THEME
+   Crisp glacial sky, frost vignette, dense crystalline snowfall
+   ========================================================================== */
+.snowBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 75% at 50% 10%, rgba(56, 189, 248, 0.55) 0%, transparent 80%),
+    linear-gradient(180deg, #bae6fd 0%, #e0f2fe 45%, #f0f9ff 100%);
+}
+
+.frostVignette {
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 0 0 160px rgba(186, 230, 253, 0.75),
+    inset 0 0 60px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+.snowFlake {
+  position: absolute;
+  top: -30px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 12px #ffffff, 0 0 24px rgba(186, 230, 253, 0.95);
+  animation: snowfall 7s linear infinite;
+  will-change: transform;
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translate3d(0, -30px, 0) scale(0.85);
+    opacity: 0.2;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  90% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(60px, 105vh, 0) scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Atmosphere Status & Quick Tester Pill (Fixed at bottom right)
+   ========================================================================== */
+.atmoPill {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.atmoPill:hover {
+  background: rgba(15, 23, 42, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.atmoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: dotPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility Override
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .sunRays,
+  .cloudLayer1,
+  .cloudLayer2,
+  .cloudLayer3,
+  .rainCloudCanopy,
+  .rainDrop,
+  .rainDropHeavy,
+  .lightningFlash,
+  .lightningBolt,
+  .heatShimmer,
+  .heatEmber,
+  .fogMist1,
+  .fogMist2,
+  .snowFlake {
+    animation: none !important;
+    transform: none !important;
+  }
+}
