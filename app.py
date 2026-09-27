@@ -77,7 +77,17 @@ def add_cors_headers(response):
     return response
 
 
+@app.route('/favicon.ico')
+def favicon():
+    """Return 204 No Content to satisfy browser requests without 404."""
+    return ('', 204)
+
+
 @app.route('/')
+@app.route('/api')
+@app.route('/api/')
+@app.route('/health')
+@app.route('/healthz')
 def index():
     return jsonify({
         "status": "online",
@@ -99,6 +109,7 @@ def index():
 
 
 @app.route('/api/metadata', methods=['GET'])
+@app.route('/metadata', methods=['GET'])
 def get_metadata():
     """
     Returns forecast freshness metadata:
@@ -122,6 +133,7 @@ def get_metadata():
 
 
 @app.route('/api/forecast', methods=['GET'])
+@app.route('/forecast', methods=['GET'])
 def get_forecast():
     """
     Returns records from outputs/blended_forecast.csv.
@@ -171,6 +183,7 @@ def get_forecast():
 
 
 @app.route('/api/weights', methods=['GET'])
+@app.route('/weights', methods=['GET'])
 def get_weights():
     """
     Returns records from outputs/model_weights_lead.csv.
@@ -205,6 +218,7 @@ def get_weights():
 
 
 @app.route('/api/skill', methods=['GET'])
+@app.route('/skill', methods=['GET'])
 def get_skill():
     """
     Returns records from outputs/skill_scores_lead.csv.
@@ -239,6 +253,7 @@ def get_skill():
 
 
 @app.route('/api/alerts', methods=['GET'])
+@app.route('/alerts', methods=['GET'])
 def get_alerts():
     """
     Returns records from outputs/extreme_alerts.csv.
@@ -259,6 +274,7 @@ def get_alerts():
 
 
 @app.route('/api/cities', methods=['GET'])
+@app.route('/cities', methods=['GET'])
 def get_cities():
     """
     Returns unique cities and their latitude/longitude coordinates from
@@ -280,6 +296,7 @@ def get_cities():
 
 
 @app.route('/api/confidence', methods=['GET'])
+@app.route('/confidence', methods=['GET'])
 def get_confidence():
     """
     Returns records from outputs/confidence_scores.csv.
@@ -309,6 +326,7 @@ def get_confidence():
 
 
 @app.route('/api/rpi', methods=['GET'])
+@app.route('/rpi', methods=['GET'])
 def get_rpi():
     """
     Risk Priority Index (RPI) - Government Emergency Operations Decision Support.
@@ -531,6 +549,7 @@ def get_rpi():
 
 
 @app.route('/api/rpi/map', methods=['GET'])
+@app.route('/rpi/map', methods=['GET'])
 def get_rpi_map():
     """
     Returns GeoJSON FeatureCollection of all Indian synoptic stations with RPI attributes
@@ -625,6 +644,28 @@ def get_rpi_map():
             "crs": "EPSG:4326"
         }
     })
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({
+        "error": "Not Found",
+        "message": "The requested endpoint does not exist.",
+        "status": 404,
+        "available_endpoints": {
+            "root": "/",
+            "health": "/health",
+            "metadata": "/api/metadata",
+            "forecast": "/api/forecast",
+            "weights": "/api/weights",
+            "skill": "/api/skill",
+            "alerts": "/api/alerts",
+            "cities": "/api/cities",
+            "confidence": "/api/confidence",
+            "rpi": "/api/rpi",
+            "rpi_map": "/api/rpi/map"
+        }
+    }), 404
 
 
 if __name__ == '__main__':
