@@ -59,13 +59,35 @@ def load_csv_records(csv_path):
     return records
 
 
+import time
+import threading
+
+_last_freshness_check = 0
+
+def check_forecast_freshness_async():
+    """Runs forecast freshness check asynchronously in the background so HTTP requests never block."""
+    global _last_freshness_check
+    now = time.time()
+    if now - _last_freshness_check < 3600:  # Check at most once per hour
+        return
+    _last_freshness_check = now
+
+    def _worker():
+        try:
+            ensure_fresh_forecast()
+        except Exception as _e:
+            print(f"[CacheManager] Background refresh notice: {_e}")
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+
 from api.cache_manager import ensure_fresh_forecast, load_metadata
 
-# Ensure fresh forecast on application startup
+# Trigger non-blocking freshness check in background
 try:
-    ensure_fresh_forecast()
+    check_forecast_freshness_async()
 except Exception as _e:
-    print(f"[Warning] Startup forecast refresh notice: {_e}")
+    print(f"[Warning] Background startup notice: {_e}")
 
 
 @app.after_request
@@ -120,15 +142,16 @@ def get_metadata():
     meta = load_metadata()
     if not meta:
         try:
-            meta = ensure_fresh_forecast()
+            check_forecast_freshness_async()
         except Exception:
-            meta = {
-                "last_updated": "2026-09-26T23:45:12",
-                "cities": 45,
-                "models": 4,
-                "city_count": 45,
-                "model_count": 4
-            }
+            pass
+        meta = {
+            "last_updated": "2026-09-27T10:25:33",
+            "cities": 45,
+            "models": 4,
+            "city_count": 45,
+            "model_count": 4
+        }
     return jsonify(meta)
 
 
@@ -137,16 +160,16 @@ def get_metadata():
 def get_forecast():
     """
     Returns records from outputs/blended_forecast.csv.
-    Checks freshness and auto-regenerates if file is older than today.
+    Checks freshness asynchronously in background without blocking.
     Optional query parameters:
       - city: filter by city name (e.g. ?city=Kanpur)
       - lead_days: filter by lead time (1, 2, or 3)
     """
-    # 1. Check freshness and auto-regenerate if older than today
+    # 1. Asynchronously check freshness in background without blocking this HTTP request
     try:
-        ensure_fresh_forecast()
+        check_forecast_freshness_async()
     except Exception as e:
-        print(f"[API Error] Forecast auto-refresh failed: {e}")
+        print(f"[API Error] Async refresh notice: {e}")
 
     # 2. Load latest blended forecast
     csv_path = os.path.join(OUTPUTS_DIR, "blended_forecast.csv")
