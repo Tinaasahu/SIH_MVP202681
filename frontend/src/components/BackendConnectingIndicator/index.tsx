@@ -18,25 +18,24 @@ import { getBackendStatus, BackendStatusType } from '@/lib/api';
 export function BackendConnectingIndicator() {
   const [status, setStatus] = useState<BackendStatusType>(() => {
     if (typeof window === 'undefined') return 'idle';
-    const initial = getBackendStatus();
-    return initial === 'connecting' ? 'connecting' : initial === 'connected' ? 'connected' : 'idle';
+    return getBackendStatus() === 'connecting' ? 'connecting' : 'idle';
   });
-
   const [visible, setVisible] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    const initial = getBackendStatus();
-    return initial === 'connecting' || initial === 'connected';
+    return getBackendStatus() === 'connecting';
   });
 
+  const wasConnectingRef = useRef<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const exitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    // Check status on mount
+    // Check status on mount: only show if actively waking up / connecting
     const current = getBackendStatus();
     if (current === 'connecting') {
+      wasConnectingRef.current = true;
       setStatus('connecting');
       setVisible(true);
     }
@@ -52,28 +51,39 @@ export function BackendConnectingIndicator() {
       if (!mounted || !detail) return;
 
       if (detail.status === 'connecting' || detail.wakingUp) {
+        wasConnectingRef.current = true;
         if (timerRef.current) clearTimeout(timerRef.current);
         if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
         setStatus('connecting');
         setVisible(true);
       } else if (detail.status === 'connected' || detail.connected) {
-        setStatus('connected');
-        setVisible(true);
+        // Only show green success pill if it was previously in connecting / waking-up state!
+        // Do not show on instant normal loads or page reloads when backend was already awake.
+        if (wasConnectingRef.current) {
+          wasConnectingRef.current = false;
+          setStatus('connected');
+          setVisible(true);
 
-        if (timerRef.current) clearTimeout(timerRef.current);
-        if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+          if (timerRef.current) clearTimeout(timerRef.current);
+          if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
 
-        // Show green success pill for 2 seconds, then automatically hide
-        timerRef.current = setTimeout(() => {
-          if (!mounted) return;
+          // Show green success pill for 2 seconds, then automatically hide
+          timerRef.current = setTimeout(() => {
+            if (!mounted) return;
+            setVisible(false);
+            exitTimerRef.current = setTimeout(() => {
+              if (mounted) {
+                setStatus('idle');
+              }
+            }, 350); // Matches CSS transition duration
+          }, 2000);
+        } else {
+          // Normal fast fetch when backend is already connected: keep indicator hidden
+          setStatus('idle');
           setVisible(false);
-          exitTimerRef.current = setTimeout(() => {
-            if (mounted) {
-              setStatus('idle');
-            }
-          }, 350); // Matches CSS transition duration
-        }, 2000);
+        }
       } else if (detail.status === 'error' || detail.error) {
+        wasConnectingRef.current = false;
         setVisible(false);
         if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
         exitTimerRef.current = setTimeout(() => {

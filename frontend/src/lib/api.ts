@@ -197,9 +197,14 @@ export async function fetchWithReconnect<T = any>(
     const startTime = Date.now();
     let attempt = 0;
 
-    // Notify connecting status on initial fetch before first connection
+    // Only flag connecting state if the request takes >1200ms (Render cold start) or encounters a retryable error
+    let connectingTimer: NodeJS.Timeout | null = null;
     if (!hasConnectedOnce && backendStatus !== 'connecting') {
-      setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG, 'connecting');
+      connectingTimer = setTimeout(() => {
+        if (!hasConnectedOnce && backendStatus !== 'connected') {
+          setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG, 'connecting');
+        }
+      }, 1200);
     }
 
     while (Date.now() - startTime < totalTimeout) {
@@ -240,6 +245,10 @@ export async function fetchWithReconnect<T = any>(
 
         // Requirement 3: As soon as one request succeeds, return the response normally
         if (res.ok) {
+          if (connectingTimer) {
+            clearTimeout(connectingTimer);
+            connectingTimer = null;
+          }
           coldStartLogged = false;
           coldStartExhaustedLogged = false;
           setBackendStatus(false, false, '', 'connected');
@@ -272,6 +281,11 @@ export async function fetchWithReconnect<T = any>(
         }
       }
 
+      if (connectingTimer) {
+        clearTimeout(connectingTimer);
+        connectingTimer = null;
+      }
+
       if (isRetryable) {
         setBackendStatus(true, false, STARTING_AI_WEATHER_ENGINE_MSG, 'connecting');
         if (!coldStartLogged) {
@@ -290,6 +304,11 @@ export async function fetchWithReconnect<T = any>(
           await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
+    }
+
+    if (connectingTimer) {
+      clearTimeout(connectingTimer);
+      connectingTimer = null;
     }
 
     // Requirement 4: If all retries fail, throw clean error
