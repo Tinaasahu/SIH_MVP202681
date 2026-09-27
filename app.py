@@ -17,6 +17,21 @@ except (ImportError, ValueError, Exception):
 
 app = Flask(__name__)
 
+# Production CORS configuration for Vercel and local environments
+try:
+    from flask_cors import CORS
+    CORS(
+        app,
+        resources={r"/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+            "allow_headers": ["Content-Type", "Authorization", "Cache-Control", "Pragma", "Accept", "X-Requested-With", "Origin"],
+            "max_age": 86400
+        }}
+    )
+except ImportError:
+    pass
+
 # Base project paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
@@ -90,12 +105,25 @@ except Exception as _e:
     print(f"[Warning] Background startup notice: {_e}")
 
 
+@app.before_request
+def handle_options_preflight():
+    """Explicitly handle OPTIONS preflight requests for cross-origin browser clients."""
+    if request.method == 'OPTIONS':
+        res = app.make_default_options_response()
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, HEAD'
+        res.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Cache-Control, Pragma, Accept, X-Requested-With, Origin'
+        res.headers['Access-Control-Max-Age'] = '86400'
+        return res
+
+
 @app.after_request
 def add_cors_headers(response):
-    """Enable CORS for local frontend development."""
+    """Enable CORS for Vercel, Render, and local frontend origins."""
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, HEAD'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Cache-Control, Pragma, Accept, X-Requested-With, Origin'
+    response.headers['Access-Control-Max-Age'] = '86400'
     return response
 
 
