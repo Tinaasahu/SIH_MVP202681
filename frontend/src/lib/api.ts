@@ -75,7 +75,7 @@ function getFormattedApiBase(): string {
 }
 
 const MAX_RETRIES = 3;
-const TIMEOUT_MS = 15000; // 15-second timeout for Render cold start
+const TIMEOUT_MS = 35000; // 35-second timeout allowing Render free tier sufficient time to wake up
 
 export const RENDER_COLD_START_MSG = "Backend is waking up. Please wait a few seconds.";
 
@@ -102,7 +102,7 @@ function setWakingUpStatus(waking: boolean) {
 /**
  * Generic safe fetch with Render cold-start handling:
  * - Retries failed requests up to 3 times
- * - 15-second timeout per attempt
+ * - 35-second timeout per attempt to accommodate Render free-tier container spins
  * - Friendly error: "Backend is waking up. Please wait a few seconds."
  * - Returns fallback on persistent error without crashing the page
  */
@@ -135,18 +135,20 @@ async function fetchFromApi<T>(endpoint: string, fallback: T): Promise<T> {
 
       // If server returned 5xx (e.g. Render 502/503 during wake-up)
       if (res.status >= 500) {
-        console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (${res.status}): ${RENDER_COLD_START_MSG}`);
+        console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (HTTP ${res.status}): ${RENDER_COLD_START_MSG}`);
         setWakingUpStatus(true);
       }
-    } catch {
+    } catch (err: unknown) {
       clearTimeout(timeoutId);
-      console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES}: ${RENDER_COLD_START_MSG}`);
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      const reason = isAbort ? 'Timeout reached' : (err instanceof Error ? err.message : String(err));
+      console.warn(`[NabhDrishti] Attempt ${attempt}/${MAX_RETRIES} (${reason}): ${RENDER_COLD_START_MSG}`);
       setWakingUpStatus(true);
     }
 
-    // Delay 1.5s between retries to give Render time to spin up
+    // Delay between retries to give Render time to spin up (2s, 4s)
     if (attempt < MAX_RETRIES) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
     }
   }
 
