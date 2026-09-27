@@ -187,7 +187,7 @@ def get_metadata():
 @app.route('/forecast', methods=['GET'])
 def get_forecast():
     """
-    Returns records from outputs/blended_forecast.csv.
+    Returns records from outputs/hybrid_forecast.csv (falls back to blended_forecast.csv if missing).
     Checks freshness asynchronously in background without blocking.
     Optional query parameters:
       - city: filter by city name (e.g. ?city=Kanpur)
@@ -199,17 +199,27 @@ def get_forecast():
     except Exception as e:
         print(f"[API Error] Async refresh notice: {e}")
 
-    # 2. Load latest blended forecast
-    csv_path = os.path.join(OUTPUTS_DIR, "blended_forecast.csv")
-    if not os.path.exists(csv_path):
-        csv_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
+    # 2. Load latest forecast (primary: hybrid_forecast.csv, fallback: blended_forecast.csv)
+    hybrid_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
+    blended_path = os.path.join(OUTPUTS_DIR, "blended_forecast.csv")
+
+    is_fallback = False
+    if os.path.exists(hybrid_path):
+        csv_path = hybrid_path
+    elif os.path.exists(blended_path):
+        csv_path = blended_path
+        is_fallback = True
+    else:
+        return jsonify({"error": "Forecast data not found (neither hybrid nor blended)"}), 404
 
     records = load_csv_records(csv_path)
     if records is None:
-        return jsonify({"error": "blended_forecast.csv not found"}), 404
+        return jsonify({"error": f"{os.path.basename(csv_path)} could not be loaded"}), 404
 
     # Ensure backward-compatible blend_* fields for all frontend consumers
     for r in records:
+        if is_fallback:
+            r['is_fallback'] = True
         if 'blend_temperature' not in r or r['blend_temperature'] is None:
             r['blend_temperature'] = r.get('temperature')
         if 'blend_rainfall' not in r or r['blend_rainfall'] is None:

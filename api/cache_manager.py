@@ -214,10 +214,15 @@ def fetch_open_meteo_forecasts(cities_df):
     if df_raw.empty:
         raise RuntimeError("Failed to fetch forecast records from Open-Meteo API.")
 
-    # Impute missing values if any NWP model had a dropped timestamp
-    df_raw["temperature"] = df_raw.groupby(["city", "model"])["temperature"].ffill().bfill().fillna(28.0)
-    df_raw["rainfall"] = df_raw.groupby(["city", "model"])["rainfall"].ffill().bfill().fillna(0.0)
-    df_raw["wind_speed"] = df_raw.groupby(["city", "model"])["wind_speed"].ffill().bfill().fillna(10.0)
+    # Impute missing values within each (city, model) group; fail explicitly if NaN remains
+    for col in ["temperature", "rainfall", "wind_speed"]:
+        df_raw[col] = df_raw.groupby(["city", "model"])[col].ffill().bfill()
+        if df_raw[col].isna().any():
+            culprits = df_raw[df_raw[col].isna()][["city", "model"]].drop_duplicates().to_dict(orient="records")
+            raise RuntimeError(
+                f"Missing data in column '{col}' after (city, model) ffill/bfill for: {culprits}. "
+                f"Never inventing fallback numbers."
+            )
 
     # Save to data/forecast_current.csv
     FORECAST_CURR_CSV.parent.mkdir(parents=True, exist_ok=True)
@@ -241,9 +246,14 @@ def run_preprocessing(df_raw):
     df["model"] = df["model"].map(MODEL_MAP)
     df = df.sort_values(by=["city", "model", "datetime"]).reset_index(drop=True)
 
-    # Assertions
-    if df.isna().any().any():
-        df = df.bfill().ffill()
+    # Assertions: fail explicitly if any NaN remains within (city, model) group
+    for col in ["temperature", "rainfall", "wind_speed"]:
+        df[col] = df.groupby(["city", "model"])[col].ffill().bfill()
+        if df[col].isna().any():
+            culprits = df[df[col].isna()][["city", "model"]].drop_duplicates().to_dict(orient="records")
+            raise RuntimeError(
+                f"Preprocessing error: Missing data in column '{col}' after (city, model) ffill/bfill for: {culprits}"
+            )
 
     INTERIM_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(CLEAN_FC_CSV, index=False, date_format="%Y-%m-%d %H:%M:%S")
@@ -305,9 +315,9 @@ def run_adaptive_weighting():
     output_cols = ["city", "datetime", "lead_days", "temperature", "rainfall", "wind_speed"]
     df_out = df_blended.sort_values(by=["city", "datetime"]).reset_index(drop=True)[output_cols]
 
-    # Quality control
+    # Quality control: fail if NaN produced
     if df_out.isna().any().any():
-        df_out = df_out.bfill().ffill()
+        raise RuntimeError("Adaptive weighting produced NaN values in blended forecast.")
 
     df_out["datetime"] = df_out["datetime"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -316,18 +326,64 @@ def run_adaptive_weighting():
     df_out.to_csv(BLENDED_CSV, index=False)
     print(f"[CacheManager] Successfully generated {BLENDED_CSV} ({len(df_out)} rows)")
 
-    # Also synchronize hybrid_forecast.csv for unified API compatibility
-    df_hybrid = df_out.copy()
-    df_hybrid["blend_temperature"] = df_hybrid["temperature"]
-    df_hybrid["blend_rainfall"] = df_hybrid["rainfall"]
-    df_hybrid["blend_wind_speed"] = df_hybrid["wind_speed"]
+    # Generate hybrid_forecast.csv using trained Random Forest models from ai/predict.py
+    print("[CacheManager] Generating hybrid_forecast.csv with Random Forest residual corrections...")
+    from ai.predict import build_current_features, predict_hybrid, FEATURE_COLS
+
+    orig_cwd = os.getcwd()
+    try:
+        os.chdir(str(BASE_DIR))
+        curr_df, _ = build_current_features()
+        hybrids, _ = predict_hybrid(curr_df)
+    finally:
+        os.chdir(orig_cwd)
+
+    curr_df["temperature"] = hybrids["temperature"]
+    curr_df["rainfall"] = hybrids["rainfall"]
+    curr_df["wind_speed"] = hybrids["wind_speed"]
+
     hybrid_cols = [
         "city", "datetime", "lead_days",
         "blend_temperature", "blend_rainfall", "blend_wind_speed",
         "temperature", "rainfall", "wind_speed"
     ]
-    df_hybrid[hybrid_cols].to_csv(HYBRID_CSV, index=False)
-    print(f"[CacheManager] Synchronized {HYBRID_CSV}")
+    df_hybrid = curr_df[hybrid_cols].sort_values(by=["city", "datetime"]).copy()
+    df_hybrid["datetime"] = pd.to_datetime(df_hybrid["datetime"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Save hybrid_forecast.csv
+    df_hybrid.to_csv(HYBRID_CSV, index=False)
+    print(f"[CacheManager] Successfully generated {HYBRID_CSV} ({len(df_hybrid)} rows)")
+
+    # Assertion: for a random sample of 5 rows, hybrid value must NOT exactly equal blend value
+    sample_rows = df_hybrid.sample(n=min(5, len(df_hybrid)), random_state=42)
+    all_equal = True
+    for _, s_row in sample_rows.iterrows():
+        is_row_equal = (
+            np.isclose(s_row["temperature"], s_row["blend_temperature"], atol=1e-6) and
+            np.isclose(s_row["rainfall"], s_row["blend_rainfall"], atol=1e-6) and
+            np.isclose(s_row["wind_speed"], s_row["blend_wind_speed"], atol=1e-6)
+        )
+        if not is_row_equal:
+            all_equal = False
+            break
+    if all_equal:
+        raise RuntimeError("Assertion failed: Random sample of 5 rows showed hybrid exactly equals blend for all 5. RF correction was skipped!")
+
+    # Summary and difference printout
+    row_count = len(df_hybrid)
+    date_min = df_hybrid["datetime"].min()
+    date_max = df_hybrid["datetime"].max()
+    print("\n" + "=" * 60)
+    print("=== HYBRID FORECAST (AI-NWP RF CORRECTION) SUMMARY ===")
+    print(f"Total row count : {row_count}")
+    print(f"Date range      : {date_min} to {date_max}")
+    print("Mean absolute difference (|hybrid - blend|):")
+    for var in ["temperature", "rainfall", "wind_speed"]:
+        mae_diff = float(np.mean(np.abs(df_hybrid[var].values - df_hybrid[f"blend_{var}"].values)))
+        print(f"  {var:<12}: {mae_diff:.4f}")
+        if mae_diff <= 0:
+            raise RuntimeError(f"RF correction verification failed: mean absolute difference for '{var}' is {mae_diff:.4f} (must be > 0)")
+    print("=" * 60 + "\n")
 
     # Run downstream alerts and confidence updates if modules available
     try:
