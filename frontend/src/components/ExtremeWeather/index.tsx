@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { AlertTriangle, CloudRain, Thermometer, Wind, ChevronRight, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CloudRain, Thermometer, Wind, ChevronRight, ShieldAlert, LucideIcon } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { getExtremeEventsData, MOCK_EXTREME_EVENTS } from '@/lib/api';
 import type { ExtremeEvent } from '@/types';
 
-const EVENT_ICONS: Record<ExtremeEvent['type'], React.ElementType> = {
+const EVENT_ICONS: Record<ExtremeEvent['type'], LucideIcon> = {
   heavy_rainfall: CloudRain,
   heatwave: Thermometer,
   high_wind: Wind,
@@ -110,7 +110,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Icon size={14} style={{ color, shrink: 0 }} />
+                      <Icon size={14} style={{ color, flexShrink: 0 }} />
                       <span className="text-xs font-bold text-slate-800">{event.label}</span>
                       <Badge variant={style.badge}>{event.severity}</Badge>
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { X, AlertCircle, AlertTriangle, Info, MapPin, RotateCcw, ShieldAlert, CheckCircle2, ChevronDown } from 'lucide-react';
+import { X, AlertCircle, AlertTriangle, Info, MapPin, RotateCcw, ShieldAlert, CheckCircle2, ChevronDown, LucideIcon } from 'lucide-react';
 import { getAlertsData, MOCK_ALERTS, getAlertState } from '@/lib/api';
 import type { Alert } from '@/types';
 
@@ -11,7 +11,7 @@ interface AlertDrawerProps {
 
 type SeverityFilter = 'all' | 'danger' | 'warning';
 
-const alertStyles: Record<Alert['type'], { bg: string; border: string; icon: React.ElementType; iconColor: string; dot: string }> = {
+const alertStyles: Record<Alert['type'], { bg: string; border: string; icon: LucideIcon; iconColor: string; dot: string }> = {
   danger: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.22)', icon: AlertCircle, iconColor: '#ef4444', dot: '#ef4444' },
   warning: { bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.22)', icon: AlertTriangle, iconColor: '#f59e0b', dot: '#f59e0b' },
   info: { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.22)', icon: Info, iconColor: '#3b82f6', dot: '#3b82f6' },

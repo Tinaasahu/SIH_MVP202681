@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, XCircle, Activity, Clock } from 'lucide-react';
+import { CheckCircle, AlertCircle, XCircle, Activity, Clock, LucideIcon } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { MOCK_DATA_SOURCES, ENGINE_STATUS, getForecast } from '@/lib/api';
 import { DataSource } from '@/types';
 
-const STATUS_CONFIG: Record<DataSource['status'], { icon: React.ElementType; color: string; label: string }> = {
+const STATUS_CONFIG: Record<DataSource['status'], { icon: LucideIcon; color: string; label: string }> = {
   healthy: { icon: CheckCircle, color: '#10b981', label: 'Healthy' },
   delayed: { icon: AlertCircle, color: '#f59e0b', label: 'Delayed' },
   unavailable: { icon: XCircle, color: '#ef4444', label: 'Unavailable' },
