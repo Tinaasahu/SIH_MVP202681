@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MOCK_CITIES, MOCK_REGION_DOMINANCE } from '@/data/mockData';
+import { getCityForecastsData, MOCK_CITIES, MOCK_REGION_DOMINANCE } from '@/lib/api';
 import { CityForecast, MapLayer } from '@/types';
 import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN } from '@/lib/mapConfig';
 import { getRiskColor } from '@/lib/utils';
@@ -55,9 +55,32 @@ export default function RealLeafletMap({
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   
-  // Default to satellite if Mapbox token is present
-  const [activeTile, setActiveTile] = useState<TileType>(MAPBOX_ACCESS_TOKEN ? 'satellite' : 'positron');
+  // Default to satellite if Mapbox token is present, otherwise standard osm
+  const [activeTile, setActiveTile] = useState<TileType>(MAPBOX_ACCESS_TOKEN ? 'satellite' : 'osm');
   const [activeHoverCity, setActiveHoverCity] = useState<CityForecast | null>(null);
+  const [cities, setCities] = useState<CityForecast[]>(MOCK_CITIES);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getCityForecastsData()
+      .then((data) => {
+        if (mounted && data && data.length > 0) {
+          setCities(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // 1. Initialize Leaflet Map
   useEffect(() => {
@@ -72,7 +95,7 @@ export default function RealLeafletMap({
       attributionControl: false,
     });
 
-    const initialTileKey = MAPBOX_ACCESS_TOKEN ? 'satellite' : 'positron';
+    const initialTileKey = MAPBOX_ACCESS_TOKEN ? 'satellite' : 'osm';
     const tileInfo = MAP_CONFIG.tiles[initialTileKey];
 
     const tileLayer = L.tileLayer(tileInfo.url, {
@@ -119,37 +142,70 @@ export default function RealLeafletMap({
 
     const isDarkBg = activeTile === 'satellite';
 
-    MOCK_CITIES.forEach((city) => {
+    cities.forEach((city) => {
       const { text, color } = getCityMetric(city, layer);
+      const isSelected = selectedCity ? city.city.toLowerCase() === selectedCity.toLowerCase() : false;
 
       const customIcon = L.divIcon({
         className: 'custom-weather-marker',
         html: `
-          <div class="relative flex items-center justify-center group cursor-pointer" style="width: 36px; height: 36px;">
+          <div class="relative flex items-center justify-center group cursor-pointer" style="width: ${isSelected ? '44px' : '36px'}; height: ${isSelected ? '44px' : '36px'};">
             <!-- Radar Beacon Pulse Animation -->
-            <div class="absolute inset-0 rounded-full animate-ping opacity-35" style="background-color: ${color};"></div>
+            <div class="absolute inset-0 rounded-full animate-ping ${isSelected ? 'opacity-70' : 'opacity-35'}" style="background-color: ${color};"></div>
             
+            ${isSelected ? `<div class="absolute -inset-1.5 rounded-full border-2 border-blue-500 animate-pulse shadow-md"></div>` : ''}
+
             <!-- Pinpoint Center Core -->
-            <div class="relative w-4 h-4 rounded-full border-2 border-white shadow-lg flex items-center justify-center" style="background-color: ${color};">
-              <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+            <div class="relative ${isSelected ? 'w-5 h-5 scale-110' : 'w-4 h-4'} rounded-full border-2 border-white shadow-lg flex items-center justify-center" style="background-color: ${color};">
+              <div class="${isSelected ? 'w-2 h-2' : 'w-1.5 h-1.5'} rounded-full bg-white"></div>
             </div>
 
             <!-- Crisp Weather Badge Label -->
             <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight shadow-md border pointer-events-none transition-all duration-200 group-hover:scale-110 ${
-              isDarkBg
+              isSelected
+                ? 'bg-blue-600 text-white border-white ring-2 ring-blue-300 z-30 scale-105'
+                : isDarkBg
                 ? 'bg-slate-900/90 text-white border-white/20'
                 : 'bg-white/95 text-slate-800 border-slate-200/80'
             }">
               <span>${city.city}</span>
-              <span class="ml-1 opacity-80 text-[9px] font-medium" style="color: ${color};">${text}</span>
+              <span class="ml-1 opacity-80 text-[9px] font-medium" style="color: ${isSelected ? '#ffffff' : color};">${text}</span>
             </div>
           </div>
         `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
+        iconSize: isSelected ? [44, 44] : [36, 36],
+        iconAnchor: isSelected ? [22, 22] : [18, 18],
       });
 
       const marker = L.marker([city.lat, city.lon], { icon: customIcon }).addTo(map);
+
+      // Station detail popup
+      const popupContent = `
+        <div style="font-family: inherit; min-width: 170px; padding: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+            <span style="font-weight: 800; font-size: 13px; color: #1e293b; text-transform: uppercase;">${city.city}</span>
+            <span style="font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 9999px;">${city.state}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px;">
+            <div><span style="color: #64748b; font-size: 10px; display: block;">Rainfall</span><strong style="color: #0284c7; font-size: 12px;">${city.rainfall} mm</strong></div>
+            <div><span style="color: #64748b; font-size: 10px; display: block;">Temp</span><strong style="color: #ea580c; font-size: 12px;">${city.temperature}°C</strong></div>
+            <div><span style="color: #64748b; font-size: 10px; display: block;">Wind</span><strong style="color: #7c3aed; font-size: 12px;">${city.wind} km/h</strong></div>
+            <div><span style="color: #64748b; font-size: 10px; display: block;">Reliability</span><strong style="color: #059669; font-size: 12px;">${city.confidence}% ${city.confidenceLabel ? '(' + city.confidenceLabel + ')' : ''}</strong></div>
+          </div>
+          <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #f1f5f9; font-size: 10px; color: #64748b; display: flex; justify-content: space-between;">
+            <span>Dominant Model:</span>
+            <strong style="color: #1d4ed8;">${city.dominantModel}</strong>
+          </div>
+          ${city.explanation ? `
+          <div style="margin-top: 4px; font-size: 9.5px; color: #475569; font-style: italic; background: #f8fafc; padding: 4px 6px; border-radius: 6px; border: 1px solid #e2e8f0; line-height: 1.3;">
+            &quot;${city.explanation}&quot;
+          </div>` : ''}
+        </div>
+      `;
+      marker.bindPopup(popupContent, {
+        closeButton: true,
+        offset: [0, -12],
+      });
 
       marker.on('mouseover', () => {
         setActiveHoverCity(city);
@@ -160,25 +216,31 @@ export default function RealLeafletMap({
           duration: 1.4,
           easeLinearity: 0.25,
         });
+        setActiveHoverCity(city);
+        marker.openPopup();
         if (onSelectCity) onSelectCity(city);
       });
 
       markersRef.current[city.city] = marker;
     });
-  }, [layer, activeTile, onSelectCity]);
+  }, [layer, activeTile, onSelectCity, cities, selectedCity]);
 
-  // 4. Smooth FlyTo Zoom when city is selected
+  // 4. Smooth FlyTo Zoom & Open Popup when city is selected
   useEffect(() => {
     if (!selectedCity || !mapInstanceRef.current) return;
-    const target = MOCK_CITIES.find((c) => c.city.toLowerCase() === selectedCity.toLowerCase());
+    const target = cities.find((c) => c.city.toLowerCase() === selectedCity.toLowerCase());
     if (target) {
       mapInstanceRef.current.flyTo([target.lat, target.lon], 9, {
         duration: 1.4,
         easeLinearity: 0.25,
       });
       setActiveHoverCity(target);
+      const marker = markersRef.current[target.city];
+      if (marker) {
+        marker.openPopup();
+      }
     }
-  }, [selectedCity]);
+  }, [selectedCity, cities]);
 
   // Controls
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
@@ -287,48 +349,64 @@ export default function RealLeafletMap({
       </div>
 
       {/* Floating Selected/Hovered Station Card */}
-      {activeHoverCity && (
-        <div
-          className="absolute bottom-4 left-4 z-10 p-4 rounded-2xl shadow-xl border border-white/80 max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200"
-          style={{
-            background: 'rgba(255, 255, 255, 0.90)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-          }}
-        >
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-sm font-extrabold uppercase tracking-wide text-slate-800">
-              {activeHoverCity.city}
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100/70 text-blue-700 font-bold border border-blue-200/50">
-              {activeHoverCity.state}
-            </span>
-          </div>
+      {(() => {
+        const activeCardCity = activeHoverCity || (selectedCity ? cities.find(c => c.city.toLowerCase() === selectedCity.toLowerCase()) : null) || cities[0];
+        if (!activeCardCity) return null;
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-400 block text-[10px] font-medium">Rainfall</span>
-              <span className="font-extrabold text-sky-600 text-sm">{activeHoverCity.rainfall} mm</span>
+        return (
+          <div
+            className="absolute bottom-4 left-4 z-10 p-4 rounded-2xl shadow-xl border border-white/80 max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200"
+            style={{
+              background: 'rgba(255, 255, 255, 0.90)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-sm font-extrabold uppercase tracking-wide text-slate-800">
+                {activeCardCity.city}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100/70 text-blue-700 font-bold border border-blue-200/50">
+                {activeCardCity.state}
+              </span>
             </div>
-            <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-400 block text-[10px] font-medium">Temperature</span>
-              <span className="font-extrabold text-orange-600 text-sm">{activeHoverCity.temperature}°C</span>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
+                <span className="text-slate-400 block text-[10px] font-medium">Rainfall</span>
+                <span className="font-extrabold text-sky-600 text-sm">{activeCardCity.rainfall} mm</span>
+              </div>
+              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
+                <span className="text-slate-400 block text-[10px] font-medium">Temperature</span>
+                <span className="font-extrabold text-orange-600 text-sm">{activeCardCity.temperature}°C</span>
+              </div>
+              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
+                <span className="text-slate-400 block text-[10px] font-medium">Wind Speed</span>
+                <span className="font-extrabold text-purple-600 text-sm">{activeCardCity.wind} km/h</span>
+              </div>
+              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
+                <span className="text-slate-400 block text-[10px] font-medium">Confidence</span>
+                <span className="font-extrabold text-emerald-600 text-sm">{activeCardCity.confidence}%</span>
+              </div>
             </div>
-            <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-400 block text-[10px] font-medium">Wind Speed</span>
-              <span className="font-extrabold text-purple-600 text-sm">{activeHoverCity.wind} km/h</span>
+            <div className="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+              <span>Dominant Model:</span>
+              <span className="font-bold text-blue-700">{activeCardCity.dominantModel}</span>
             </div>
-            <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-400 block text-[10px] font-medium">Confidence</span>
-              <span className="font-extrabold text-emerald-600 text-sm">{activeHoverCity.confidence}%</span>
-            </div>
+            {activeCardCity.confidenceLabel && (
+              <div className="mt-1 text-[10px] text-slate-500 flex items-center justify-between">
+                <span>Rating:</span>
+                <span className="font-semibold text-emerald-600">{activeCardCity.confidenceLabel}</span>
+              </div>
+            )}
+            {activeCardCity.explanation && (
+              <div className="mt-1.5 pt-1.5 border-t border-slate-100/80 text-[10px] text-slate-500 italic leading-snug">
+                &quot;{activeCardCity.explanation}&quot;
+              </div>
+            )}
           </div>
-          <div className="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
-            <span>Dominant Model:</span>
-            <span className="font-bold text-blue-700">{activeHoverCity.dominantModel}</span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Model Dominance Overlay */}
       {layer === 'model_dominance' && (

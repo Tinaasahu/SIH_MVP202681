@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description:
     'नभदृष्टि: AI–NWP Multi-Model Forecast Blending System. Dynamically blended weather forecasts for India. Built for Smart India Hackathon 2026, Ministry of Earth Sciences.',
   keywords: 'नभदृष्टि, NabhDrishti, weather forecast, NWP, AI, blending, NCMRWF, MoES, India',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/favicon.ico',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({

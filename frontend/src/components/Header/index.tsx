@@ -57,10 +57,13 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
             {/* Logo & Brand Identity */}
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs"
-                style={{ background: 'linear-gradient(135deg, #2563eb, #0ea5e9)' }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden bg-white shadow-xs border border-slate-200/80 p-0.5"
               >
-                <Wind size={18} className="text-white" />
+                <img
+                  src="/logo-emblem.png"
+                  alt="नभदृष्टि Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">

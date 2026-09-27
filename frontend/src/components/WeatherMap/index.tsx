@@ -13,7 +13,7 @@ const RealLeafletMap = dynamic(() => import('./RealLeafletMap'), {
   loading: () => (
     <div className="w-full h-[520px] rounded-2xl bg-slate-100/60 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
       <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-      <span className="text-xs font-medium tracking-wide">Loading Real Geographic Map of India...</span>
+      <span className="text-xs font-medium tracking-wide">Starting AI weather engine… This may take up to 60 seconds.</span>
     </div>
   ),
 });
@@ -40,7 +40,7 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
   const [layerMenuOpen, setLayerMenuOpen] = useState(false);
 
   return (
-    <GlassCard padding="none" className="overflow-hidden">
+    <GlassCard padding="none" variant="blue" className="overflow-hidden">
       {/* Controls Bar */}
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"

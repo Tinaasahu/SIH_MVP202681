@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { AtmosphereLayer } from '@/components/AtmosphereLayer';
 import { Header } from '@/components/Header';
+import { BackendConnectingIndicator } from '@/components/BackendConnectingIndicator';
 import { StatusStrip } from '@/components/StatusStrip';
 import { CursorEffect } from '@/components/CursorEffect';
 import { ForecastHero } from '@/components/ForecastHero';
@@ -143,6 +144,9 @@ export default function Home() {
       {/* Floating Boxed Taskbar Panel */}
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
+      {/* Global Backend Connecting / Cold Start Indicator */}
+      <BackendConnectingIndicator />
+
       {/* Main Content with generous top padding to prevent ANY header overlap */}
       <main className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 pt-36 pb-20">
         <StatusStrip />
@@ -154,8 +158,9 @@ export default function Home() {
         className="relative z-10 max-w-[1440px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500"
         style={{ borderTop: '1px solid rgba(148,163,184,0.18)' }}
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-bold text-slate-700">Hybrid AI–NWP Blending Platform</span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <img src="/logo-emblem.png" alt="नभदृष्टि Logo" className="w-5 h-5 object-contain rounded" />
+          <span className="font-bold text-slate-700">नभदृष्टि Hybrid AI–NWP Platform</span>
           <span>·</span>
           <span>MoES / NCMRWF</span>
           <span>·</span>

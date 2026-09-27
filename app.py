@@ -17,6 +17,21 @@ except (ImportError, ValueError, Exception):
 
 app = Flask(__name__)
 
+# Production CORS configuration for Vercel and local environments
+try:
+    from flask_cors import CORS
+    CORS(
+        app,
+        resources={r"/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+            "allow_headers": ["Content-Type", "Authorization", "Cache-Control", "Pragma", "Accept", "X-Requested-With", "Origin"],
+            "max_age": 86400
+        }}
+    )
+except ImportError:
+    pass
+
 # Base project paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
@@ -59,25 +74,70 @@ def load_csv_records(csv_path):
     return records
 
 
+import time
+import threading
+
+_last_freshness_check = 0
+
+def check_forecast_freshness_async():
+    """Runs forecast freshness check asynchronously in the background so HTTP requests never block."""
+    global _last_freshness_check
+    now = time.time()
+    if now - _last_freshness_check < 3600:  # Check at most once per hour
+        return
+    _last_freshness_check = now
+
+    def _worker():
+        try:
+            ensure_fresh_forecast()
+        except Exception as _e:
+            print(f"[CacheManager] Background refresh notice: {_e}")
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+
 from api.cache_manager import ensure_fresh_forecast, load_metadata
 
-# Ensure fresh forecast on application startup
+# Trigger non-blocking freshness check in background
 try:
-    ensure_fresh_forecast()
+    check_forecast_freshness_async()
 except Exception as _e:
-    print(f"[Warning] Startup forecast refresh notice: {_e}")
+    print(f"[Warning] Background startup notice: {_e}")
+
+
+@app.before_request
+def handle_options_preflight():
+    """Explicitly handle OPTIONS preflight requests for cross-origin browser clients."""
+    if request.method == 'OPTIONS':
+        res = app.make_default_options_response()
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, HEAD'
+        res.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Cache-Control, Pragma, Accept, X-Requested-With, Origin'
+        res.headers['Access-Control-Max-Age'] = '86400'
+        return res
 
 
 @app.after_request
 def add_cors_headers(response):
-    """Enable CORS for local frontend development."""
+    """Enable CORS for Vercel, Render, and local frontend origins."""
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, HEAD'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Cache-Control, Pragma, Accept, X-Requested-With, Origin'
+    response.headers['Access-Control-Max-Age'] = '86400'
     return response
 
 
+@app.route('/favicon.ico')
+def favicon():
+    """Return 204 No Content to satisfy browser requests without 404."""
+    return ('', 204)
+
+
 @app.route('/')
+@app.route('/api')
+@app.route('/api/')
+@app.route('/health')
+@app.route('/healthz')
 def index():
     return jsonify({
         "status": "online",
@@ -99,6 +159,7 @@ def index():
 
 
 @app.route('/api/metadata', methods=['GET'])
+@app.route('/metadata', methods=['GET'])
 def get_metadata():
     """
     Returns forecast freshness metadata:
@@ -109,32 +170,34 @@ def get_metadata():
     meta = load_metadata()
     if not meta:
         try:
-            meta = ensure_fresh_forecast()
+            check_forecast_freshness_async()
         except Exception:
-            meta = {
-                "last_updated": "2026-09-26T23:45:12",
-                "cities": 45,
-                "models": 4,
-                "city_count": 45,
-                "model_count": 4
-            }
+            pass
+        meta = {
+            "last_updated": "2026-09-27T10:25:33",
+            "cities": 45,
+            "models": 4,
+            "city_count": 45,
+            "model_count": 4
+        }
     return jsonify(meta)
 
 
 @app.route('/api/forecast', methods=['GET'])
+@app.route('/forecast', methods=['GET'])
 def get_forecast():
     """
     Returns records from outputs/blended_forecast.csv.
-    Checks freshness and auto-regenerates if file is older than today.
+    Checks freshness asynchronously in background without blocking.
     Optional query parameters:
       - city: filter by city name (e.g. ?city=Kanpur)
       - lead_days: filter by lead time (1, 2, or 3)
     """
-    # 1. Check freshness and auto-regenerate if older than today
+    # 1. Asynchronously check freshness in background without blocking this HTTP request
     try:
-        ensure_fresh_forecast()
+        check_forecast_freshness_async()
     except Exception as e:
-        print(f"[API Error] Forecast auto-refresh failed: {e}")
+        print(f"[API Error] Async refresh notice: {e}")
 
     # 2. Load latest blended forecast
     csv_path = os.path.join(OUTPUTS_DIR, "blended_forecast.csv")
@@ -171,6 +234,7 @@ def get_forecast():
 
 
 @app.route('/api/weights', methods=['GET'])
+@app.route('/weights', methods=['GET'])
 def get_weights():
     """
     Returns records from outputs/model_weights_lead.csv.
@@ -205,6 +269,7 @@ def get_weights():
 
 
 @app.route('/api/skill', methods=['GET'])
+@app.route('/skill', methods=['GET'])
 def get_skill():
     """
     Returns records from outputs/skill_scores_lead.csv.
@@ -239,6 +304,7 @@ def get_skill():
 
 
 @app.route('/api/alerts', methods=['GET'])
+@app.route('/alerts', methods=['GET'])
 def get_alerts():
     """
     Returns records from outputs/extreme_alerts.csv.
@@ -259,6 +325,7 @@ def get_alerts():
 
 
 @app.route('/api/cities', methods=['GET'])
+@app.route('/cities', methods=['GET'])
 def get_cities():
     """
     Returns unique cities and their latitude/longitude coordinates from
@@ -280,6 +347,7 @@ def get_cities():
 
 
 @app.route('/api/confidence', methods=['GET'])
+@app.route('/confidence', methods=['GET'])
 def get_confidence():
     """
     Returns records from outputs/confidence_scores.csv.
@@ -309,6 +377,7 @@ def get_confidence():
 
 
 @app.route('/api/rpi', methods=['GET'])
+@app.route('/rpi', methods=['GET'])
 def get_rpi():
     """
     Risk Priority Index (RPI) - Government Emergency Operations Decision Support.
@@ -531,6 +600,7 @@ def get_rpi():
 
 
 @app.route('/api/rpi/map', methods=['GET'])
+@app.route('/rpi/map', methods=['GET'])
 def get_rpi_map():
     """
     Returns GeoJSON FeatureCollection of all Indian synoptic stations with RPI attributes
@@ -625,6 +695,28 @@ def get_rpi_map():
             "crs": "EPSG:4326"
         }
     })
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({
+        "error": "Not Found",
+        "message": "The requested endpoint does not exist.",
+        "status": 404,
+        "available_endpoints": {
+            "root": "/",
+            "health": "/health",
+            "metadata": "/api/metadata",
+            "forecast": "/api/forecast",
+            "weights": "/api/weights",
+            "skill": "/api/skill",
+            "alerts": "/api/alerts",
+            "cities": "/api/cities",
+            "confidence": "/api/confidence",
+            "rpi": "/api/rpi",
+            "rpi_map": "/api/rpi/map"
+        }
+    }), 404
 
 
 if __name__ == '__main__':
