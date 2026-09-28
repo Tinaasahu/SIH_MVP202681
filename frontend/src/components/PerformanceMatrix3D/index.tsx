@@ -1,6 +1,5 @@
 'use client';
-
-import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Text, Html, Environment, Float } from '@react-three/drei';
 import * as THREE from 'three';
@@ -50,10 +49,10 @@ interface BarProps {
 
 function PerformanceBar({ cell, maxRmse, spacing, onHover, isHovered, colorMode }: BarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const targetHeight = useRef(0);
-  const currentHeight = useRef(0.01);
+  const normalizedHeight = Math.max(0.15, (cell.rmse / (maxRmse || 1)) * 4); // max height = 4 units
+  const targetHeight = useRef(normalizedHeight);
+  const currentHeight = useRef(normalizedHeight);
 
-  const normalizedHeight = (cell.rmse / maxRmse) * 4; // max height = 4 units
   targetHeight.current = normalizedHeight;
 
   const baseColor = colorMode === 'model'
@@ -65,14 +64,16 @@ function PerformanceBar({ cell, maxRmse, spacing, onHover, isHovered, colorMode 
 
     // Smooth animation
     currentHeight.current += (targetHeight.current - currentHeight.current) * Math.min(delta * 4, 1);
-    const h = Math.max(0.02, currentHeight.current);
+    const h = Math.max(0.05, currentHeight.current);
     meshRef.current.scale.y = h;
     meshRef.current.position.y = h / 2;
 
     // Hover glow
     const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-    const targetEmissive = isHovered ? 0.4 : 0;
-    mat.emissiveIntensity += (targetEmissive - mat.emissiveIntensity) * Math.min(delta * 8, 1);
+    if (mat) {
+      const targetEmissive = isHovered ? 0.4 : 0;
+      mat.emissiveIntensity += (targetEmissive - mat.emissiveIntensity) * Math.min(delta * 8, 1);
+    }
   });
 
   const x = cell.modelIndex * spacing - ((MODELS.length - 1) * spacing) / 2;
@@ -81,7 +82,8 @@ function PerformanceBar({ cell, maxRmse, spacing, onHover, isHovered, colorMode 
   return (
     <mesh
       ref={meshRef}
-      position={[x, 0, z]}
+      position={[x, normalizedHeight / 2, z]}
+      scale={[1, normalizedHeight, 1]}
       onPointerOver={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); onHover(cell); }}
       onPointerOut={() => onHover(null)}
       castShadow
@@ -125,7 +127,6 @@ function AxisLabels({ spacing, matrix, maxRmse }: GridProps) {
           anchorX="center"
           anchorY="middle"
           rotation={[-Math.PI / 2, 0, -Math.PI / 6]}
-          font="/fonts/inter-medium.woff"
         >
           {model}
         </Text>
@@ -519,7 +520,9 @@ export function PerformanceMatrix3D() {
           dpr={[1, 2]}
           gl={{ antialias: true, alpha: true }}
         >
-          <Scene matrix={matrix} colorMode={colorMode} autoRotate={autoRotate} />
+          <Suspense fallback={null}>
+            <Scene matrix={matrix} colorMode={colorMode} autoRotate={autoRotate} />
+          </Suspense>
         </Canvas>
       </div>
 
