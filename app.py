@@ -697,146 +697,223 @@ def get_rpi():
             weights = {'ecmwf': 30.5, 'icon': 28.0, 'gfs': 21.5, 'gem': 20.0}
 
         # Real-time quantitative resource estimations based on synoptic thresholds
+        # Real-time quantitative resource estimations based on synoptic thresholds for all 3 disaster domains
         recommendations = []
-        if rain > 45 or rain_risk > 50:
+
+        # --- 1. FLOOD & PRECIPITATION CONTINGENCY ---
+        if rain >= 50:
             boats = max(2, int(rain * 0.25))
             pumps = max(5, int(rain * 0.4))
             personnel = max(20, int(rain * 1.5))
             shelter_cap = int(max(200, rain * 50))
             recommendations.append({
-                'id': f'{c_key}-rec-rain-1',
+                'id': f'{c_key}-rec-rain-crit',
                 'title': 'Deploy SDRF & NDRF Water Rescue Battalions',
-                'description': f'Pre-position State Disaster Response Force at low-lying riverine basins. Projected rainfall: {rain:.1f} mm/24h. Estimated requirement: {boats} inflatable rescue boats, {personnel} response personnel.',
+                'description': f'Stage 4 Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: {rain:.1f} mm/24h. Estimated requirement: {boats} inflatable rescue boats, {personnel} response personnel.',
                 'category': 'rain',
-                'priority': 'critical' if rain > 70 else 'high',
+                'priority': 'critical',
                 'department': 'Disaster Management Authority (SDMA / DDMA)',
                 'status': 'Ready',
                 'actionCode': 'SDRF-DEPL-01',
                 'estimatedResources': {
                     'rescueBoats': boats,
                     'personnel': personnel,
-                    'dewateringPumps': pumps
+                    'dewateringPumps': pumps,
+                    'shelterCapacity': shelter_cap
                 }
             })
+        elif rain >= 20:
+            boats = max(1, int(rain * 0.2))
+            pumps = max(4, int(rain * 0.35))
+            personnel = max(12, int(rain * 1.2))
             recommendations.append({
-                'id': f'{c_key}-rec-rain-2',
-                'title': 'Open Emergency Relief Shelters & Stock Rations',
-                'description': f'Activate community relief shelters with drinking water, dry rations, and medical kits. Estimated shelter capacity: {shelter_cap} evacuees.',
+                'id': f'{c_key}-rec-rain-high',
+                'title': 'Pre-emptive Drainage Sump Mobilization & SDRF Standby',
+                'description': f'Stage 3 High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing {rain:.1f} mm/24h rainfall. Standby rescue squads on 30-min notice.',
                 'category': 'rain',
                 'priority': 'high',
-                'department': 'Revenue & Civil Supplies Dept',
-                'status': 'Standby',
-                'actionCode': 'SHELTER-ACT-04',
-                'estimatedResources': {
-                    'shelterCapacity': shelter_cap,
-                    'medicalKits': max(10, int(shelter_cap / 20))
-                }
-            })
-            recommendations.append({
-                'id': f'{c_key}-rec-rain-3',
-                'title': 'Continuous Drainage & Sump Pump Monitoring',
-                'description': f'Deploy high-capacity dewatering pump sets at major urban underpasses, storm drains, and culverts. Estimated requirement: {pumps} mobile pump units.',
-                'category': 'rain',
-                'priority': 'high' if rain > 60 else 'medium',
-                'department': 'Municipal Corporation / PWD',
+                'department': 'Municipal Corporation / PWD & SDRF',
                 'status': 'Active',
                 'actionCode': 'DRAIN-PUMP-02',
                 'estimatedResources': {
-                    'dewateringPumps': pumps
+                    'dewateringPumps': pumps,
+                    'standbyBoats': boats,
+                    'responseSquads': personnel
+                }
+            })
+        elif rain >= 5:
+            pumps = max(2, int(rain * 0.3))
+            personnel = max(6, int(rain * 0.8))
+            recommendations.append({
+                'id': f'{c_key}-rec-rain-med',
+                'title': 'Catchment Basin & Storm Sump Surveillance',
+                'description': f'Stage 2 Alert: Moderate rainfall expected ({rain:.1f} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.',
+                'category': 'rain',
+                'priority': 'medium',
+                'department': 'Urban Water Supply & Drainage Cell',
+                'status': 'Active',
+                'actionCode': 'BASIN-WATCH-03',
+                'estimatedResources': {
+                    'standbyPumps': pumps,
+                    'patrolCrews': personnel
+                }
+            })
+        else:
+            recommendations.append({
+                'id': f'{c_key}-rec-rain-base',
+                'title': 'Baseline Synoptic Pluviometer Monitoring & Readiness',
+                'description': f'Stage 1 Baseline: Light/normal rainfall ({rain:.1f} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.',
+                'category': 'rain',
+                'priority': 'routine',
+                'department': 'State Meteorological Control Cell',
+                'status': 'Active',
+                'actionCode': 'RAIN-BASE-04',
+                'estimatedResources': {
+                    'activeRainGauges': 8,
+                    'telemetrySensors': 12
                 }
             })
 
-        if temp >= 37 or heat_risk > 55:
-            tankers = max(4, int((temp - 35) * 5))
-            ors_pkts = int((temp - 35) * 1200)
-            cooling_centers = max(2, int((temp - 35) * 2))
+        # --- 2. HEAT ACTION PLAN PROTOCOL ---
+        if temp >= 40:
+            tankers = max(6, int((temp - 35) * 5))
+            ors_pkts = int((temp - 35) * 1500)
+            cooling_centers = max(4, int((temp - 35) * 2.5))
+            heat_beds = max(20, int((temp - 35) * 10))
             recommendations.append({
-                'id': f'{c_key}-rec-heat-1',
-                'title': 'Issue Heatwave Red Alert & Public Advisory',
-                'description': f'Broadcast urgent heat warnings via SMS & media. Restrict heavy physical outdoor work between 11:30 AM and 03:30 PM. Current peak temp: {temp:.1f}°C.',
+                'id': f'{c_key}-rec-heat-crit',
+                'title': 'Issue Heatwave Red Alert & Outdoor Work Curfew',
+                'description': f'Stage 4 Emergency: Severe heatwave conditions ({temp:.1f}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.',
                 'category': 'heat',
-                'priority': 'critical' if temp >= 40 else 'high',
-                'department': 'Dept of Public Health & Family Welfare',
+                'priority': 'critical',
+                'department': 'Dept of Public Health & Disaster Management',
                 'status': 'Active',
                 'actionCode': 'HEAT-ADV-01',
                 'estimatedResources': {
-                    'broadcastRadiusKm': 25,
-                    'healthAdvisories': 1
+                    'emergencyHeatBeds': heat_beds,
+                    'waterTankers': tankers,
+                    'orsPackets': ors_pkts,
+                    'coolingCenters': cooling_centers
                 }
             })
+        elif temp >= 36:
+            tankers = max(4, int((temp - 33) * 3))
+            ors_pkts = int((temp - 33) * 1000)
+            cooling_centers = max(2, int((temp - 33) * 1.5))
             recommendations.append({
-                'id': f'{c_key}-rec-heat-2',
-                'title': 'Activate Air-Cooled Public Relief Centres',
-                'description': f'Open air-conditioned civic centers and libraries as heat relief shelters with ORS hydration stations. Estimated requirement: {cooling_centers} cooling centers, {ors_pkts} ORS packets.',
+                'id': f'{c_key}-rec-heat-high',
+                'title': 'Activate Civic Air-Cooled Relief Shelters & Tankers',
+                'description': f'Stage 3 High Alert: Elevated thermal stress ({temp:.1f}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.',
                 'category': 'heat',
                 'priority': 'high',
-                'department': 'District Administration / Urban Local Bodies',
+                'department': 'Urban Local Bodies / Health Dept',
                 'status': 'Ready',
                 'actionCode': 'COOL-CTR-02',
                 'estimatedResources': {
                     'coolingCenters': cooling_centers,
+                    'waterTankers': tankers,
                     'orsPackets': ors_pkts
                 }
             })
+        elif temp >= 31:
+            tankers = max(2, int((temp - 28) * 1.5))
+            ors_pkts = max(500, int((temp - 28) * 500))
             recommendations.append({
-                'id': f'{c_key}-rec-heat-3',
-                'title': 'Mobilize Emergency Drinking Water Tankers',
-                'description': f'Deploy municipal water supply bowsers to informal settlements and water-stressed wards. Estimated requirement: {tankers} drinking water tankers.',
+                'id': f'{c_key}-rec-heat-med',
+                'title': 'Thermal Index Advisory & Public Hydration Points',
+                'description': f'Stage 2 Alert: Warm conditions ({temp:.1f}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.',
                 'category': 'heat',
                 'priority': 'medium',
-                'department': 'Water Supply & Sewerage Board',
-                'status': 'Dispatched',
+                'department': 'Municipal Public Health Wing',
+                'status': 'Active',
                 'actionCode': 'WATER-MOB-03',
                 'estimatedResources': {
-                    'waterTankers': tankers
+                    'hydrationKiosks': tankers,
+                    'orsUnits': ors_pkts
+                }
+            })
+        else:
+            recommendations.append({
+                'id': f'{c_key}-rec-heat-base',
+                'title': 'Thermal Baseline & Heat Index Surveillance',
+                'description': f'Stage 1 Baseline: Temperature ({temp:.1f}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.',
+                'category': 'heat',
+                'priority': 'routine',
+                'department': 'Health Surveillance & Met Cell',
+                'status': 'Active',
+                'actionCode': 'HEAT-BASE-04',
+                'estimatedResources': {
+                    'ambientSensors': 6,
+                    'healthMonitors': 2
                 }
             })
 
-        if wind >= 25 or wind_risk > 45:
-            cranes = max(2, int(wind * 0.15))
-            crews = max(4, int(wind * 0.3))
+        # --- 3. WIND & INFRASTRUCTURE DEFENSE ---
+        if wind >= 45:
+            cranes = max(3, int(wind * 0.15))
+            crews = max(6, int(wind * 0.3))
+            vessels = max(2, int(wind * 0.1))
             recommendations.append({
-                'id': f'{c_key}-rec-wind-1',
-                'title': 'Secure High-Rise Hoardings & Structural Assets',
-                'description': f'Inspect and dismantle unauthorized temporary billboards and scaffolding facing wind gusts of {wind:.1f} km/h. Estimated crew requirement: {crews} structural safety crews, {cranes} mobile cranes.',
+                'id': f'{c_key}-rec-wind-crit',
+                'title': 'Suspend Marine Operations & Halt High-Altitude Cranes',
+                'description': f'Stage 4 Critical: Dangerous wind gusts ({wind:.1f} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.',
                 'category': 'wind',
-                'priority': 'high' if wind > 35 else 'medium',
+                'priority': 'critical',
+                'department': 'Port Authority, Labour & Police Safety',
+                'status': 'Active',
+                'actionCode': 'OPS-HALT-02',
+                'estimatedResources': {
+                    'patrolVessels': vessels,
+                    'craneSafetyUnits': cranes,
+                    'emergencyLineCrews': crews
+                }
+            })
+        elif wind >= 30:
+            cranes = max(1, int(wind * 0.1))
+            crews = max(4, int(wind * 0.25))
+            recommendations.append({
+                'id': f'{c_key}-rec-wind-high',
+                'title': 'Secure Overhead Hoardings & Scaffolding Inspections',
+                'description': f'Stage 3 High Alert: Strong wind gusts ({wind:.1f} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.',
+                'category': 'wind',
+                'priority': 'high',
                 'department': 'Municipal Town Planning / Safety Wing',
                 'status': 'Active',
                 'actionCode': 'WIND-SEC-01',
                 'estimatedResources': {
-                    'safetyCrews': crews,
+                    'safetyInspectors': crews,
                     'mobileCranes': cranes
                 }
             })
+        elif wind >= 18:
+            crews = max(2, int(wind * 0.2))
             recommendations.append({
-                'id': f'{c_key}-rec-wind-2',
-                'title': 'Suspend Marine, Port & Crane Operations',
-                'description': f'Issue immediate no-sail advisory for artisanal fishing boats and halt towering construction crane operations facing {wind:.1f} km/h winds.',
+                'id': f'{c_key}-rec-wind-med',
+                'title': 'Power Grid Line Patrol & Tree Clearing Squads',
+                'description': f'Stage 2 Alert: Moderate wind activity ({wind:.1f} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.',
                 'category': 'wind',
-                'priority': 'high' if wind > 40 else 'medium',
-                'department': 'Port Authority / Labour Enforcement',
+                'priority': 'medium',
+                'department': 'State Electricity Board / Forestry Works',
                 'status': 'Standby',
-                'actionCode': 'OPS-HALT-02',
+                'actionCode': 'GRID-STBY-03',
                 'estimatedResources': {
-                    'patrolVessels': 3,
-                    'advisoryChannels': 4
+                    'powerRestorationCrews': crews,
+                    'treeTrimmingUnits': max(1, int(crews / 2))
                 }
             })
-
-        if not recommendations:
+        else:
             recommendations.append({
-                'id': f'{c_key}-rec-std-1',
-                'title': 'Standard Operational Readiness & Sensor Verification',
-                'description': 'All synoptic parameters within baseline thresholds. Maintain automated radar & rain-gauge calibration.',
-                'category': 'general',
+                'id': f'{c_key}-rec-wind-base',
+                'title': 'Anemometer Verification & Baseline Grid Monitoring',
+                'description': f'Stage 1 Baseline: Wind velocity ({wind:.1f} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.',
+                'category': 'wind',
                 'priority': 'routine',
                 'department': 'State Meteorological Control Cell',
                 'status': 'Active',
-                'actionCode': 'EOC-STBY-00',
+                'actionCode': 'WIND-BASE-04',
                 'estimatedResources': {
-                    'activeSensors': 12,
-                    'standbyStaff': 4
+                    'anemometers': 6,
+                    'gridTelemetry': 10
                 }
             })
 

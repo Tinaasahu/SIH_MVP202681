@@ -1137,108 +1137,223 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
   const cKey = city.toLowerCase();
   const recs: ResourceAction[] = [];
 
-  // Heavy Rain Rules
-  if (rainfall > 40) {
+  // --- 1. FLOOD & PRECIPITATION CONTINGENCY ---
+  if (rainfall >= 50) {
+    const boats = Math.max(2, Math.floor(rainfall * 0.25));
+    const pumps = Math.max(5, Math.floor(rainfall * 0.4));
+    const personnel = Math.max(20, Math.floor(rainfall * 1.5));
+    const shelterCap = Math.max(200, Math.floor(rainfall * 50));
     recs.push({
-      id: `${cKey}-rain-sdrf`,
+      id: `${cKey}-rec-rain-crit`,
       title: 'Deploy SDRF & NDRF Water Rescue Battalions',
-      description: `Pre-position State Disaster Response Force inflatable motor boats, diving units, and rescue personnel at low-lying riverine basins. Projected rainfall at ${rainfall} mm/24h.`,
+      description: `Stage 4 Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: ${rainfall.toFixed(1)} mm/24h. Estimated requirement: ${boats} inflatable rescue boats, ${personnel} response personnel.`,
       category: 'rain',
-      priority: rainfall > 70 ? 'critical' : 'high',
-      department: 'State Disaster Management Authority (SDMA / DDMA)',
+      priority: 'critical',
+      department: 'Disaster Management Authority (SDMA / DDMA)',
       status: 'Ready',
       actionCode: 'SDRF-DEPL-01',
+      estimatedResources: {
+        rescueBoats: boats,
+        personnel: personnel,
+        dewateringPumps: pumps,
+        shelterCapacity: shelterCap,
+      },
     });
+  } else if (rainfall >= 20) {
+    const boats = Math.max(1, Math.floor(rainfall * 0.2));
+    const pumps = Math.max(4, Math.floor(rainfall * 0.35));
+    const personnel = Math.max(12, Math.floor(rainfall * 1.2));
     recs.push({
-      id: `${cKey}-rain-shelter`,
-      title: 'Open Emergency Relief Shelters & Stock Rations',
-      description: 'Activate cyclone/flood community shelters and primary healthcare relief camps with drinking water, dry rations, and medical emergency kits.',
+      id: `${cKey}-rec-rain-high`,
+      title: 'Pre-emptive Drainage Sump Mobilization & SDRF Standby',
+      description: `Stage 3 High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing ${rainfall.toFixed(1)} mm/24h rainfall. Standby rescue squads on 30-min notice.`,
       category: 'rain',
       priority: 'high',
-      department: 'Revenue & Civil Supplies Dept',
-      status: 'Standby',
-      actionCode: 'SHELTER-ACT-04',
-    });
-    recs.push({
-      id: `${cKey}-rain-drain`,
-      title: 'Continuous Drainage & Sump Pump Monitoring',
-      description: 'Deploy high-capacity dewatering pump sets at major urban underpasses, storm drains, railway culverts, and water-logging vulnerable hotspots.',
-      category: 'rain',
-      priority: rainfall > 60 ? 'high' : 'medium',
-      department: 'Municipal Corporation / PWD Works',
+      department: 'Municipal Corporation / PWD & SDRF',
       status: 'Active',
       actionCode: 'DRAIN-PUMP-02',
+      estimatedResources: {
+        dewateringPumps: pumps,
+        standbyBoats: boats,
+        responseSquads: personnel,
+      },
     });
-  }
-
-  // Heatwave Rules
-  if (temp >= 36) {
+  } else if (rainfall >= 5) {
+    const pumps = Math.max(2, Math.floor(rainfall * 0.3));
+    const personnel = Math.max(6, Math.floor(rainfall * 0.8));
     recs.push({
-      id: `${cKey}-heat-adv`,
-      title: 'Issue Heatwave Red Alert & Public Health Advisory',
-      description: `Broadcast urgent heat advisories via SMS, local radio, and state channels. Restrict heavy physical outdoor work between 11:30 AM and 03:30 PM. Current temp: ${temp}°C.`,
-      category: 'heat',
-      priority: temp >= 40 ? 'critical' : 'high',
-      department: 'Dept of Public Health & Family Welfare',
-      status: 'Active',
-      actionCode: 'HEAT-ADV-01',
-    });
-    recs.push({
-      id: `${cKey}-heat-cool`,
-      title: 'Activate Air-Cooled Public Relief Centres',
-      description: 'Open air-conditioned civic centers, bus terminuses, public libraries, and religious shelters as designated heat relief sanctuaries with ORS hydration kiosks.',
-      category: 'heat',
-      priority: 'high',
-      department: 'District Administration / Urban Local Bodies',
-      status: 'Ready',
-      actionCode: 'COOL-CTR-02',
-    });
-    recs.push({
-      id: `${cKey}-heat-water`,
-      title: 'Mobilize Emergency Drinking Water Tankers',
-      description: 'Dispatch municipal drinking water tankers to informal settlements, construction laborer clusters, and water-stressed urban wards.',
-      category: 'heat',
+      id: `${cKey}-rec-rain-med`,
+      title: 'Catchment Basin & Storm Sump Surveillance',
+      description: `Stage 2 Alert: Moderate rainfall expected (${rainfall.toFixed(1)} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.`,
+      category: 'rain',
       priority: 'medium',
-      department: 'Water Supply & Sewerage Board',
-      status: 'Dispatched',
-      actionCode: 'WATER-MOB-03',
-    });
-  }
-
-  // High Wind Rules
-  if (wind >= 22) {
-    recs.push({
-      id: `${cKey}-wind-infra`,
-      title: 'Secure Critical Infrastructure & Commercial Hoardings',
-      description: `Mandate structural inspection and immediate dismantling of unauthorized billboards, overhead hoardings, and construction scaffolding facing wind gusts of ${wind} km/h.`,
-      category: 'wind',
-      priority: wind > 35 ? 'high' : 'medium',
-      department: 'Municipal Town Planning / Safety Wing',
+      department: 'Urban Water Supply & Drainage Cell',
       status: 'Active',
-      actionCode: 'WIND-SEC-01',
+      actionCode: 'BASIN-WATCH-03',
+      estimatedResources: {
+        standbyPumps: pumps,
+        patrolCrews: personnel,
+      },
     });
+  } else {
     recs.push({
-      id: `${cKey}-wind-ops`,
-      title: 'Suspend Vulnerable High-Altitude & Marine Operations',
-      description: 'Issue immediate no-sail advisory for artisanal fishing boats, harbor ferries, and halt towering construction tower cranes and rooftop maintenance.',
-      category: 'wind',
-      priority: wind > 35 ? 'high' : 'medium',
-      department: 'Port Authority / Labour Enforcement',
-      status: 'Standby',
-      actionCode: 'OPS-HALT-02',
-    });
-  }
-
-  if (recs.length === 0) {
-    recs.push({
-      id: `${cKey}-std-readiness`,
-      title: 'Standard Operational Readiness & Sensor Verification',
-      description: 'All synoptic parameters within baseline thresholds. Maintain automated Doppler radar, automatic weather stations (AWS), and rain-gauge calibration.',
-      category: 'general',
+      id: `${cKey}-rec-rain-base`,
+      title: 'Baseline Synoptic Pluviometer Monitoring & Readiness',
+      description: `Stage 1 Baseline: Light/normal rainfall (${rainfall.toFixed(1)} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.`,
+      category: 'rain',
       priority: 'routine',
       department: 'State Meteorological Control Cell',
       status: 'Active',
-      actionCode: 'EOC-STBY-00',
+      actionCode: 'RAIN-BASE-04',
+      estimatedResources: {
+        activeRainGauges: 8,
+        telemetrySensors: 12,
+      },
+    });
+  }
+
+  // --- 2. HEAT ACTION PLAN PROTOCOL ---
+  if (temp >= 40) {
+    const tankers = Math.max(6, Math.floor((temp - 35) * 5));
+    const orsPkts = Math.floor((temp - 35) * 1500);
+    const coolingCenters = Math.max(4, Math.floor((temp - 35) * 2.5));
+    const heatBeds = Math.max(20, Math.floor((temp - 35) * 10));
+    recs.push({
+      id: `${cKey}-rec-heat-crit`,
+      title: 'Issue Heatwave Red Alert & Outdoor Work Curfew',
+      description: `Stage 4 Emergency: Severe heatwave conditions (${temp.toFixed(1)}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.`,
+      category: 'heat',
+      priority: 'critical',
+      department: 'Dept of Public Health & Disaster Management',
+      status: 'Active',
+      actionCode: 'HEAT-ADV-01',
+      estimatedResources: {
+        emergencyHeatBeds: heatBeds,
+        waterTankers: tankers,
+        orsPackets: orsPkts,
+        coolingCenters: coolingCenters,
+      },
+    });
+  } else if (temp >= 36) {
+    const tankers = Math.max(4, Math.floor((temp - 33) * 3));
+    const orsPkts = Math.floor((temp - 33) * 1000);
+    const coolingCenters = Math.max(2, Math.floor((temp - 33) * 1.5));
+    recs.push({
+      id: `${cKey}-rec-heat-high`,
+      title: 'Activate Civic Air-Cooled Relief Shelters & Tankers',
+      description: `Stage 3 High Alert: Elevated thermal stress (${temp.toFixed(1)}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.`,
+      category: 'heat',
+      priority: 'high',
+      department: 'Urban Local Bodies / Health Dept',
+      status: 'Ready',
+      actionCode: 'COOL-CTR-02',
+      estimatedResources: {
+        coolingCenters: coolingCenters,
+        waterTankers: tankers,
+        orsPackets: orsPkts,
+      },
+    });
+  } else if (temp >= 31) {
+    const tankers = Math.max(2, Math.floor((temp - 28) * 1.5));
+    const orsPkts = Math.max(500, Math.floor((temp - 28) * 500));
+    recs.push({
+      id: `${cKey}-rec-heat-med`,
+      title: 'Thermal Index Advisory & Public Hydration Points',
+      description: `Stage 2 Alert: Warm conditions (${temp.toFixed(1)}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.`,
+      category: 'heat',
+      priority: 'medium',
+      department: 'Municipal Public Health Wing',
+      status: 'Active',
+      actionCode: 'WATER-MOB-03',
+      estimatedResources: {
+        hydrationKiosks: tankers,
+        orsUnits: orsPkts,
+      },
+    });
+  } else {
+    recs.push({
+      id: `${cKey}-rec-heat-base`,
+      title: 'Thermal Baseline & Heat Index Surveillance',
+      description: `Stage 1 Baseline: Temperature (${temp.toFixed(1)}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.`,
+      category: 'heat',
+      priority: 'routine',
+      department: 'Health Surveillance & Met Cell',
+      status: 'Active',
+      actionCode: 'HEAT-BASE-04',
+      estimatedResources: {
+        ambientSensors: 6,
+        healthMonitors: 2,
+      },
+    });
+  }
+
+  // --- 3. WIND & INFRASTRUCTURE DEFENSE ---
+  if (wind >= 45) {
+    const cranes = Math.max(3, Math.floor(wind * 0.15));
+    const crews = Math.max(6, Math.floor(wind * 0.3));
+    const vessels = Math.max(2, Math.floor(wind * 0.1));
+    recs.push({
+      id: `${cKey}-rec-wind-crit`,
+      title: 'Suspend Marine Operations & Halt High-Altitude Cranes',
+      description: `Stage 4 Critical: Dangerous wind gusts (${wind.toFixed(1)} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.`,
+      category: 'wind',
+      priority: 'critical',
+      department: 'Port Authority, Labour & Police Safety',
+      status: 'Active',
+      actionCode: 'OPS-HALT-02',
+      estimatedResources: {
+        patrolVessels: vessels,
+        craneSafetyUnits: cranes,
+        emergencyLineCrews: crews,
+      },
+    });
+  } else if (wind >= 30) {
+    const cranes = Math.max(1, Math.floor(wind * 0.1));
+    const crews = Math.max(4, Math.floor(wind * 0.25));
+    recs.push({
+      id: `${cKey}-rec-wind-high`,
+      title: 'Secure Overhead Hoardings & Scaffolding Inspections',
+      description: `Stage 3 High Alert: Strong wind gusts (${wind.toFixed(1)} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.`,
+      category: 'wind',
+      priority: 'high',
+      department: 'Municipal Town Planning / Safety Wing',
+      status: 'Active',
+      actionCode: 'WIND-SEC-01',
+      estimatedResources: {
+        safetyInspectors: crews,
+        mobileCranes: cranes,
+      },
+    });
+  } else if (wind >= 18) {
+    const crews = Math.max(2, Math.floor(wind * 0.2));
+    recs.push({
+      id: `${cKey}-rec-wind-med`,
+      title: 'Power Grid Line Patrol & Tree Clearing Squads',
+      description: `Stage 2 Alert: Moderate wind activity (${wind.toFixed(1)} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.`,
+      category: 'wind',
+      priority: 'medium',
+      department: 'State Electricity Board / Forestry Works',
+      status: 'Standby',
+      actionCode: 'GRID-STBY-03',
+      estimatedResources: {
+        powerRestorationCrews: crews,
+        treeTrimmingUnits: Math.max(1, Math.floor(crews / 2)),
+      },
+    });
+  } else {
+    recs.push({
+      id: `${cKey}-rec-wind-base`,
+      title: 'Anemometer Verification & Baseline Grid Monitoring',
+      description: `Stage 1 Baseline: Wind velocity (${wind.toFixed(1)} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.`,
+      category: 'wind',
+      priority: 'routine',
+      department: 'State Meteorological Control Cell',
+      status: 'Active',
+      actionCode: 'WIND-BASE-04',
+      estimatedResources: {
+        anemometers: 6,
+        gridTelemetry: 10,
+      },
     });
   }
 
