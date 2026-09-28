@@ -593,10 +593,35 @@ def get_rpi():
     forecast_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
     confidence_path = os.path.join(OUTPUTS_DIR, "confidence_scores.csv")
     cities_path = os.path.join(DATA_DIR, "cities.csv")
+    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []
     city_records = load_csv_records(cities_path) or []
+    weights_records = load_csv_records(weights_path) or []
+
+    # Calculate real model weights per city from model_weights_lead.csv
+    city_weights_raw = {}
+    for wr in weights_records:
+        w_city = str(wr.get('city', '')).strip().lower()
+        if not w_city:
+            continue
+        m = str(wr.get('model', '')).strip().lower()
+        try:
+            w_val = float(wr.get('weight', 0.0))
+        except (ValueError, TypeError):
+            w_val = 0.0
+        if w_city not in city_weights_raw:
+            city_weights_raw[w_city] = {}
+        if m not in city_weights_raw[w_city]:
+            city_weights_raw[w_city][m] = []
+        city_weights_raw[w_city][m].append(w_val)
+
+    city_model_weights = {}
+    for w_city, m_dict in city_weights_raw.items():
+        w_avg = {m: sum(vals)/len(vals) for m, vals in m_dict.items() if vals}
+        tot = sum(w_avg.values()) or 1.0
+        city_model_weights[w_city] = {m: round((v / tot) * 100.0, 1) for m, v in w_avg.items()}
 
     city_meta = {}
     for c in city_records:
@@ -659,104 +684,144 @@ def get_rpi():
         else:
             priority = 'Critical'
 
-        dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
-        if dom_model == 'AI':
-            dom_model = 'ECMWF'
-
-        if dom_model == 'ECMWF':
-            weights = {'ecmwf': 45, 'icon': 25, 'gfs': 18, 'gem': 12}
-        elif dom_model == 'ICON':
-            weights = {'ecmwf': 25, 'icon': 45, 'gfs': 18, 'gem': 12}
-        elif dom_model == 'GFS':
-            weights = {'ecmwf': 20, 'icon': 22, 'gfs': 46, 'gem': 12}
+        # Real model weights from outputs/model_weights_lead.csv
+        real_w = city_model_weights.get(c_key)
+        if real_w and len(real_w) >= 4:
+            weights = real_w
+            best_model_name = max(real_w.items(), key=lambda x: x[1])[0]
+            dom_model = best_model_name.upper()
         else:
-            weights = {'ecmwf': 22, 'icon': 20, 'gfs': 18, 'gem': 40}
+            dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
+            if dom_model == 'AI':
+                dom_model = 'ECMWF'
+            weights = {'ecmwf': 30.5, 'icon': 28.0, 'gfs': 21.5, 'gem': 20.0}
 
+        # Real-time quantitative resource estimations based on synoptic thresholds
         recommendations = []
         if rain > 45 or rain_risk > 50:
+            boats = max(2, int(rain * 0.25))
+            pumps = max(5, int(rain * 0.4))
+            personnel = max(20, int(rain * 1.5))
+            shelter_cap = int(max(200, rain * 50))
             recommendations.append({
                 'id': f'{c_key}-rec-rain-1',
                 'title': 'Deploy SDRF & NDRF Water Rescue Battalions',
-                'description': f'Pre-position State Disaster Response Force inflatable boats & rescue personnel at low-lying riverine basins. Projected rainfall at {rain:.1f} mm/24h.',
+                'description': f'Pre-position State Disaster Response Force at low-lying riverine basins. Projected rainfall: {rain:.1f} mm/24h. Estimated requirement: {boats} inflatable rescue boats, {personnel} response personnel.',
                 'category': 'rain',
                 'priority': 'critical' if rain > 70 else 'high',
                 'department': 'Disaster Management Authority (SDMA / DDMA)',
                 'status': 'Ready',
-                'actionCode': 'SDRF-DEPL-01'
+                'actionCode': 'SDRF-DEPL-01',
+                'estimatedResources': {
+                    'rescueBoats': boats,
+                    'personnel': personnel,
+                    'dewateringPumps': pumps
+                }
             })
             recommendations.append({
                 'id': f'{c_key}-rec-rain-2',
                 'title': 'Open Emergency Relief Shelters & Stock Rations',
-                'description': 'Activate community shelters and primary healthcare relief camps with drinking water, dry rations, and medical kits.',
+                'description': f'Activate community relief shelters with drinking water, dry rations, and medical kits. Estimated shelter capacity: {shelter_cap} evacuees.',
                 'category': 'rain',
                 'priority': 'high',
                 'department': 'Revenue & Civil Supplies Dept',
                 'status': 'Standby',
-                'actionCode': 'SHELTER-ACT-04'
+                'actionCode': 'SHELTER-ACT-04',
+                'estimatedResources': {
+                    'shelterCapacity': shelter_cap,
+                    'medicalKits': max(10, int(shelter_cap / 20))
+                }
             })
             recommendations.append({
                 'id': f'{c_key}-rec-rain-3',
                 'title': 'Continuous Drainage & Sump Pump Monitoring',
-                'description': 'Deploy high-capacity dewatering pump sets at major urban underpasses, storm drains, and culverts.',
+                'description': f'Deploy high-capacity dewatering pump sets at major urban underpasses, storm drains, and culverts. Estimated requirement: {pumps} mobile pump units.',
                 'category': 'rain',
                 'priority': 'high' if rain > 60 else 'medium',
                 'department': 'Municipal Corporation / PWD',
                 'status': 'Active',
-                'actionCode': 'DRAIN-PUMP-02'
+                'actionCode': 'DRAIN-PUMP-02',
+                'estimatedResources': {
+                    'dewateringPumps': pumps
+                }
             })
 
         if temp >= 37 or heat_risk > 55:
+            tankers = max(4, int((temp - 35) * 5))
+            ors_pkts = int((temp - 35) * 1200)
+            cooling_centers = max(2, int((temp - 35) * 2))
             recommendations.append({
                 'id': f'{c_key}-rec-heat-1',
                 'title': 'Issue Heatwave Red Alert & Public Advisory',
-                'description': f'Broadcast urgent heat warnings via SMS, radio, and social media. Restrict heavy physical outdoor work between 11:30 AM and 03:30 PM. Temp: {temp:.1f}°C.',
+                'description': f'Broadcast urgent heat warnings via SMS & media. Restrict heavy physical outdoor work between 11:30 AM and 03:30 PM. Current peak temp: {temp:.1f}°C.',
                 'category': 'heat',
                 'priority': 'critical' if temp >= 40 else 'high',
                 'department': 'Dept of Public Health & Family Welfare',
                 'status': 'Active',
-                'actionCode': 'HEAT-ADV-01'
+                'actionCode': 'HEAT-ADV-01',
+                'estimatedResources': {
+                    'broadcastRadiusKm': 25,
+                    'healthAdvisories': 1
+                }
             })
             recommendations.append({
                 'id': f'{c_key}-rec-heat-2',
                 'title': 'Activate Air-Cooled Public Relief Centres',
-                'description': 'Open air-conditioned civic centers, bus terminuses, and libraries as heat relief shelters with ORS hydration stations.',
+                'description': f'Open air-conditioned civic centers and libraries as heat relief shelters with ORS hydration stations. Estimated requirement: {cooling_centers} cooling centers, {ors_pkts} ORS packets.',
                 'category': 'heat',
                 'priority': 'high',
                 'department': 'District Administration / Urban Local Bodies',
                 'status': 'Ready',
-                'actionCode': 'COOL-CTR-02'
+                'actionCode': 'COOL-CTR-02',
+                'estimatedResources': {
+                    'coolingCenters': cooling_centers,
+                    'orsPackets': ors_pkts
+                }
             })
             recommendations.append({
                 'id': f'{c_key}-rec-heat-3',
                 'title': 'Mobilize Emergency Drinking Water Tankers',
-                'description': 'Deploy municipal water supply bowsers to informal settlements, construction clusters, and water-stressed wards.',
+                'description': f'Deploy municipal water supply bowsers to informal settlements and water-stressed wards. Estimated requirement: {tankers} drinking water tankers.',
                 'category': 'heat',
                 'priority': 'medium',
                 'department': 'Water Supply & Sewerage Board',
                 'status': 'Dispatched',
-                'actionCode': 'WATER-MOB-03'
+                'actionCode': 'WATER-MOB-03',
+                'estimatedResources': {
+                    'waterTankers': tankers
+                }
             })
 
         if wind >= 25 or wind_risk > 45:
+            cranes = max(2, int(wind * 0.15))
+            crews = max(4, int(wind * 0.3))
             recommendations.append({
                 'id': f'{c_key}-rec-wind-1',
                 'title': 'Secure High-Rise Hoardings & Structural Assets',
-                'description': f'Inspect and dismantle unauthorized temporary billboards, overhead hoardings, and construction scaffolding facing wind gusts of {wind:.1f} km/h.',
+                'description': f'Inspect and dismantle unauthorized temporary billboards and scaffolding facing wind gusts of {wind:.1f} km/h. Estimated crew requirement: {crews} structural safety crews, {cranes} mobile cranes.',
                 'category': 'wind',
                 'priority': 'high' if wind > 35 else 'medium',
                 'department': 'Municipal Town Planning / Safety Wing',
                 'status': 'Active',
-                'actionCode': 'WIND-SEC-01'
+                'actionCode': 'WIND-SEC-01',
+                'estimatedResources': {
+                    'safetyCrews': crews,
+                    'mobileCranes': cranes
+                }
             })
             recommendations.append({
                 'id': f'{c_key}-rec-wind-2',
                 'title': 'Suspend Marine, Port & Crane Operations',
-                'description': 'Issue immediate no-sail advisory for artisanal fishing boats and halt towering construction tower crane operations.',
+                'description': f'Issue immediate no-sail advisory for artisanal fishing boats and halt towering construction crane operations facing {wind:.1f} km/h winds.',
                 'category': 'wind',
                 'priority': 'high' if wind > 40 else 'medium',
                 'department': 'Port Authority / Labour Enforcement',
                 'status': 'Standby',
-                'actionCode': 'OPS-HALT-02'
+                'actionCode': 'OPS-HALT-02',
+                'estimatedResources': {
+                    'patrolVessels': 3,
+                    'advisoryChannels': 4
+                }
             })
 
         if not recommendations:
@@ -768,7 +833,11 @@ def get_rpi():
                 'priority': 'routine',
                 'department': 'State Meteorological Control Cell',
                 'status': 'Active',
-                'actionCode': 'EOC-STBY-00'
+                'actionCode': 'EOC-STBY-00',
+                'estimatedResources': {
+                    'activeSensors': 12,
+                    'standbyStaff': 4
+                }
             })
 
         results.append({
@@ -809,10 +878,34 @@ def get_rpi_map():
     forecast_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
     confidence_path = os.path.join(OUTPUTS_DIR, "confidence_scores.csv")
     cities_path = os.path.join(DATA_DIR, "cities.csv")
+    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []
     city_records = load_csv_records(cities_path) or []
+    weights_records = load_csv_records(weights_path) or []
+
+    city_weights_raw = {}
+    for wr in weights_records:
+        w_city = str(wr.get('city', '')).strip().lower()
+        if not w_city:
+            continue
+        m = str(wr.get('model', '')).strip().lower()
+        try:
+            w_val = float(wr.get('weight', 0.0))
+        except (ValueError, TypeError):
+            w_val = 0.0
+        if w_city not in city_weights_raw:
+            city_weights_raw[w_city] = {}
+        if m not in city_weights_raw[w_city]:
+            city_weights_raw[w_city][m] = []
+        city_weights_raw[w_city][m].append(w_val)
+
+    city_model_weights = {}
+    for w_city, m_dict in city_weights_raw.items():
+        w_avg = {m: sum(vals)/len(vals) for m, vals in m_dict.items() if vals}
+        tot = sum(w_avg.values()) or 1.0
+        city_model_weights[w_city] = {m: round((v / tot) * 100.0, 1) for m, v in w_avg.items()}
 
     city_meta = {}
     for c in city_records:
@@ -863,9 +956,13 @@ def get_rpi_map():
         rpi = round(0.35 * rain_risk + 0.25 * heat_risk + 0.20 * wind_risk + 0.20 * conf, 1)
 
         priority = 'Low' if rpi <= 30 else 'Moderate' if rpi <= 55 else 'High' if rpi <= 75 else 'Critical'
-        dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
-        if dom_model == 'AI':
-            dom_model = 'ECMWF'
+        real_w = city_model_weights.get(c_key)
+        if real_w and len(real_w) >= 4:
+            dom_model = max(real_w.items(), key=lambda x: x[1])[0].upper()
+        else:
+            dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
+            if dom_model == 'AI':
+                dom_model = 'ECMWF'
 
         features.append({
             "type": "Feature",

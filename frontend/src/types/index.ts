@@ -130,6 +130,7 @@ export interface ResourceAction {
   department: string;
   status: 'Ready' | 'Standby' | 'Dispatched' | 'Active';
   actionCode: string;
+  estimatedResources?: Record<string, number | string>;
 }
 
 export interface RpiData {

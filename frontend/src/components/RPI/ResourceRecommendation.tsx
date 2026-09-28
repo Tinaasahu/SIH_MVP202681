@@ -190,9 +190,26 @@ export function ResourceRecommendation({ rpiData }: ResourceRecommendationProps)
                   </h4>
 
                   {/* Description */}
-                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  <p className="text-xs text-slate-600 leading-relaxed mb-3">
                     {rec.description}
                   </p>
+
+                  {/* Estimated Quantitative Resources */}
+                  {rec.estimatedResources && Object.keys(rec.estimatedResources).length > 0 && (
+                    <div className="mb-4 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 flex flex-wrap gap-2">
+                      {Object.entries(rec.estimatedResources).map(([key, val]) => {
+                        const formattedKey = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, (s) => s.toUpperCase());
+                        return (
+                          <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-slate-200/60 shadow-2xs text-[11px]">
+                            <span className="text-slate-500 font-medium">{formattedKey}:</span>
+                            <span className="font-bold text-slate-800">{val}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Bar: Department & Operational Dispatch Button */}
