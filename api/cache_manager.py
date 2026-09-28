@@ -14,11 +14,18 @@ Rules:
 import os
 import json
 import threading
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from pathlib import Path
 import requests
 import pandas as pd
 import numpy as np
+
+# India Standard Time (IST: UTC+05:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_now_ist():
+    """Returns current datetime in Indian Standard Time (IST)."""
+    return datetime.now(IST)
 
 # Base paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,7 +97,11 @@ def is_cache_fresh():
 
     try:
         last_updated_dt = datetime.fromisoformat(meta["last_updated"])
-        hours_old = (datetime.now() - last_updated_dt).total_seconds() / 3600.0
+        if last_updated_dt.tzinfo is not None:
+            now_cmp = datetime.now(last_updated_dt.tzinfo)
+        else:
+            now_cmp = datetime.now()
+        hours_old = (now_cmp - last_updated_dt).total_seconds() / 3600.0
         if hours_old < 0 or hours_old >= 6.0:
             print(f"[CacheManager] metadata.json is {hours_old:.2f}h old (>= 6 hours) -> stale.")
             return False
@@ -466,7 +477,7 @@ def regenerate_forecast():
         if is_cache_fresh():
             print("[CacheManager] Cache is already fresh (verified inside lock).")
             return load_metadata() or {
-                "last_updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
                 "cities": 45,
                 "models": 4
             }
@@ -485,8 +496,8 @@ def regenerate_forecast():
         # 4 & 5: Adaptive Weighting & Blended Forecast
         run_adaptive_weighting()
 
-        # 6: Save metadata
-        timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        # 6: Save metadata in IST
+        timestamp = get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30")
         metadata = {
             "last_updated": timestamp,
             "cities": city_count,
@@ -513,7 +524,7 @@ def ensure_fresh_forecast(force=False):
         meta = load_metadata()
         if not meta:
             meta = {
-                "last_updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
                 "cities": 45,
                 "models": 4,
                 "city_count": 45,

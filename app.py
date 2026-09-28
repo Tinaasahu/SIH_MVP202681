@@ -96,7 +96,7 @@ def check_forecast_freshness_async():
     threading.Thread(target=_worker, daemon=True).start()
 
 
-from api.cache_manager import ensure_fresh_forecast, load_metadata
+from api.cache_manager import ensure_fresh_forecast, load_metadata, get_now_ist
 
 # Trigger non-blocking freshness check in background
 try:
@@ -175,7 +175,7 @@ def get_metadata():
         except Exception:
             pass
         meta = {
-            "last_updated": "2026-09-27T10:25:33",
+            "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
             "cities": 45,
             "models": 4,
             "city_count": 45,

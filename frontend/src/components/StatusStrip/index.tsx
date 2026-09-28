@@ -5,19 +5,36 @@ import { Activity, Clock, Database, Layers, MapPin, RefreshCw } from 'lucide-rea
 import { getMetadata, MetadataRecord } from '@/lib/api';
 
 function formatStatusStripDate(isoString?: string): string {
-  if (!isoString) return '26 Sep 2026 • 23:45 IST';
+  if (!isoString) return '29 Sep 2026 • 00:30 IST';
   try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '26 Sep 2026 • 23:45 IST';
-    const day = d.getDate();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[d.getMonth()];
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${day} ${month} ${year} • ${hours}:${minutes} IST`;
+    let clean = isoString.trim();
+    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+      clean += 'Z';
+    }
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return '29 Sep 2026 • 00:30 IST';
+
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    let day = '', month = '', year = '', hour = '', minute = '';
+    for (const p of parts) {
+      if (p.type === 'day') day = p.value;
+      if (p.type === 'month') month = p.value;
+      if (p.type === 'year') year = p.value;
+      if (p.type === 'hour') hour = p.value;
+      if (p.type === 'minute') minute = p.value;
+    }
+    return `${day} ${month} ${year} • ${hour}:${minute} IST`;
   } catch {
-    return '26 Sep 2026 • 23:45 IST';
+    return '29 Sep 2026 • 00:30 IST';
   }
 }
 

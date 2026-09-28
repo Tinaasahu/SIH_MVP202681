@@ -415,26 +415,39 @@ export type { ConfidenceRecord };
  */
 export function formatLastUpdated(isoString?: string): string {
   if (!isoString) {
-    return '26 Sep 2026 • 11:45 PM';
+    return '29 Sep 2026 • 12:30 AM';
   }
   try {
-    const d = new Date(isoString);
+    let clean = isoString.trim();
+    // If backend timestamp has no timezone offset or Z, it originates from Render UTC -> append Z
+    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+      clean += 'Z';
+    }
+    const d = new Date(clean);
     if (isNaN(d.getTime())) return isoString;
 
-    const day = d.getDate();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[d.getMonth()];
-    const year = d.getFullYear();
-
-    let hours = d.getHours();
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-
-    return `${day} ${month} ${year} • ${hours}:${minutes} ${ampm}`;
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    const parts = formatter.formatToParts(d);
+    let day = '', month = '', year = '', hour = '', minute = '', dayPeriod = '';
+    for (const p of parts) {
+      if (p.type === 'day') day = p.value;
+      if (p.type === 'month') month = p.value;
+      if (p.type === 'year') year = p.value;
+      if (p.type === 'hour') hour = p.value;
+      if (p.type === 'minute') minute = p.value;
+      if (p.type === 'dayPeriod') dayPeriod = p.value.toUpperCase();
+    }
+    return `${day} ${month} ${year} • ${hour}:${minute} ${dayPeriod}`;
   } catch {
-    return '26 Sep 2026 • 11:45 PM';
+    return isoString;
   }
 }
 
