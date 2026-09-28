@@ -1,14 +1,17 @@
 /**
- * 3D Performance Matrix Data
+ * 3D Performance Matrix Data Layer
+ * 
+ * Powered by live validation data from /api/performance (outputs/performance_summary.csv).
+ * Evaluated on the TEST split across all 3 lead days.
  * 
  * Axes:
- *   X → Weather Models (AI, ECMWF IFS, GFS, Ensemble, Blended)
- *   Z → Lead Times (6h, 12h, 24h, 48h, 72h)
+ *   X → Weather Models (Hybrid, ECMWF IFS, GFS, Ensemble, Blended)
+ *   Z → Lead Times (24h, 48h, 72h)
  *   Y → RMSE Error (lower = better)
- *
- * Each variable (rainfall, temperature, wind) has its own dataset.
- * Values are realistic RMSE ranges for Indian Monsoon forecasting.
  */
+
+import { getPerformance } from '@/lib/api';
+import type { PerformanceSummaryRecord } from '@/types';
 
 export interface PerformanceCell {
   model: string;
@@ -27,126 +30,112 @@ export interface PerformanceMatrixData {
   cells: PerformanceCell[];
 }
 
-export const MODELS = ['AI Model', 'ECMWF IFS', 'GFS', 'Ensemble', 'Blended'] as const;
-export const LEAD_TIMES = ['6h', '12h', '24h', '48h', '72h'] as const;
+export const MODELS = ['Hybrid (Final)', 'ECMWF IFS', 'GFS', 'Ensemble', 'Blended'] as const;
+export const LEAD_TIMES = ['24h', '48h', '72h'] as const;
+
+export const MODEL_METHOD_MAP: Record<string, string> = {
+  'Hybrid (Final)': 'hybrid_rf',
+  'ECMWF IFS': 'ecmwf',
+  'GFS': 'gfs',
+  'Ensemble': 'equal_avg',
+  'Blended': 'weighted_blend',
+};
 
 export const MODEL_COLORS: Record<string, string> = {
-  'AI Model': '#3b82f6',
+  'Hybrid (Final)': '#3b82f6',
   'ECMWF IFS': '#0ea5e9',
   'GFS': '#6366f1',
   'Ensemble': '#8b5cf6',
   'Blended': '#10b981',
 };
 
-const buildMatrix = (
-  variable: string,
-  unit: string,
-  baseRMSE: number[][],  // [model][lead]
-  baseMae: number[][],
-  baseBias: number[][],
-): PerformanceMatrixData => {
+const VARIABLE_CONFIG: Record<string, { label: string; unit: string; key: string }> = {
+  rainfall: { label: 'Rainfall', unit: 'mm', key: 'rainfall' },
+  temperature: { label: 'Temperature', unit: '°C', key: 'temperature' },
+  wind: { label: 'Wind Speed', unit: 'km/h', key: 'wind_speed' },
+  wind_speed: { label: 'Wind Speed', unit: 'km/h', key: 'wind_speed' },
+};
+
+/**
+ * Builds a dynamic PerformanceMatrixData structure from raw /api/performance records.
+ */
+export function buildMatrix(
+  variableKey: string,
+  records: PerformanceSummaryRecord[]
+): PerformanceMatrixData | null {
+  const cfg = VARIABLE_CONFIG[variableKey.toLowerCase()] || {
+    label: variableKey,
+    unit: '',
+    key: variableKey.toLowerCase(),
+  };
+
+  const matchingRecords = records.filter(r => {
+    const v = r.variable.toLowerCase();
+    return v === cfg.key || (cfg.key === 'wind_speed' && (v === 'wind' || v === 'wind_speed'));
+  });
+
+  if (matchingRecords.length === 0) {
+    return null;
+  }
+
+  const maxRmse = Math.max(...matchingRecords.map(r => r.rmse), 0.01);
   const cells: PerformanceCell[] = [];
-  const maxRmse = Math.max(...baseRMSE.flat());
 
   for (let mi = 0; mi < MODELS.length; mi++) {
+    const model = MODELS[mi];
+    const method = MODEL_METHOD_MAP[model];
+
     for (let li = 0; li < LEAD_TIMES.length; li++) {
+      const leadDay = li + 1;
+      const rec = matchingRecords.find(
+        r => r.lead_days === leadDay && r.method.toLowerCase() === method.toLowerCase()
+      );
+
+      const rmse = rec ? rec.rmse : 0;
+      const mae = rec ? rec.mae : 0;
+      const skillScore = rmse > 0 ? Math.max(0, 1 - rmse / (maxRmse * 1.1)) : 0;
+
       cells.push({
-        model: MODELS[mi],
+        model,
         modelIndex: mi,
         leadTime: LEAD_TIMES[li],
         leadIndex: li,
-        rmse: baseRMSE[mi][li],
-        mae: baseMae[mi][li],
-        bias: baseBias[mi][li],
-        skillScore: Math.max(0, 1 - baseRMSE[mi][li] / (maxRmse * 1.1)),
+        rmse,
+        mae,
+        bias: 0,
+        skillScore,
       });
     }
   }
 
-  return { variable, unit, cells };
-};
+  return {
+    variable: cfg.label,
+    unit: cfg.unit,
+    cells,
+  };
+}
 
-// Rainfall RMSE (mm) — models × lead times
-export const RAINFALL_MATRIX = buildMatrix(
-  'Rainfall', 'mm',
-  // RMSE: AI, ECMWF, GFS, Ensemble, Blended
-  [
-    [4.2, 5.8, 8.1, 12.4, 18.6],   // AI Model
-    [3.8, 5.2, 7.6, 11.8, 17.2],   // ECMWF IFS
-    [5.1, 6.8, 9.4, 14.1, 20.8],   // GFS
-    [4.6, 6.2, 8.8, 13.2, 19.4],   // Ensemble
-    [3.2, 4.5, 6.8, 10.6, 15.8],   // Blended (best)
-  ],
-  // MAE
-  [
-    [3.1, 4.2, 6.0, 9.2, 14.1],
-    [2.8, 3.9, 5.6, 8.8, 13.0],
-    [3.8, 5.1, 7.1, 10.6, 15.8],
-    [3.4, 4.6, 6.5, 9.8, 14.8],
-    [2.4, 3.3, 5.0, 7.9, 12.0],
-  ],
-  // Bias
-  [
-    [-0.8, -1.2, -2.1, -3.4, -5.2],
-    [0.4, 0.8, 1.4, 2.2, 3.6],
-    [1.2, 1.8, 2.8, 4.2, 6.4],
-    [0.2, 0.4, 0.6, 1.0, 1.6],
-    [-0.1, -0.2, -0.4, -0.6, -1.0],
-  ],
-);
+/**
+ * Fetches all performance matrices dynamically from /api/performance.
+ * Returns null if the endpoint fails or records are empty (no mock fallback).
+ */
+export async function fetchAllMatrices(): Promise<Record<string, PerformanceMatrixData> | null> {
+  const records = await getPerformance();
+  if (!records || records.length === 0) {
+    return null;
+  }
 
-export const TEMPERATURE_MATRIX = buildMatrix(
-  'Temperature', '°C',
-  [
-    [0.8, 1.1, 1.6, 2.4, 3.5],
-    [0.7, 1.0, 1.4, 2.1, 3.2],
-    [1.0, 1.3, 1.9, 2.8, 4.1],
-    [0.9, 1.2, 1.7, 2.6, 3.8],
-    [0.6, 0.8, 1.2, 1.8, 2.8],
-  ],
-  [
-    [0.6, 0.8, 1.2, 1.8, 2.7],
-    [0.5, 0.7, 1.0, 1.6, 2.4],
-    [0.8, 1.0, 1.4, 2.1, 3.1],
-    [0.7, 0.9, 1.3, 2.0, 2.9],
-    [0.4, 0.6, 0.9, 1.4, 2.1],
-  ],
-  [
-    [-0.2, -0.3, -0.4, -0.6, -0.9],
-    [0.1, 0.2, 0.3, 0.5, 0.8],
-    [0.3, 0.4, 0.6, 0.9, 1.4],
-    [0.1, 0.1, 0.2, 0.3, 0.4],
-    [0.0, -0.1, -0.1, -0.2, -0.3],
-  ],
-);
+  const rainfall = buildMatrix('rainfall', records);
+  const temperature = buildMatrix('temperature', records);
+  const wind = buildMatrix('wind', records);
 
-export const WIND_MATRIX = buildMatrix(
-  'Wind Speed', 'km/h',
-  [
-    [1.8, 2.4, 3.4, 5.2, 7.8],
-    [1.6, 2.2, 3.1, 4.8, 7.2],
-    [2.2, 2.9, 4.1, 6.2, 9.1],
-    [2.0, 2.6, 3.7, 5.6, 8.4],
-    [1.4, 1.9, 2.7, 4.2, 6.4],
-  ],
-  [
-    [1.4, 1.8, 2.6, 4.0, 6.0],
-    [1.2, 1.7, 2.4, 3.7, 5.5],
-    [1.7, 2.2, 3.1, 4.8, 7.0],
-    [1.5, 2.0, 2.8, 4.3, 6.5],
-    [1.0, 1.4, 2.0, 3.2, 4.9],
-  ],
-  [
-    [-0.4, -0.6, -0.9, -1.4, -2.1],
-    [0.2, 0.4, 0.6, 1.0, 1.5],
-    [0.6, 0.8, 1.2, 1.8, 2.8],
-    [0.1, 0.2, 0.3, 0.5, 0.7],
-    [0.0, -0.1, -0.1, -0.2, -0.4],
-  ],
-);
+  if (!rainfall || !temperature || !wind) {
+    return null;
+  }
 
-export const ALL_MATRICES: Record<string, PerformanceMatrixData> = {
-  rainfall: RAINFALL_MATRIX,
-  temperature: TEMPERATURE_MATRIX,
-  wind: WIND_MATRIX,
-};
+  return {
+    rainfall,
+    temperature,
+    wind,
+  };
+}

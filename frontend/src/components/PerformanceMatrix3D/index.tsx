@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Text, Html, Environment, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import {
-  ALL_MATRICES,
+  fetchAllMatrices,
   MODELS,
   LEAD_TIMES,
   MODEL_COLORS,
@@ -344,19 +344,89 @@ export function PerformanceMatrix3D() {
   const [variable, setVariable] = useState<VariableKey>('rainfall');
   const [colorMode, setColorMode] = useState<ColorMode>('model');
   const [autoRotate, setAutoRotate] = useState(true);
+  const [matrices, setMatrices] = useState<Record<string, PerformanceMatrixData> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
-  const matrix = ALL_MATRICES[variable];
+  useEffect(() => {
+    let mounted = true;
+    fetchAllMatrices()
+      .then((data) => {
+        if (mounted) {
+          if (data && Object.keys(data).length > 0) {
+            setMatrices(data);
+            setIsError(false);
+          } else {
+            setIsError(true);
+          }
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const matrix = matrices ? matrices[variable] : null;
 
   // Find best model at each lead time
   const bestModels = useMemo(() => {
+    if (!matrix) return {};
     const bests: Record<string, string> = {};
     for (const lt of LEAD_TIMES) {
       const cellsAtLead = matrix.cells.filter(c => c.leadTime === lt);
-      const best = cellsAtLead.reduce((a, b) => (a.rmse < b.rmse ? a : b));
-      bests[lt] = best.model;
+      if (cellsAtLead.length > 0) {
+        const best = cellsAtLead.reduce((a, b) => (a.rmse < b.rmse ? a : b));
+        bests[lt] = best.model;
+      }
     }
     return bests;
   }, [matrix]);
+
+  if (isLoading) {
+    return (
+      <GlassCard padding="md">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 flex items-center justify-center text-blue-600">
+            <Box size={15} />
+          </div>
+          <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+            3D PERFORMANCE MATRIX
+          </span>
+        </div>
+        <div className="h-64 flex items-center justify-center text-slate-400 text-xs">
+          Loading performance validation matrix...
+        </div>
+      </GlassCard>
+    );
+  }
+
+  if (isError || !matrix) {
+    return (
+      <GlassCard padding="md">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 flex items-center justify-center text-blue-600">
+            <Box size={15} />
+          </div>
+          <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+            3D PERFORMANCE MATRIX
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+            Unavailable
+          </span>
+        </div>
+        <div className="h-64 flex items-center justify-center text-slate-500 text-xs">
+          3D Performance Matrix unavailable. Could not fetch metrics from /api/performance.
+        </div>
+      </GlassCard>
+    );
+  }
 
   return (
     <GlassCard padding="md">
@@ -505,20 +575,18 @@ export function PerformanceMatrix3D() {
       </div>
 
       {/* Insight footer */}
-      <div
-        className="mt-3 rounded-xl px-3.5 py-2.5"
-        style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}
-      >
-        <p className="text-xs text-slate-600 leading-relaxed">
-          <span className="font-bold text-emerald-700">Blended AI-NWP</span> achieves lowest RMSE across all lead times for {matrix.variable.toLowerCase()}, with skill degradation of only{' '}
-          <span className="font-bold text-emerald-700">
-            {((matrix.cells.find(c => c.model === 'Blended' && c.leadTime === '72h')!.rmse /
-              matrix.cells.find(c => c.model === 'Blended' && c.leadTime === '6h')!.rmse) - 1).toFixed(1)}x
-          </span>{' '}
-          from 6h to 72h vs {((matrix.cells.find(c => c.model === 'GFS' && c.leadTime === '72h')!.rmse /
-            matrix.cells.find(c => c.model === 'GFS' && c.leadTime === '6h')!.rmse) - 1).toFixed(1)}x for GFS.
-        </p>
-      </div>
+      {matrix && (
+        <div
+          className="mt-3 rounded-xl px-3.5 py-2.5"
+          style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}
+        >
+          <p className="text-xs text-slate-600 leading-relaxed">
+            <span className="font-bold text-emerald-700">Hybrid (Final)</span> achieves lowest RMSE across lead times for {matrix.variable.toLowerCase()} (
+            {matrix.cells.find(c => c.model === 'Hybrid (Final)' && c.leadIndex === 0)?.rmse} {matrix.unit} at 24h vs{' '}
+            {matrix.cells.find(c => c.model === 'ECMWF IFS' && c.leadIndex === 0)?.rmse} {matrix.unit} for ECMWF IFS).
+          </p>
+        </div>
+      )}
     </GlassCard>
   );
 }

@@ -15,19 +15,28 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
   const [weights, setWeights] = useState<ModelWeight[]>(MOCK_MODEL_WEIGHTS);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     getModelWeightsData(selectedCity || 'Kanpur', 'temperature')
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setWeights(data);
+        if (mounted) {
+          if (data && data.length > 0 && data !== MOCK_MODEL_WEIGHTS) {
+            setWeights(data);
+            setIsFallback(false);
+          } else {
+            setWeights(MOCK_MODEL_WEIGHTS);
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setWeights(MOCK_MODEL_WEIGHTS);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -46,6 +55,11 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
             <span className="text-xs font-semibold tracking-widest text-slate-500" style={{ letterSpacing: '0.12em' }}>
               MODEL CONTRIBUTION
             </span>
+            {isFallback && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                Demo data (backend unavailable)
+              </span>
+            )}
             <Tooltip
               content={
                 <div className="space-y-1 p-1">
@@ -130,7 +144,7 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
         style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.1)' }}
       >
         <p className="text-xs text-slate-500">
-          <span className="font-medium text-blue-600">AI Model</span> currently demonstrates stronger historical performance for this region and lead time, while NWP contributes additional physical consistency.
+          <span className="font-medium text-blue-600">Hybrid (Final)</span> applies Random Forest residual correction on top of the 4 NWP consensus weights for localized precision.
         </p>
       </div>
     </GlassCard>

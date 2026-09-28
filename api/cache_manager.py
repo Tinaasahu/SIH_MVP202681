@@ -79,20 +79,32 @@ def save_metadata(metadata_dict):
 
 def is_cache_fresh():
     """
-    Checks if blended_forecast.csv is from today's date.
-    Returns True if fresh, False if older than today or missing.
+    Checks if forecast cache is fresh.
+    Fresh only if metadata.json 'last_updated' is less than 6 hours old.
+    As a secondary safeguard, verifies the forecast's first datetime is today or later.
     """
+    meta = load_metadata()
+    if not meta or "last_updated" not in meta:
+        print("[CacheManager] metadata.json missing or lacks last_updated -> stale.")
+        return False
+
+    try:
+        last_updated_dt = datetime.fromisoformat(meta["last_updated"])
+        hours_old = (datetime.now() - last_updated_dt).total_seconds() / 3600.0
+        if hours_old < 0 or hours_old >= 6.0:
+            print(f"[CacheManager] metadata.json is {hours_old:.2f}h old (>= 6 hours) -> stale.")
+            return False
+    except Exception as e:
+        print(f"[CacheManager] Error parsing metadata last_updated: {e}")
+        return False
+
+    # Secondary safeguard: Check that blended_forecast.csv's first datetime is today or later
     if not BLENDED_CSV.exists():
         print("[CacheManager] blended_forecast.csv does not exist -> stale.")
         return False
 
-    # Check metadata date if available
-    meta = load_metadata()
     today_str = get_today_date_str()
-
-    # Also inspect actual date inside blended_forecast.csv
     try:
-        # Read just first 2 lines to quickly get first datetime without loading entire file
         with open(BLENDED_CSV, "r", encoding="utf-8") as f:
             header = f.readline()
             first_row = f.readline()
@@ -100,29 +112,16 @@ def is_cache_fresh():
                 return False
             parts = first_row.strip().split(",")
             if len(parts) >= 2:
-                # datetime is the second column e.g. "2026-09-26 00:00:00"
                 fc_dt_str = parts[1].strip()
                 fc_date_str = fc_dt_str[:10]
-                if fc_date_str == today_str:
-                    # File is from today's date!
-                    if meta and meta.get("last_updated", "").startswith(today_str):
-                        return True
-                    # If file has today's date but metadata is missing, backfill metadata
-                    save_metadata({
-                        "last_updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                        "cities": 45,
-                        "models": 4,
-                        "city_count": 45,
-                        "model_count": 4
-                    })
-                    return True
-                else:
-                    print(f"[CacheManager] blended_forecast.csv date ({fc_date_str}) is older than today ({today_str}).")
+                if fc_date_str < today_str:
+                    print(f"[CacheManager] blended_forecast.csv date ({fc_date_str}) is older than today ({today_str}) -> stale.")
                     return False
     except Exception as e:
         print(f"[CacheManager] Error checking file date: {e}")
+        return False
 
-    return False
+    return True
 
 
 def fetch_open_meteo_forecasts(cities_df):
@@ -385,11 +384,10 @@ def run_adaptive_weighting():
             raise RuntimeError(f"RF correction verification failed: mean absolute difference for '{var}' is {mae_diff:.4f} (must be > 0)")
     print("=" * 60 + "\n")
 
-    # Run downstream alerts and confidence updates if modules available
-    try:
-        run_downstream_updates()
-    except Exception as e:
-        print(f"[CacheManager] Notice during downstream updates: {e}")
+    # Run downstream alerts and confidence updates strictly AFTER hybrid_forecast.csv is fully written
+    if not HYBRID_CSV.exists() or HYBRID_CSV.stat().st_size == 0:
+        raise RuntimeError(f"[CacheManager] {HYBRID_CSV} does not exist or is empty before downstream updates.")
+    run_downstream_updates()
 
     return df_out
 
@@ -397,26 +395,60 @@ def run_adaptive_weighting():
 def run_downstream_updates():
     """
     Refreshes outputs/extreme_alerts.csv and outputs/confidence_scores.csv
-    based on the freshly blended forecast.
+    based on the freshly written hybrid forecast.
+    Captures and prints return code and stderr of ai/alerts.py and ai/confidence_engine.py.
     """
-    try:
-        import sys
-        import subprocess
-        # Check if venv python exists
-        venv_py = BASE_DIR / "venv" / "bin" / "python"
-        py_exec = str(venv_py) if venv_py.exists() else sys.executable
+    if not HYBRID_CSV.exists() or HYBRID_CSV.stat().st_size == 0:
+        print(f"[CacheManager] Cannot run downstream updates: {HYBRID_CSV} is missing or empty.")
+        return
 
-        # Run alerts.py
-        alerts_script = BASE_DIR / "ai" / "alerts.py"
-        if alerts_script.exists():
-            subprocess.run([py_exec, str(alerts_script)], cwd=str(BASE_DIR), capture_output=True)
+    import sys
+    import subprocess
 
-        # Run confidence_engine.py
-        conf_script = BASE_DIR / "ai" / "confidence_engine.py"
-        if conf_script.exists():
-            subprocess.run([py_exec, str(conf_script)], cwd=str(BASE_DIR), capture_output=True)
-    except Exception as e:
-        print(f"[CacheManager] Downstream sync warning: {e}")
+    venv_py = BASE_DIR / "venv" / "bin" / "python"
+    venv_py_win = BASE_DIR / "venv" / "Scripts" / "python.exe"
+    if venv_py.exists():
+        py_exec = str(venv_py)
+    elif venv_py_win.exists():
+        py_exec = str(venv_py_win)
+    else:
+        py_exec = sys.executable
+
+    # Run ai/alerts.py
+    alerts_script = BASE_DIR / "ai" / "alerts.py"
+    if alerts_script.exists():
+        print(f"[CacheManager] Running downstream alerts: {alerts_script}...")
+        res_alerts = subprocess.run(
+            [py_exec, str(alerts_script)],
+            cwd=str(BASE_DIR),
+            capture_output=True,
+            text=True
+        )
+        print(f"[CacheManager] ai/alerts.py return code: {res_alerts.returncode}")
+        if res_alerts.stdout:
+            print(f"[CacheManager] ai/alerts.py stdout:\n{res_alerts.stdout}")
+        if res_alerts.stderr:
+            print(f"[CacheManager] ai/alerts.py stderr:\n{res_alerts.stderr}")
+        if res_alerts.returncode != 0:
+            print(f"[CacheManager] Warning: ai/alerts.py exited with non-zero code {res_alerts.returncode}")
+
+    # Run ai/confidence_engine.py
+    conf_script = BASE_DIR / "ai" / "confidence_engine.py"
+    if conf_script.exists():
+        print(f"[CacheManager] Running downstream confidence: {conf_script}...")
+        res_conf = subprocess.run(
+            [py_exec, str(conf_script)],
+            cwd=str(BASE_DIR),
+            capture_output=True,
+            text=True
+        )
+        print(f"[CacheManager] ai/confidence_engine.py return code: {res_conf.returncode}")
+        if res_conf.stdout:
+            print(f"[CacheManager] ai/confidence_engine.py stdout:\n{res_conf.stdout}")
+        if res_conf.stderr:
+            print(f"[CacheManager] ai/confidence_engine.py stderr:\n{res_conf.stderr}")
+        if res_conf.returncode != 0:
+            print(f"[CacheManager] Warning: ai/confidence_engine.py exited with non-zero code {res_conf.returncode}")
 
 
 def regenerate_forecast():

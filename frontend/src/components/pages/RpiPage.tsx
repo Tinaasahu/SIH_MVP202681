@@ -113,6 +113,9 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                 Decision Support
               </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                Illustrative prototype, not an official advisory
+              </span>
             </div>
             <p className="text-xs text-slate-500">
               Disaster Risk Mitigation & Resource Pre-Positioning Dashboard for National & State EOCs

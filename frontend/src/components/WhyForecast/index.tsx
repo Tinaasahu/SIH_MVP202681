@@ -16,6 +16,7 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
   const [conf, setConf] = useState<ConfidenceRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -26,7 +27,13 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
     ])
       .then(([weightsData, confData]) => {
         if (mounted) {
-          if (weightsData && weightsData.length > 0) setWeights(weightsData);
+          if (weightsData && weightsData.length > 0 && weightsData !== MOCK_MODEL_WEIGHTS) {
+            setWeights(weightsData);
+            setIsFallback(false);
+          } else {
+            setWeights(MOCK_MODEL_WEIGHTS);
+            setIsFallback(true);
+          }
           if (confData && confData.length > 0) setConf(confData[0]);
           setIsLoading(false);
         }
@@ -34,6 +41,8 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setWeights(MOCK_MODEL_WEIGHTS);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -45,6 +54,13 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
   return (
     <Modal open={open} onClose={onClose} title="WHY THIS FORECAST?" size="md">
       <div className="space-y-5">
+        {isFallback && (
+          <div className="mb-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              Demo data (backend unavailable)
+            </span>
+          </div>
+        )}
         {/* Context grid */}
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -99,13 +115,13 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
           </div>
           <p className="text-sm text-slate-600 leading-relaxed">
             {conf?.explanation ||
-              "AI Model currently demonstrates stronger historical performance for this region and lead time, while NWP contributes additional physical consistency. Ensemble components are weighted lower due to moderate agreement under active monsoon conditions."}
+              "Hybrid (Final) applies Random Forest residual correction on top of dynamically weighted NWP forecasts (ECMWF, GFS, ICON, GEM) based on lead-time historical skill."}
           </p>
         </div>
 
         {/* Disclaimer */}
         <p className="text-xs text-slate-400 leading-relaxed">
-          This forecast is based on statistical blending of NWP and AI model outputs. It is intended for decision-support and should not replace official IMD/NCMRWF operational guidance.
+          This forecast is based on dynamic blending of 4 NWP models with Random Forest AI residual correction. It is intended for decision-support and should not replace official NCMRWF operational guidance.
         </p>
       </div>
     </Modal>

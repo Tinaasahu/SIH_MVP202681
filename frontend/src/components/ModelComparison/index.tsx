@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { getModelComparisonData, MOCK_MODEL_COMPARISON } from '@/lib/api';
+import { getModelComparisonData } from '@/lib/api';
 import type { ModelComparison as ModelComparisonType, Variable } from '@/types';
 import { BarChart3 } from 'lucide-react';
 
@@ -21,22 +21,29 @@ interface ModelComparisonProps {
 
 export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProps) {
   const [variable, setVariable] = useState<Variable>('rainfall');
-  const [comparison, setComparison] = useState<ModelComparisonType[]>(MOCK_MODEL_COMPARISON);
+  const [comparison, setComparison] = useState<ModelComparisonType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
+    setIsLoading(true);
+    setIsError(false);
     getModelComparisonData(selectedCity || 'Kanpur')
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setComparison(data);
+        if (mounted) {
+          if (data && data.length > 0) {
+            setComparison(data);
+          } else {
+            setComparison([]);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setComparison([]);
           setIsLoading(false);
         }
       });
@@ -44,6 +51,27 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
       mounted = false;
     };
   }, [selectedCity]);
+
+  if (!isLoading && (isError || comparison.length === 0)) {
+    return (
+      <GlassCard padding="md" variant="yellow" className="flex flex-col justify-between h-full">
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+              <BarChart3 size={14} />
+            </div>
+            <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+              COMPARE MODELS
+            </span>
+          </div>
+          <div className="py-16 text-center text-slate-400 text-xs font-semibold bg-slate-50/60 rounded-xl border border-slate-100 flex flex-col items-center justify-center gap-2">
+            <span>Model comparison data unavailable</span>
+            <span className="text-[11px] text-slate-400 font-normal">Real NWP multi-model forecast could not be loaded for {selectedCity || 'this city'}</span>
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
 
   const config = VARIABLE_CONFIG[variable];
 

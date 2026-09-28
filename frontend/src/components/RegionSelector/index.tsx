@@ -17,20 +17,29 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
   const [district, setDistrict] = useState('Kanpur');
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   // 1. Fetch dynamic cities list from API
   useEffect(() => {
     let mounted = true;
     getCityForecastsData()
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setCities(data);
+        if (mounted) {
+          if (data && data.length > 0 && data !== MOCK_CITIES) {
+            setCities(data);
+            setIsFallback(false);
+          } else {
+            setCities(MOCK_CITIES);
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setCities(MOCK_CITIES);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -103,6 +112,11 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
           <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
             REGION SELECTOR
           </span>
+          {isFallback && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              Demo data (backend unavailable)
+            </span>
+          )}
         </div>
         <span className="text-[10px] text-blue-600 font-semibold px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 flex items-center gap-1">
           <Navigation size={10} /> Auto-Zoom

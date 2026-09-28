@@ -21,6 +21,7 @@ export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
   const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all');
   const [selectedState, setSelectedState] = useState<string>('all');
 
@@ -28,14 +29,22 @@ export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
     let mounted = true;
     getAlertsData()
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setAlerts(data);
+        if (mounted) {
+          if (data && data.length > 0 && data !== MOCK_ALERTS) {
+            setAlerts(data);
+            setIsFallback(false);
+          } else {
+            setAlerts(MOCK_ALERTS);
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setAlerts(MOCK_ALERTS);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -103,6 +112,11 @@ export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                   {alerts.length} Total
                 </span>
+                {isFallback && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    Demo data (backend unavailable)
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-400">Extreme Hazard Warning Registry</p>
             </div>
@@ -295,7 +309,7 @@ export function AlertDrawer({ open, onClose }: AlertDrawerProps) {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-slate-100 bg-white/60">
           <p className="text-[11px] text-slate-400 text-center">
-            Alerts generated from multi-model blending engine. For operational disaster deployment, refer to IMD/NCMRWF bulletins.
+            Alerts generated from multi-model blending engine. For operational disaster deployment, refer to official NCMRWF bulletins.
           </p>
         </div>
       </div>

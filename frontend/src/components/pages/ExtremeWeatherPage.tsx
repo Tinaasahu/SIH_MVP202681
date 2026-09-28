@@ -13,6 +13,7 @@ export function ExtremeWeatherPage() {
   const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all');
   const [selectedState, setSelectedState] = useState<string>('all');
 
@@ -20,14 +21,22 @@ export function ExtremeWeatherPage() {
     let mounted = true;
     getAlertsData()
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setAlerts(data);
+        if (mounted) {
+          if (data && data.length > 0) {
+            setAlerts(data);
+            setIsFallback(false);
+          } else {
+            setAlerts(MOCK_ALERTS);
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setAlerts(MOCK_ALERTS);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -67,13 +76,25 @@ export function ExtremeWeatherPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-600">
-          <ShieldAlert size={20} />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">Extreme Weather Guidance</h1>
-          <p className="text-xs text-slate-400">Probabilistic risk alerts for heavy rain, heatwave, and high wind</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-600">
+            <ShieldAlert size={20} />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-800">Extreme Weather Guidance</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                Illustrative prototype, not an official advisory
+              </span>
+              {isFallback && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                  Demo data (backend unavailable)
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-400">Probabilistic risk alerts for heavy rain, heatwave, and high wind</p>
+          </div>
         </div>
       </div>
 

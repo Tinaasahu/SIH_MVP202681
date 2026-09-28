@@ -146,6 +146,7 @@ def index():
         "engine": "pandas" if (USE_PANDAS and pd is not None) else "standard-csv",
         "endpoints": {
             "forecast": "/api/forecast",
+            "model_forecasts": "/api/model_forecasts",
             "metadata": "/api/metadata",
             "weights": "/api/weights",
             "skill": "/api/skill",
@@ -227,6 +228,28 @@ def get_forecast():
         if 'blend_wind_speed' not in r or r['blend_wind_speed'] is None:
             r['blend_wind_speed'] = r.get('wind_speed')
 
+    # Keep only rows where datetime >= the current hour (floor of now to the hour, Asia/Kolkata)
+    from datetime import datetime, timezone, timedelta
+    kolkata_tz = timezone(timedelta(hours=5, minutes=30))
+    current_hour_dt = datetime.now(kolkata_tz).replace(minute=0, second=0, microsecond=0).replace(tzinfo=None)
+    current_hour_str = current_hour_dt.strftime("%Y-%m-%d %H:00:00")
+
+    filtered_time_records = []
+    for r in records:
+        dt_val = str(r.get('datetime', '')).replace('T', ' ')
+        if len(dt_val) == 16:
+            dt_val += ":00"
+        if dt_val >= current_hour_str:
+            filtered_time_records.append(r)
+    records = filtered_time_records
+
+    # If no rows remain, return [] with HTTP 200 and a "stale": true field
+    if not records:
+        resp = jsonify([])
+        resp.headers['stale'] = 'true'
+        resp.headers['X-Forecast-Stale'] = 'true'
+        return resp, 200
+
     city = request.args.get('city')
     lead_days = request.args.get('lead_days')
 
@@ -240,7 +263,137 @@ def get_forecast():
         except ValueError:
             pass
 
+    if not records:
+        resp = jsonify([])
+        resp.headers['stale'] = 'true'
+        resp.headers['X-Forecast-Stale'] = 'true'
+        return resp, 200
+
     return jsonify(records)
+
+
+@app.route('/api/model_forecasts', methods=['GET'])
+@app.route('/model_forecasts', methods=['GET'])
+def get_model_forecasts():
+    """
+    Returns per-model forecast values from data/forecast_current.csv
+    (columns: city, model, datetime, temperature, rainfall, wind_speed;
+    models: ecmwf_ifs025, gfs_seamless, icon_seamless, gem_seamless).
+    Filtered to datetime >= current hour (Asia/Kolkata) and to the lead_days window
+    (lead_days = hours since the file's first datetime // 24 + 1).
+    Also includes the hybrid values from outputs/hybrid_forecast.csv for the same rows.
+    No computed multipliers.
+    Query parameters:
+      - city: filter by city name (e.g. ?city=Kanpur)
+      - lead_days: filter by lead days window (1, 2, 3)
+    """
+    from datetime import datetime, timezone, timedelta
+
+    curr_csv_path = os.path.join(DATA_DIR, "forecast_current.csv")
+    hybrid_csv_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
+
+    raw_records = load_csv_records(curr_csv_path)
+    if raw_records is None:
+        return jsonify({"error": "data/forecast_current.csv not found"}), 404
+
+    # Determine file's first datetime
+    first_dt = None
+    for r in raw_records:
+        if r.get('datetime'):
+            dt_clean = str(r['datetime']).replace('T', ' ')
+            if len(dt_clean) == 16:
+                dt_clean += ":00"
+            try:
+                p_dt = datetime.strptime(dt_clean[:19], "%Y-%m-%d %H:%M:%S")
+                if first_dt is None or p_dt < first_dt:
+                    first_dt = p_dt
+            except Exception:
+                pass
+    if first_dt is None:
+        first_dt = datetime.now()
+
+    # Current hour floor in Asia/Kolkata
+    kolkata_tz = timezone(timedelta(hours=5, minutes=30))
+    current_hour_dt = datetime.now(kolkata_tz).replace(minute=0, second=0, microsecond=0).replace(tzinfo=None)
+    current_hour_str = current_hour_dt.strftime("%Y-%m-%d %H:00:00")
+
+    city = request.args.get('city')
+    lead_days = request.args.get('lead_days')
+    target_lead = int(lead_days) if lead_days and str(lead_days).isdigit() else None
+    target_city = city.strip().lower() if city else None
+
+    results = []
+    valid_keys = set()
+
+    for r in raw_records:
+        r_city = str(r.get('city', '')).strip()
+        if target_city and r_city.lower() != target_city:
+            continue
+
+        dt_raw = str(r.get('datetime', '')).replace('T', ' ')
+        if len(dt_raw) == 16:
+            dt_raw += ":00"
+        if dt_raw < current_hour_str:
+            continue
+
+        # lead_days = hours since the file's first datetime // 24 + 1
+        try:
+            row_dt = datetime.strptime(dt_raw[:19], "%Y-%m-%d %H:%M:%S")
+            hours_ahead = int((row_dt - first_dt).total_seconds() // 3600)
+            row_lead = int(hours_ahead // 24 + 1)
+        except Exception:
+            row_lead = 1
+
+        if target_lead is not None and row_lead != target_lead:
+            continue
+
+        rec_entry = {
+            "city": r_city,
+            "model": r.get('model'),
+            "datetime": dt_raw,
+            "lead_days": row_lead,
+            "temperature": r.get('temperature'),
+            "rainfall": r.get('rainfall'),
+            "wind_speed": r.get('wind_speed')
+        }
+        results.append(rec_entry)
+        valid_keys.add((r_city.lower(), dt_raw))
+
+    # Also include the hybrid values from outputs/hybrid_forecast.csv for the same rows
+    hybrid_records = load_csv_records(hybrid_csv_path) or []
+    for hr in hybrid_records:
+        h_city = str(hr.get('city', '')).strip()
+        h_dt = str(hr.get('datetime', '')).replace('T', ' ')
+        if len(h_dt) == 16:
+            h_dt += ":00"
+
+        # Match city, datetime >= current hour, and target_lead
+        if (h_city.lower(), h_dt) in valid_keys or (
+            (not valid_keys) and
+            (not target_city or h_city.lower() == target_city) and
+            h_dt >= current_hour_str and
+            (target_lead is None or hr.get('lead_days') == target_lead)
+        ):
+            h_lead = hr.get('lead_days')
+            if h_lead is None:
+                try:
+                    row_dt = datetime.strptime(h_dt[:19], "%Y-%m-%d %H:%M:%S")
+                    hours_ahead = int((row_dt - first_dt).total_seconds() // 3600)
+                    h_lead = int(hours_ahead // 24 + 1)
+                except Exception:
+                    h_lead = 1
+
+            results.append({
+                "city": h_city,
+                "model": "hybrid",
+                "datetime": h_dt,
+                "lead_days": h_lead,
+                "temperature": hr.get('temperature'),
+                "rainfall": hr.get('rainfall'),
+                "wind_speed": hr.get('wind_speed')
+            })
+
+    return jsonify(results)
 
 
 @app.route('/api/weights', methods=['GET'])
@@ -309,6 +462,44 @@ def get_skill():
             records = [r for r in records if r.get('lead_days') == ld]
         except ValueError:
             pass
+
+    return jsonify(records)
+
+
+@app.route('/api/performance', methods=['GET'])
+@app.route('/performance', methods=['GET'])
+def get_performance():
+    """
+    Returns records from outputs/performance_summary.csv.
+    Optional query parameters:
+      - variable: filter by variable ('temperature', 'rainfall', 'wind' / 'wind_speed')
+      - lead_days: filter by lead_days (1, 2, 3)
+      - method: filter by method ('ecmwf', 'gfs', 'icon', 'gem', 'equal_avg', 'weighted_blend', 'bias_corrected', 'hybrid_rf')
+    """
+    csv_path = os.path.join(OUTPUTS_DIR, "performance_summary.csv")
+    records = load_csv_records(csv_path)
+    if records is None:
+        return jsonify({"error": "performance_summary.csv not found"}), 404
+
+    variable = request.args.get('variable')
+    lead_days = request.args.get('lead_days')
+    method = request.args.get('method')
+
+    if variable:
+        var_lower = variable.strip().lower()
+        if var_lower == 'wind':
+            records = [r for r in records if str(r.get('variable', '')).lower() in ['wind', 'wind_speed']]
+        else:
+            records = [r for r in records if str(r.get('variable', '')).lower() == var_lower]
+    if lead_days:
+        try:
+            ld = int(lead_days)
+            records = [r for r in records if r.get('lead_days') == ld]
+        except ValueError:
+            pass
+    if method:
+        method_lower = method.strip().lower()
+        records = [r for r in records if str(r.get('method', '')).lower() == method_lower]
 
     return jsonify(records)
 
@@ -718,11 +909,13 @@ def not_found(e):
             "health": "/health",
             "metadata": "/api/metadata",
             "forecast": "/api/forecast",
+            "model_forecasts": "/api/model_forecasts",
             "weights": "/api/weights",
             "skill": "/api/skill",
             "alerts": "/api/alerts",
             "cities": "/api/cities",
             "confidence": "/api/confidence",
+            "performance": "/api/performance",
             "rpi": "/api/rpi",
             "rpi_map": "/api/rpi/map"
         }

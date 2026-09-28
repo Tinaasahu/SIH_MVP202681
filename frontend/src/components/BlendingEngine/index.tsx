@@ -9,10 +9,11 @@ interface BlendingEngineModalProps {
 }
 
 const PIPELINE = [
-  { label: 'AI Model', color: '#3b82f6' },
   { label: 'ECMWF IFS', color: '#0ea5e9' },
   { label: 'GFS Seamless', color: '#6366f1' },
-  { label: 'Observations', color: '#10b981' },
+  { label: 'ICON Seamless', color: '#10b981' },
+  { label: 'GEM Seamless', color: '#8b5cf6' },
+  { label: 'Hybrid (Final)', color: '#3b82f6' },
 ];
 
 export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps) {

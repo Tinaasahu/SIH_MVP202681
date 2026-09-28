@@ -26,6 +26,7 @@ import type {
   ConfidenceRecord,
   RpiData,
   ResourceAction,
+  PerformanceSummaryRecord,
 } from '@/types';
 
 import {
@@ -463,11 +464,47 @@ export async function getConfidence(city?: string, lead_day?: number): Promise<C
   return fetchFromApi<ConfidenceRecord[]>(`/confidence${query}`, []);
 }
 
+/**
+ * GET /api/performance
+ * Returns performance_summary.csv records.
+ */
+export async function getPerformance(variable?: string, lead_days?: number, method?: string): Promise<PerformanceSummaryRecord[]> {
+  const params = new URLSearchParams();
+  if (variable) params.append('variable', variable);
+  if (lead_days) params.append('lead_days', String(lead_days));
+  if (method) params.append('method', method);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchFromApi<PerformanceSummaryRecord[]>(`/performance${query}`, []);
+}
+
 // Active in-flight singleton and memory cache for forecast records
 let activeForecastPromise: Promise<ForecastRecord[]> | null = null;
 let cachedForecastRecords: ForecastRecord[] | null = null;
 let lastForecastFetchTime = 0;
 const FORECAST_CACHE_TTL_MS = 60000; // 60 seconds
+
+export function getCurrentHourKolkata(): string {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(new Date());
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    const day = parts.find(p => p.type === 'day')?.value;
+    let hour = parts.find(p => p.type === 'hour')?.value || '00';
+    if (hour === '24') hour = '00';
+    return `${year}-${month}-${day} ${hour}:00`;
+  } catch {
+    const now = new Date();
+    return now.toISOString().slice(0, 13).replace('T', ' ') + ':00';
+  }
+}
 
 function filterForecastRecords(records: ForecastRecord[], city?: string, lead_days?: number): ForecastRecord[] {
   if (!records || !Array.isArray(records)) return [];
@@ -506,7 +543,10 @@ export async function getForecast(city?: string, lead_days?: number): Promise<Fo
   if (!activeForecastPromise) {
     activeForecastPromise = (async () => {
       try {
-        const records = await fetchFromApi<ForecastRecord[]>('/forecast', []);
+        const raw = await fetchFromApi<any>('/forecast', []);
+        const records: ForecastRecord[] = Array.isArray(raw)
+          ? raw
+          : (raw?.records || raw?.data || raw?.forecast || []);
         if (records && records.length > 0) {
           cachedForecastRecords = records;
           lastForecastFetchTime = Date.now();
@@ -524,6 +564,28 @@ export async function getForecast(city?: string, lead_days?: number): Promise<Fo
   } catch {
     return [];
   }
+}
+
+export interface ModelForecastRecord {
+  city: string;
+  model: string;
+  datetime: string;
+  lead_days: number;
+  temperature: number;
+  rainfall: number;
+  wind_speed: number;
+}
+
+/**
+ * GET /api/model_forecasts
+ * Returns real per-model forecast records for ECMWF, GFS, ICON, GEM, and Hybrid.
+ */
+export async function getModelForecasts(city?: string, lead_days?: number): Promise<ModelForecastRecord[]> {
+  const params = new URLSearchParams();
+  if (city) params.append('city', city);
+  if (lead_days) params.append('lead_days', String(lead_days));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchFromApi<ModelForecastRecord[]>(`/model_forecasts${query}`, []);
 }
 
 /**
@@ -587,8 +649,12 @@ export async function getForecastMetrics(city: string = 'Kanpur'): Promise<Forec
       return MOCK_FORECAST;
     }
 
-    // Take the 24h lead point or nearest step
-    const target = records.find(r => r.lead_days === 1) || records[0];
+    // F5: "Current weather" values must come from the row for the current hour, never from the first row of the array.
+    const currentHourStr = getCurrentHourKolkata();
+    const target = records.find(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr))
+      || records.find(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr)
+      || records[records.length - 1]
+      || records[0];
     const confItem = confRecords && confRecords.length > 0 ? confRecords[0] : null;
 
     const tempDiff = Math.abs((target.temperature ?? 30) - (target.blend_temperature ?? 30));
@@ -675,7 +741,6 @@ export async function getModelWeightsData(city: string = 'Kanpur', variable: str
       gfs: { name: 'GFS Seamless', color: '#6366f1' },
       icon: { name: 'ICON Seamless', color: '#10b981' },
       gem: { name: 'GEM Seamless', color: '#8b5cf6' },
-      ai: { name: 'AI Hybrid Model', color: '#3b82f6' },
     };
 
     const totalWeight = weights.reduce((sum, w) => sum + (w.weight || 0), 0) || 1;
@@ -703,32 +768,51 @@ export async function getModelWeightsData(city: string = 'Kanpur', variable: str
 
 /**
  * Helper to get ModelComparison[] for ModelComparison component.
+ * Uses real /api/model_forecasts endpoint data for ECMWF, GFS, ICON, GEM, and Hybrid.
+ * No fabricated multipliers. Returns [] on failure so component can render unavailable state.
  */
 export async function getModelComparisonData(city: string = 'Kanpur'): Promise<ModelComparison[]> {
   try {
-    const records = await getForecast(city, 1);
+    const records = await getModelForecasts(city, 1);
     if (!records || records.length === 0) {
-      return MOCK_MODEL_COMPARISON;
+      return [];
     }
 
-    const latest = records[0];
-    const blendedRain = latest.blend_rainfall ?? 15;
-    const blendedTemp = latest.blend_temperature ?? 30;
-    const blendedWind = latest.blend_wind_speed ?? 12;
+    const currentHourStr = getCurrentHourKolkata();
+    const getModelRow = (modelPrefix: string) => {
+      const matches = records.filter(r => r.model && r.model.toLowerCase().includes(modelPrefix.toLowerCase()));
+      if (matches.length === 0) return null;
+      return matches.find(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr))
+        || matches.find(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr)
+        || matches[0];
+    };
 
-    const hybridRain = latest.rainfall ?? blendedRain;
-    const hybridTemp = latest.temperature ?? blendedTemp;
-    const hybridWind = latest.wind_speed ?? blendedWind;
+    const ecmwf = getModelRow('ecmwf');
+    const gfs = getModelRow('gfs');
+    const icon = getModelRow('icon');
+    const gem = getModelRow('gem');
+    const hybrid = getModelRow('hybrid');
 
-    return [
-      { model: 'AI Hybrid', rainfall: Math.round(hybridRain * 10) / 10, temperature: Math.round(hybridTemp * 10) / 10, wind: Math.round(hybridWind * 10) / 10 },
-      { model: 'ECMWF IFS', rainfall: Math.round((blendedRain * 1.08) * 10) / 10, temperature: Math.round((blendedTemp + 0.4) * 10) / 10, wind: Math.round((blendedWind + 1.5) * 10) / 10 },
-      { model: 'GFS Seamless', rainfall: Math.round((blendedRain * 0.92) * 10) / 10, temperature: Math.round((blendedTemp - 0.3) * 10) / 10, wind: Math.round((blendedWind - 1.2) * 10) / 10 },
-      { model: 'ICON Seamless', rainfall: Math.round((blendedRain * 1.02) * 10) / 10, temperature: Math.round((blendedTemp + 0.1) * 10) / 10, wind: Math.round(blendedWind * 10) / 10 },
-      { model: 'Optimized Blend', rainfall: Math.round(blendedRain * 10) / 10, temperature: Math.round(blendedTemp * 10) / 10, wind: Math.round(blendedWind * 10) / 10, isBlended: true },
-    ];
+    const result: ModelComparison[] = [];
+    if (ecmwf) {
+      result.push({ model: 'ECMWF IFS', rainfall: Math.round((ecmwf.rainfall ?? 0) * 10) / 10, temperature: Math.round((ecmwf.temperature ?? 0) * 10) / 10, wind: Math.round((ecmwf.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (gfs) {
+      result.push({ model: 'GFS Seamless', rainfall: Math.round((gfs.rainfall ?? 0) * 10) / 10, temperature: Math.round((gfs.temperature ?? 0) * 10) / 10, wind: Math.round((gfs.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (icon) {
+      result.push({ model: 'ICON Seamless', rainfall: Math.round((icon.rainfall ?? 0) * 10) / 10, temperature: Math.round((icon.temperature ?? 0) * 10) / 10, wind: Math.round((icon.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (gem) {
+      result.push({ model: 'GEM Seamless', rainfall: Math.round((gem.rainfall ?? 0) * 10) / 10, temperature: Math.round((gem.temperature ?? 0) * 10) / 10, wind: Math.round((gem.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (hybrid) {
+      result.push({ model: 'Hybrid (Final)', rainfall: Math.round((hybrid.rainfall ?? 0) * 10) / 10, temperature: Math.round((hybrid.temperature ?? 0) * 10) / 10, wind: Math.round((hybrid.wind_speed ?? 0) * 10) / 10, isBlended: true });
+    }
+
+    return result;
   } catch {
-    return MOCK_MODEL_COMPARISON;
+    return [];
   }
 }
 
@@ -748,11 +832,18 @@ export async function getCityForecastsData(): Promise<CityForecast[]> {
       return MOCK_CITIES;
     }
 
-    // Index latest record per city (case-insensitive)
+    // F5: Index current hour record per city (case-insensitive)
+    const currentHourStr = getCurrentHourKolkata();
     const latestPerCity: Record<string, ForecastRecord> = {};
     for (const rec of forecastRecords) {
       const key = rec.city?.toLowerCase();
-      if (key && (!latestPerCity[key] || rec.lead_days === 1)) {
+      if (!key) continue;
+      const recTime = rec.datetime ? rec.datetime.replace('T', ' ') : '';
+      if (recTime.startsWith(currentHourStr)) {
+        latestPerCity[key] = rec;
+      } else if (!latestPerCity[key] && recTime >= currentHourStr) {
+        latestPerCity[key] = rec;
+      } else if (!latestPerCity[key]) {
         latestPerCity[key] = rec;
       }
     }
@@ -921,10 +1012,19 @@ export async function getAlertsData(city?: string): Promise<Alert[]> {
 
 /**
  * Helper to get ExtremeEvent[] for ExtremeWeather component.
+ * Attaches real confidence scores fetched from /api/confidence.
  */
 export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[]> {
   try {
-    const rawAlerts = await getAlerts(city);
+    const [rawAlerts, confScores] = await Promise.all([
+      getAlerts(city).catch(() => []),
+      getConfidence(city).catch(() => []),
+    ]);
+
+    const defaultConf = confScores && confScores.length > 0 && typeof confScores[0].confidence === 'number'
+      ? Math.round(confScores[0].confidence)
+      : 84;
+
     if (!rawAlerts || rawAlerts.length === 0) {
       return [
         {
@@ -932,7 +1032,7 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
           label: 'Safe Conditions',
           probability: 5,
           window: 'Next 72 Hours',
-          confidence: 94,
+          confidence: defaultConf,
           severity: 'watch',
           description: `All forecast parameters for ${city || 'this station'} remain safely below severe hazard thresholds.`,
         }
@@ -948,12 +1048,20 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
       const isHigh = a.severity.toLowerCase() === 'high';
       const timeStr = a.datetime ? a.datetime.slice(11, 16) : '00:00';
 
+      let matchedConf = defaultConf;
+      if (confScores && confScores.length > 0 && a.datetime) {
+        const found = confScores.find(c => c.datetime === a.datetime);
+        if (found && typeof found.confidence === 'number') {
+          matchedConf = Math.round(found.confidence);
+        }
+      }
+
       return {
         type,
         label: a.event,
         probability: isHigh ? 88 : 72,
         window: `${timeStr} IST`,
-        confidence: 86,
+        confidence: matchedConf,
         severity: isHigh ? 'alert' : 'warning',
         description: `Predicted: ${a.forecast_value} ${unit} (Exceeds ${a.threshold} ${unit} threshold)`,
       };
@@ -965,33 +1073,60 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
 
 /**
  * Helper to get SkillMetric[] for ModelSkill and ModelPerformancePage.
+ * Uses real test-split performance metrics from /api/performance.
+ * If endpoint fails, returns empty array to signal unavailable state (no mock numbers).
  */
 export async function getSkillMetricsData(): Promise<SkillMetric[]> {
   try {
-    const skills = await getSkillScores();
-    if (!skills || skills.length === 0) {
-      return MOCK_SKILL_METRICS;
+    const records = await getPerformance();
+    if (!records || records.length === 0) {
+      return [];
     }
 
-    const tempSkills = skills.filter(s => s.variable === 'temperature');
-    const getAvgRmse = (mod: string) => {
-      const list = tempSkills.filter(s => s.model.toLowerCase() === mod.toLowerCase());
-      if (list.length === 0) return 1.5;
-      return Math.round((list.reduce((acc, c) => acc + c.rmse, 0) / list.length) * 10) / 10;
+    const tempRecords = records.filter(r => r.variable.toLowerCase() === 'temperature');
+    if (tempRecords.length === 0) {
+      return [];
+    }
+
+    const getRmse = (method: string, lead: number) => {
+      const rec = tempRecords.find(r => r.method.toLowerCase() === method.toLowerCase() && r.lead_days === lead);
+      return rec ? rec.rmse : 0;
     };
 
-    const ecmwfRmse = getAvgRmse('ecmwf');
-    const gfsRmse = getAvgRmse('gfs');
-    const iconRmse = getAvgRmse('icon');
+    const getAvgRmse = (method: string) => {
+      const list = tempRecords.filter(r => r.method.toLowerCase() === method.toLowerCase());
+      if (list.length === 0) return 0;
+      return Math.round((list.reduce((acc, c) => acc + c.rmse, 0) / list.length) * 10000) / 10000;
+    };
 
     return [
-      { period: 'Today (Lead 1)', blended: Math.round(ecmwfRmse * 0.82 * 10) / 10, ai: Math.round(ecmwfRmse * 0.88 * 10) / 10, nwpA: ecmwfRmse, nwpB: gfsRmse, ensemble: iconRmse },
-      { period: 'Lead 2 (48h)', blended: Math.round(ecmwfRmse * 0.86 * 10) / 10, ai: Math.round(ecmwfRmse * 0.91 * 10) / 10, nwpA: Math.round(ecmwfRmse * 1.08 * 10) / 10, nwpB: Math.round(gfsRmse * 1.05 * 10) / 10, ensemble: Math.round(iconRmse * 1.06 * 10) / 10 },
-      { period: 'Lead 3 (72h)', blended: Math.round(ecmwfRmse * 0.90 * 10) / 10, ai: Math.round(ecmwfRmse * 0.94 * 10) / 10, nwpA: Math.round(ecmwfRmse * 1.15 * 10) / 10, nwpB: Math.round(gfsRmse * 1.12 * 10) / 10, ensemble: Math.round(iconRmse * 1.14 * 10) / 10 },
-      { period: 'Monsoon Cycle', blended: Math.round(ecmwfRmse * 0.85 * 10) / 10, ai: Math.round(ecmwfRmse * 0.89 * 10) / 10, nwpA: ecmwfRmse, nwpB: gfsRmse, ensemble: iconRmse },
+      {
+        period: 'Lead 1 (24h)',
+        blended: getRmse('weighted_blend', 1),
+        ai: getRmse('hybrid_rf', 1),
+        nwpA: getRmse('ecmwf', 1),
+        nwpB: getRmse('gfs', 1),
+        ensemble: getRmse('equal_avg', 1),
+      },
+      {
+        period: 'Lead 2 (48h)',
+        blended: getRmse('weighted_blend', 2),
+        ai: getRmse('hybrid_rf', 2),
+        nwpA: getRmse('ecmwf', 2),
+        nwpB: getRmse('gfs', 2),
+        ensemble: getRmse('equal_avg', 2),
+      },
+      {
+        period: 'Lead 3 (72h)',
+        blended: getRmse('weighted_blend', 3),
+        ai: getRmse('hybrid_rf', 3),
+        nwpA: getRmse('ecmwf', 3),
+        nwpB: getRmse('gfs', 3),
+        ensemble: getRmse('equal_avg', 3),
+      },
     ];
   } catch {
-    return MOCK_SKILL_METRICS;
+    return [];
   }
 }
 

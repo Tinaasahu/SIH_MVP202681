@@ -307,7 +307,7 @@ export function AtmosphereLayer({
                     key={i}
                     className={isHeavy ? styles.rainDropHeavy : styles.rainDrop}
                     style={{
-                      left: `${(i * 0.92) % 100}%`,
+                      left: `${(i * 0.91) % 100}%`,
                       height: `${60 + (i % 6) * 18}px`,
                       animationDuration: `${0.58 + (i % 4) * 0.07}s`,
                       animationDelay: `${(i * 0.05) % 1.0}s`,

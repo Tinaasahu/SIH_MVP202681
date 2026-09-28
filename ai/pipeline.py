@@ -41,6 +41,7 @@ STEPS = [
     'ai/features.py',
     'ai/baseline.py',
     'ai/train.py',       # step 14 — may be skipped (see logic below)
+    'ai/export_performance.py',
     'ai/predict.py',
     'ai/alerts.py',
 ]

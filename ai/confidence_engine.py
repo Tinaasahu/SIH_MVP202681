@@ -332,14 +332,14 @@ def generate_confidence_dataset(
     # Save to outputs/confidence_scores.csv
     out_file = os.path.join(output_dir, 'confidence_scores.csv')
     df_final.to_csv(out_file, index=False)
-    print(f"✅ Generated {len(df_final)} explainable confidence records at {out_file}")
+    print(f"[OK] Generated {len(df_final)} explainable confidence records at {out_file}")
 
     return df_final
 
 
 def main():
     print("=" * 70)
-    print("🚀 EXPLAINABLE CONFIDENCE ENGINE (ECE) — RUNNING")
+    print("[INFO] EXPLAINABLE CONFIDENCE ENGINE (ECE) -- RUNNING")
     print("=" * 70)
 
     df = generate_confidence_dataset()

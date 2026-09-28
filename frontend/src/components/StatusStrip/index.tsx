@@ -98,7 +98,7 @@ export function StatusStrip() {
     <div
       className="mb-6 rounded-2xl px-5 py-3 transition-all duration-300"
       style={{
-        background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.92) 0%, rgba(255, 255, 255, 0.92) 45%, rgba(239, 246, 255, 0.92) 100%)',
+        background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(255, 255, 255, 0.95) 45%, rgba(239, 246, 255, 0.95) 100%)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
         border: '1px solid rgba(167, 243, 208, 0.75)',

@@ -52,19 +52,28 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
   const [events, setEvents] = useState<ExtremeEvent[]>(MOCK_EXTREME_EVENTS);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     getExtremeEventsData(selectedCity || 'Kanpur')
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setEvents(data);
+        if (mounted) {
+          if (data && data.length > 0) {
+            setEvents(data);
+            setIsFallback(false);
+          } else {
+            setEvents(MOCK_EXTREME_EVENTS);
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setEvents(MOCK_EXTREME_EVENTS);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -76,15 +85,25 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
   return (
     <GlassCard padding="md" variant="red" className="flex flex-col justify-between h-full">
       <div>
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
               <ShieldAlert size={14} />
             </div>
             <div>
-              <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
-                EXTREME WEATHER GUIDANCE
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+                  EXTREME WEATHER GUIDANCE
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  Illustrative prototype, not an official advisory
+                </span>
+                {isFallback && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    Demo data (backend unavailable)
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">Probabilistic Disaster Threshold Monitoring</p>
             </div>
           </div>
@@ -117,7 +136,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
                     <div className="text-[11px] font-semibold text-slate-600 mb-1">{event.window}</div>
                     <div className="text-[11px] text-slate-500 leading-snug line-clamp-2">{event.description}</div>
                     <div className="text-[10px] text-slate-400 mt-1 font-medium">
-                      Ensemble Agreement: <span className="font-bold text-slate-700">{event.confidence}%</span>
+                      Model Confidence: <span className="font-bold text-slate-700">{event.confidence}%</span>
                     </div>
                   </div>
 
@@ -130,7 +149,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
       </div>
 
       <div className="border-t border-slate-100 mt-4 pt-2.5 text-[11px] text-slate-400 text-center font-medium">
-        Calibrated to IMD disaster warning thresholds (Orange/Red Alerts)
+        Calibrated to disaster warning thresholds (Orange/Red Alerts)
       </div>
     </GlassCard>
   );

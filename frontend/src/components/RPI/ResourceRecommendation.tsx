@@ -92,6 +92,9 @@ export function ResourceRecommendation({ rpiData }: ResourceRecommendationProps)
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30">
                   Govt EOC Active
                 </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  Illustrative prototype, not an official advisory
+                </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
                 Dynamic SOP Action Cards triggered by live synoptic risk indicators for{' '}

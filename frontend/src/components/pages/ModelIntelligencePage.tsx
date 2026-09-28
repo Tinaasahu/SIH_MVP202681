@@ -12,19 +12,26 @@ export function ModelIntelligencePage() {
   const [dominance, setDominance] = useState<RegionModelDominance[]>(MOCK_REGION_DOMINANCE);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     getWeights()
       .then((records) => {
-        if (mounted && records && records.length > 0) {
-          // Live model weights successfully fetched
-          setIsLoading(false);
+        if (mounted) {
+          if (records && records.length > 0) {
+            setIsLoading(false);
+            setIsFallback(false);
+          } else {
+            setIsFallback(true);
+            setIsLoading(false);
+          }
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -51,9 +58,16 @@ export function ModelIntelligencePage() {
 
       {/* Regional dominance */}
       <GlassCard padding="md" variant="blue">
-        <h2 className="text-xs font-semibold tracking-widest text-slate-500 mb-4" style={{ letterSpacing: '0.12em' }}>
-          REGIONAL MODEL DOMINANCE
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold tracking-widest text-slate-500" style={{ letterSpacing: '0.12em' }}>
+            REGIONAL MODEL DOMINANCE
+          </h2>
+          {isFallback && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              Demo data (backend unavailable)
+            </span>
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {dominance.map((r) => (
             <div

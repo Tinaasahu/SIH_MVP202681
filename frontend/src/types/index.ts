@@ -156,3 +156,11 @@ export interface RpiData {
   recommendations: ResourceAction[];
   updatedAt: string;
 }
+
+export interface PerformanceSummaryRecord {
+  variable: string;
+  lead_days: number;
+  method: string;
+  rmse: number;
+  mae: number;
+}

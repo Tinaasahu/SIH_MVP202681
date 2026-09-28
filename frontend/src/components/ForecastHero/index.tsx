@@ -118,6 +118,7 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
   const [lastUpdated, setLastUpdated] = useState<string>('2026-09-26T23:45:12');
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -125,12 +126,15 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       .then((data) => {
         if (mounted && data) {
           setForecast(data);
+          // Check if returned data matches fallback
+          setIsFallback(data === MOCK_FORECAST);
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -215,6 +219,11 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                   <Sparkles size={11} className="text-blue-500" />
                   Optimal Dynamic Blend
                 </span>
+                {isFallback && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    Demo data (backend unavailable)
+                  </span>
+                )}
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
                 AI + NWP + Multi-Model Ensemble → One Coherent Forecast

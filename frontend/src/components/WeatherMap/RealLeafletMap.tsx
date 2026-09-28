@@ -61,19 +61,26 @@ export default function RealLeafletMap({
   const [cities, setCities] = useState<CityForecast[]>(MOCK_CITIES);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     getCityForecastsData()
       .then((data) => {
-        if (mounted && data && data.length > 0) {
-          setCities(data);
+        if (mounted) {
+          if (data && data.length > 0) {
+            setCities(data);
+            setIsFallback(false);
+          } else {
+            setIsFallback(true);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setIsFallback(true);
           setIsLoading(false);
         }
       });
@@ -256,6 +263,14 @@ export default function RealLeafletMap({
     <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow-inner">
       {/* Map Element */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+      {/* Fallback Warning */}
+      {isFallback && (
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 text-xs font-semibold backdrop-blur-md">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          Demo data (backend unavailable)
+        </div>
+      )}
 
       {/* Floating Map Controls Bar */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2.5">
