@@ -1,7 +1,6 @@
 city,datetime,event,severity,forecast_value,threshold
-Madurai,2026-09-28 11:00:00,High Temperature,Moderate,35.29,35
-Madurai,2026-09-28 12:00:00,High Temperature,Moderate,36.33,35
-Madurai,2026-09-28 13:00:00,High Temperature,Moderate,36.88,35
-Madurai,2026-09-28 14:00:00,High Temperature,Moderate,36.13,35
-Madurai,2026-09-29 13:00:00,High Temperature,Moderate,35.27,35
-Madurai,2026-09-30 13:00:00,High Temperature,Moderate,35.6,35
+Madurai,2026-09-28 11:00:00,High Temperature,Moderate,35.22,35
+Madurai,2026-09-28 12:00:00,High Temperature,Moderate,36.26,35
+Madurai,2026-09-28 13:00:00,High Temperature,Moderate,36.76,35
+Madurai,2026-09-28 14:00:00,High Temperature,Moderate,36.0,35
+Madurai,2026-09-29 13:00:00,High Temperature,Moderate,35.26,35

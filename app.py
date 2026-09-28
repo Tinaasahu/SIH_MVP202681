@@ -304,9 +304,8 @@ def get_model_forecasts():
             if len(dt_clean) == 16:
                 dt_clean += ":00"
             try:
-                p_dt = datetime.strptime(dt_clean[:19], "%Y-%m-%d %H:%M:%S")
-                if first_dt is None or p_dt < first_dt:
-                    first_dt = p_dt
+                first_dt = datetime.strptime(dt_clean[:19], "%Y-%m-%d %H:%M:%S")
+                break
             except Exception:
                 pass
     if first_dt is None:
@@ -923,7 +922,13 @@ def not_found(e):
 
 
 if __name__ == '__main__':
+    import sys
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
     port = int(os.environ.get('PORT', 5001))
     print(f"\n🚀 Hybrid Weather AI API starting on http://localhost:{port}")
     print(f"📡 Endpoints available at http://localhost:{port}/api/\n")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
