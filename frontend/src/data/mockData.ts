@@ -36,12 +36,12 @@ export const MOCK_MODEL_WEIGHTS: ModelWeight[] = [
 ];
 
 export const MOCK_TIMELINE: TimelinePoint[] = [
-  { time: 'NOW', label: '22:00', rainfall: 45, temperature: 30.2, wind: 15, confidence: 91, risk: 'moderate', rainfallUncertaintyHigh: 52, rainfallUncertaintyLow: 38 },
-  { time: '+6h', label: '04:00', rainfall: 68, temperature: 28.8, wind: 17, confidence: 89, risk: 'high', rainfallUncertaintyHigh: 80, rainfallUncertaintyLow: 56 },
-  { time: '+12h', label: '10:00', rainfall: 82, temperature: 29.4, wind: 22, confidence: 85, risk: 'severe', rainfallUncertaintyHigh: 98, rainfallUncertaintyLow: 66 },
-  { time: '+24h', label: '22:00', rainfall: 72, temperature: 31.4, wind: 18, confidence: 87, risk: 'high', rainfallUncertaintyHigh: 86, rainfallUncertaintyLow: 58 },
-  { time: '+48h', label: '22:00', rainfall: 38, temperature: 32.1, wind: 14, confidence: 76, risk: 'moderate', rainfallUncertaintyHigh: 54, rainfallUncertaintyLow: 22 },
-  { time: '+72h', label: '22:00', rainfall: 18, temperature: 33.2, wind: 11, confidence: 61, risk: 'low', rainfallUncertaintyHigh: 34, rainfallUncertaintyLow: 2 },
+  { time: 'NOW', label: '22:00', rainfall: 45, temperature: 30.2, wind: 15, confidence: 91, risk: 'moderate', rainfallUncertaintyHigh: 52, rainfallUncertaintyLow: 38, temperatureUncertaintyHigh: 31.2, temperatureUncertaintyLow: 29.2, windUncertaintyHigh: 16.8, windUncertaintyLow: 13.2 },
+  { time: '+6h', label: '04:00', rainfall: 68, temperature: 28.8, wind: 17, confidence: 89, risk: 'high', rainfallUncertaintyHigh: 80, rainfallUncertaintyLow: 56, temperatureUncertaintyHigh: 30.0, temperatureUncertaintyLow: 27.6, windUncertaintyHigh: 19.1, windUncertaintyLow: 14.9 },
+  { time: '+12h', label: '10:00', rainfall: 82, temperature: 29.4, wind: 22, confidence: 85, risk: 'severe', rainfallUncertaintyHigh: 98, rainfallUncertaintyLow: 66, temperatureUncertaintyHigh: 30.8, temperatureUncertaintyLow: 28.0, windUncertaintyHigh: 24.5, windUncertaintyLow: 19.5 },
+  { time: '+24h', label: '22:00', rainfall: 72, temperature: 31.4, wind: 18, confidence: 87, risk: 'high', rainfallUncertaintyHigh: 86, rainfallUncertaintyLow: 58, temperatureUncertaintyHigh: 32.9, temperatureUncertaintyLow: 29.9, windUncertaintyHigh: 20.6, windUncertaintyLow: 15.4 },
+  { time: '+48h', label: '22:00', rainfall: 38, temperature: 32.1, wind: 14, confidence: 76, risk: 'moderate', rainfallUncertaintyHigh: 54, rainfallUncertaintyLow: 22, temperatureUncertaintyHigh: 33.9, temperatureUncertaintyLow: 30.3, windUncertaintyHigh: 16.9, windUncertaintyLow: 11.1 },
+  { time: '+72h', label: '22:00', rainfall: 18, temperature: 33.2, wind: 11, confidence: 61, risk: 'low', rainfallUncertaintyHigh: 34, rainfallUncertaintyLow: 2, temperatureUncertaintyHigh: 35.3, temperatureUncertaintyLow: 31.1, windUncertaintyHigh: 14.2, windUncertaintyLow: 7.8 },
 ];
 
 export const MOCK_EXTREME_EVENTS: ExtremeEvent[] = [

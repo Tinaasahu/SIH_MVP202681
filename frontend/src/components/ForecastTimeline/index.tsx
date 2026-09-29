@@ -10,16 +10,71 @@ import type { TimelinePoint, Variable } from '@/types';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { useEffect } from 'react';
 
-const VARIABLE_CONFIG: Record<Variable, { label: string; unit: string; color: string; key: string; uncertaintyHigh?: string; uncertaintyLow?: string }> = {
-  rainfall: { label: 'Rainfall', unit: 'mm', color: '#0284c7', key: 'rainfall', uncertaintyHigh: 'rainfallUncertaintyHigh', uncertaintyLow: 'rainfallUncertaintyLow' },
-  temperature: { label: 'Temperature', unit: '°C', color: '#f97316', key: 'temperature' },
-  wind: { label: 'Wind Speed', unit: 'km/h', color: '#8b5cf6', key: 'wind' },
+const VARIABLE_CONFIG: Record<Variable, {
+  label: string;
+  unit: string;
+  color: string;
+  key: string;
+  uncertaintyHigh?: string;
+  uncertaintyLow?: string;
+  domain?: [number | ((dataMin: number) => number), number | ((dataMax: number) => number)] | [string, string];
+}> = {
+  rainfall: {
+    label: 'Rainfall',
+    unit: 'mm',
+    color: '#0284c7',
+    key: 'rainfall',
+    uncertaintyHigh: 'rainfallUncertaintyHigh',
+    uncertaintyLow: 'rainfallUncertaintyLow',
+    domain: [0, 'auto'],
+  },
+  temperature: {
+    label: 'Temperature',
+    unit: '°C',
+    color: '#f97316',
+    key: 'temperature',
+    uncertaintyHigh: 'temperatureUncertaintyHigh',
+    uncertaintyLow: 'temperatureUncertaintyLow',
+    domain: [(min: number) => Math.max(0, Math.floor(min - 3)), (max: number) => Math.ceil(max + 3)],
+  },
+  wind: {
+    label: 'Wind Speed',
+    unit: 'km/h',
+    color: '#8b5cf6',
+    key: 'wind',
+    uncertaintyHigh: 'windUncertaintyHigh',
+    uncertaintyLow: 'windUncertaintyLow',
+    domain: [0, 'auto'],
+  },
 };
 
-const CustomTooltip = ({ active, payload, label, dataList }: { active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string; dataList?: TimelinePoint[] }) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  dataList,
+  variable,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; name: string }>;
+  label?: string;
+  dataList?: TimelinePoint[];
+  variable?: Variable;
+}) => {
   if (!active || !payload?.length) return null;
   const list = dataList || MOCK_TIMELINE;
   const data = list.find(t => t.time === label);
+  const cfg = variable ? VARIABLE_CONFIG[variable] : VARIABLE_CONFIG.rainfall;
+  const val = data ? (data[cfg.key as keyof typeof data] as number) : payload[0].value;
+
+  let high: number | undefined;
+  let low: number | undefined;
+  if (data && cfg.uncertaintyHigh && cfg.uncertaintyLow) {
+    high = data[cfg.uncertaintyHigh as keyof typeof data] as number;
+    low = data[cfg.uncertaintyLow as keyof typeof data] as number;
+  }
+  const hasSpread = high !== undefined && low !== undefined && high > low;
+
   return (
     <div
       className="rounded-xl px-4 py-3 shadow-xl"
@@ -27,18 +82,28 @@ const CustomTooltip = ({ active, payload, label, dataList }: { active?: boolean;
         background: 'rgba(255,255,255,0.96)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(148,163,184,0.2)',
-        minWidth: 150,
+        minWidth: 160,
       }}
     >
       <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
-        <span>{label}</span>
+        <span className="font-bold text-slate-700">{label}</span>
         {data?.label && <span className="text-slate-400 font-normal">({data.label} IST)</span>}
       </div>
-      {payload.map((p, i) => (
-        <div key={i} className="text-base font-bold text-slate-800">
-          {typeof p.value === 'number' ? p.value.toFixed(1) : p.value}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-xl font-bold text-slate-900">
+          {typeof val === 'number' ? val.toFixed(1) : val}
+        </span>
+        <span className="text-xs font-semibold text-slate-500">{cfg.unit}</span>
+      </div>
+      {hasSpread ? (
+        <div className="text-[10px] text-slate-500 font-medium mt-1">
+          Uncertainty: {low?.toFixed(1)} – {high?.toFixed(1)} {cfg.unit}
         </div>
-      ))}
+      ) : (
+        <div className="text-[10px] text-slate-400 font-medium mt-1">
+          Consensus: High confidence
+        </div>
+      )}
       {data && (
         <div className="text-[11px] text-emerald-600 font-medium mt-1">
           Confidence: {data.confidence}%
@@ -152,8 +217,14 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.18)" />
             <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} unit={config.unit === 'mm' ? ' mm' : config.unit} />
-            <ReTooltip content={<CustomTooltip />} />
+            <YAxis
+              domain={config.domain as any}
+              tick={{ fontSize: 11, fill: '#64748b' }}
+              axisLine={false}
+              tickLine={false}
+              unit={config.unit === 'mm' ? ' mm' : ` ${config.unit}`}
+            />
+            <ReTooltip content={<CustomTooltip dataList={timeline} variable={variable} />} />
             <ReferenceLine x="NOW" stroke={config.color} strokeDasharray="3 3" opacity={0.6} />
             {config.uncertaintyHigh && (
               <Area
@@ -162,6 +233,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 stroke="none"
                 fill="url(#uncertainty-grad)"
                 fillOpacity={1}
+                tooltipType="none"
               />
             )}
             {config.uncertaintyLow && (
@@ -171,6 +243,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 stroke="none"
                 fill="white"
                 fillOpacity={1}
+                tooltipType="none"
               />
             )}
             <Area

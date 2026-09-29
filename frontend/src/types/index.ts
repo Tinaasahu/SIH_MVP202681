@@ -37,6 +37,10 @@ export interface TimelinePoint {
   risk: 'low' | 'moderate' | 'high' | 'severe';
   rainfallUncertaintyHigh: number;
   rainfallUncertaintyLow: number;
+  temperatureUncertaintyHigh?: number;
+  temperatureUncertaintyLow?: number;
+  windUncertaintyHigh?: number;
+  windUncertaintyLow?: number;
 }
 
 export interface ExtremeEvent {

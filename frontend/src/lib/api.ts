@@ -705,9 +705,20 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       return MOCK_TIMELINE;
     }
 
-    // Sample across key steps: NOW (0h), +6h, +12h, +24h, +48h, +72h
-    const stepIndices = [0, 6, 12, 24, 48, Math.min(71, records.length - 1)];
+    // Anchor "NOW" to the current IST hour
+    const currentHourStr = getCurrentHourKolkata();
+    let currentIdx = records.findIndex(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr));
+    if (currentIdx === -1) {
+      currentIdx = records.findIndex(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr);
+    }
+    if (currentIdx === -1) {
+      currentIdx = 0;
+    }
+
+    // Sample across key forward steps relative to currentIdx: NOW (0h), +6h, +12h, +24h, +48h, +72h
+    const offsets = [0, 6, 12, 24, 48, 71];
     const timeLabels = ['NOW', '+6h', '+12h', '+24h', '+48h', '+72h'];
+    const stepIndices = offsets.map(off => Math.min(records.length - 1, currentIdx + off));
 
     // Map confidence records by lead_day
     const confByLead: Record<number, number> = {};
@@ -735,8 +746,27 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       const actualConfidence = Math.max(50, Math.round(baseConf - (leadDay - 1) * 3));
 
       // Dynamic uncertainty bands calculated from model residual spread
-      const modelSpread = Math.abs((rec.rainfall ?? 0) - (rec.blend_rainfall ?? 0));
-      const rainUncertainty = Math.max(1.5, Math.round((modelSpread * 2.5 + (leadDay * 1.2)) * 10) / 10);
+      // RAINFALL: Proportional to actual precipitation. If dry (<= 0.1 mm), uncertainty collapses to 0.
+      const rainSpread = Math.abs((rec.rainfall ?? 0) - (rec.blend_rainfall ?? 0));
+      let rainHigh = rain;
+      let rainLow = rain;
+      if (rain > 0.1) {
+        const rainUncertainty = Math.round((Math.min(rain * 0.35, 12) + rainSpread * 1.5 + (leadDay * 0.4)) * 10) / 10;
+        rainHigh = Math.round((rain + rainUncertainty) * 10) / 10;
+        rainLow = Math.max(0, Math.round((rain - rainUncertainty * 0.7) * 10) / 10);
+      }
+
+      // TEMPERATURE: Physical bounds ±(0.8 + 0.3 * leadDay + spread)
+      const tempSpread = Math.abs((rec.temperature ?? 30) - (rec.blend_temperature ?? 30));
+      const tempUncertainty = Math.round((0.8 + tempSpread * 1.1 + leadDay * 0.3) * 10) / 10;
+      const tempHigh = Math.round((temp + tempUncertainty) * 10) / 10;
+      const tempLow = Math.round((temp - tempUncertainty) * 10) / 10;
+
+      // WIND SPEED: Physical bounds ±(1.2 + 0.4 * leadDay + spread)
+      const windSpread = Math.abs((rec.wind_speed ?? 15) - (rec.blend_wind_speed ?? 15));
+      const windUncertainty = Math.round((1.2 + windSpread * 1.1 + leadDay * 0.4) * 10) / 10;
+      const windHigh = Math.round((wind + windUncertainty) * 10) / 10;
+      const windLow = Math.max(0, Math.round((wind - windUncertainty) * 10) / 10);
 
       return {
         time: timeLabels[i],
@@ -746,8 +776,12 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
         wind: wind,
         confidence: actualConfidence,
         risk,
-        rainfallUncertaintyHigh: Math.round((rain + rainUncertainty) * 10) / 10,
-        rainfallUncertaintyLow: Math.max(0, Math.round((rain - rainUncertainty * 0.7) * 10) / 10),
+        rainfallUncertaintyHigh: rainHigh,
+        rainfallUncertaintyLow: rainLow,
+        temperatureUncertaintyHigh: tempHigh,
+        temperatureUncertaintyLow: tempLow,
+        windUncertaintyHigh: windHigh,
+        windUncertaintyLow: windLow,
       };
     });
   } catch {
