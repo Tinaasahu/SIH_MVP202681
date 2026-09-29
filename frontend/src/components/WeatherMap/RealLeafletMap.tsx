@@ -65,7 +65,9 @@ export default function RealLeafletMap({
 
   useEffect(() => {
     let mounted = true;
-    getCityForecastsData()
+    const leadDays = leadTime === '72h' ? 3 : leadTime === '48h' ? 2 : 1;
+    setIsLoading(true);
+    getCityForecastsData(leadDays)
       .then((data) => {
         if (mounted) {
           if (data && data.length > 0) {
@@ -87,7 +89,7 @@ export default function RealLeafletMap({
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [leadTime]);
 
   // 1. Initialize Leaflet Map
   useEffect(() => {

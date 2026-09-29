@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { getCities, getMetadata, formatLastUpdated, ENGINE_STATUS } from '@/lib/api';
+import { getCities, getMetadata, formatLastUpdated, ENGINE_STATUS, getConfidence, getForecast } from '@/lib/api';
 
 interface BlendingEngineModalProps {
   open: boolean;
@@ -43,14 +43,58 @@ export function BlendingEngineModal({ open, onClose }: BlendingEngineModalProps)
         }
       });
 
+    // 1. Dynamically sync confidence from Explainable Confidence Engine (ECE)
+    getConfidence(undefined, 1)
+      .then((confs) => {
+        if (mounted && confs && confs.length > 0) {
+          const avg = Math.round(confs.reduce((a, b) => a + (b.confidence || 0), 0) / confs.length);
+          setStatus(prev => ({ ...prev, confidence: avg }));
+        }
+      })
+      .catch(() => {});
+
+    // 2. Dynamically determine synoptic regime from live forecast
+    getForecast()
+      .then((fcs) => {
+        if (mounted && fcs && fcs.length > 0) {
+          const sample = fcs.slice(0, 80);
+          const maxRain = Math.max(...sample.map(r => r.rainfall || 0));
+          const maxTemp = Math.max(...sample.map(r => r.temperature || 0));
+          let regime = 'Normal Synoptic Flow';
+          if (maxRain > 40) regime = 'Active Monsoon Heavy Rain';
+          else if (maxTemp >= 40) regime = 'Heatwave Stress Regime';
+          else if (maxRain > 15) regime = 'Scattered Precipitation';
+          else if (maxTemp >= 35) regime = 'Warm Pre-Monsoon Dry';
+          setStatus(prev => ({ ...prev, currentRegime: regime }));
+        }
+      })
+      .catch(() => {});
+
+    // 3. Dynamically format next update from last_updated + 6h cycle
     getMetadata()
       .then((meta) => {
         if (mounted && meta?.last_updated) {
           const formatted = formatLastUpdated(meta.last_updated);
+          let nextUpdateStr = 'Every 6 Hours (Auto)';
+          try {
+            let clean = meta.last_updated.trim();
+            if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) clean += 'Z';
+            const nextTime = new Date(new Date(clean).getTime() + 6 * 3600 * 1000);
+            const nextFormatted = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'Asia/Kolkata',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            }).format(nextTime);
+            nextUpdateStr = `${nextFormatted} IST`;
+          } catch {}
+
           setStatus(prev => ({
             ...prev,
             lastDataRefresh: formatted,
             lastRecalculation: formatted,
+            nextUpdate: nextUpdateStr,
           }));
         }
       })

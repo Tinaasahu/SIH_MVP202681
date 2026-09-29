@@ -27,7 +27,7 @@ const LAYERS: { id: MapLayer; label: string }[] = [
   { id: 'confidence', label: 'Confidence' },
 ];
 
-const LEAD_TIMES = ['6h', '12h', '24h', '48h', '72h'];
+const LEAD_TIMES = ['24h', '48h', '72h'];
 
 interface WeatherMapProps {
   selectedCity?: string | null;
