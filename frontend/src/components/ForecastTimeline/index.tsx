@@ -17,7 +17,7 @@ const VARIABLE_CONFIG: Record<Variable, {
   key: string;
   uncertaintyHigh?: string;
   uncertaintyLow?: string;
-  domain?: [number | ((dataMin: number) => number), number | ((dataMax: number) => number)] | [string, string];
+  domain?: [number | string | ((val: number) => number), number | string | ((val: number) => number)];
 }> = {
   rainfall: {
     label: 'Rainfall',
