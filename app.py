@@ -136,8 +136,6 @@ def favicon():
 @app.route('/')
 @app.route('/api')
 @app.route('/api/')
-@app.route('/health')
-@app.route('/healthz')
 def index():
     return jsonify({
         "status": "online",
@@ -145,6 +143,8 @@ def index():
         "version": "1.0.0",
         "engine": "pandas" if (USE_PANDAS and pd is not None) else "standard-csv",
         "endpoints": {
+            "health": "/api/health",
+            "performance": "/api/performance",
             "forecast": "/api/forecast",
             "model_forecasts": "/api/model_forecasts",
             "metadata": "/api/metadata",
@@ -154,8 +154,70 @@ def index():
             "cities": "/api/cities",
             "confidence": "/api/confidence",
             "rpi": "/api/rpi",
-            "rpi_map": "/api/rpi/map"
+            "rpi_map": "/api/rpi/map",
+            "admin_refresh": "/api/admin/refresh"
         }
+    })
+
+
+@app.route('/health')
+@app.route('/healthz')
+@app.route('/api/health')
+def health_check():
+    """Returns live empirical proof of system health and active Random Forest residual corrections."""
+    hybrid_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
+    rf_active = False
+    mae_diffs = {}
+    total_rows = 0
+
+    if os.path.exists(hybrid_path):
+        try:
+            records = load_csv_records(hybrid_path)
+            if records:
+                total_rows = len(records)
+                temp_diffs = []
+                rain_diffs = []
+                wind_diffs = []
+                for r in records[:500]:
+                    t = r.get('temperature')
+                    bt = r.get('blend_temperature')
+                    rn = r.get('rainfall')
+                    brn = r.get('blend_rainfall')
+                    w = r.get('wind_speed')
+                    bw = r.get('blend_wind_speed')
+                    if t is not None and bt is not None:
+                        temp_diffs.append(abs(float(t) - float(bt)))
+                    if rn is not None and brn is not None:
+                        rain_diffs.append(abs(float(rn) - float(brn)))
+                    if w is not None and bw is not None:
+                        wind_diffs.append(abs(float(w) - float(bw)))
+
+                if temp_diffs:
+                    mae_diffs['temperature'] = round(sum(temp_diffs) / len(temp_diffs), 4)
+                if rain_diffs:
+                    mae_diffs['rainfall'] = round(sum(rain_diffs) / len(rain_diffs), 4)
+                if wind_diffs:
+                    mae_diffs['wind_speed'] = round(sum(wind_diffs) / len(wind_diffs), 4)
+
+                if mae_diffs.get('temperature', 0) > 0.001:
+                    rf_active = True
+        except Exception:
+            pass
+
+    meta = load_metadata() or {}
+    models_dir = os.path.join(OUTPUTS_DIR, "models")
+    rf_models = [f for f in os.listdir(models_dir) if f.endswith('.joblib')] if os.path.exists(models_dir) else []
+
+    return jsonify({
+        "status": "healthy" if rf_active else "degraded",
+        "rf_correction_active": rf_active,
+        "mean_absolute_difference": mae_diffs,
+        "sample_rows_verified": min(500, total_rows),
+        "total_hybrid_rows": total_rows,
+        "rf_models": sorted(rf_models),
+        "last_updated": meta.get("last_updated"),
+        "service": "Hybrid Weather AI System",
+        "version": "1.0.0"
     })
 
 
