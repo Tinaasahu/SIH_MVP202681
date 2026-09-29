@@ -169,6 +169,7 @@ def health_check():
     rf_active = False
     mae_diffs = {}
     total_rows = 0
+    read_error = None
 
     if os.path.exists(hybrid_path):
         try:
@@ -201,14 +202,15 @@ def health_check():
 
                 if mae_diffs.get('temperature', 0) > 0.001:
                     rf_active = True
-        except Exception:
-            pass
+        except Exception as e:
+            read_error = str(e)
+            print(f"[HealthCheck Error] {e}")
 
     meta = load_metadata() or {}
     models_dir = os.path.join(OUTPUTS_DIR, "models")
     rf_models = [f for f in os.listdir(models_dir) if f.endswith('.joblib')] if os.path.exists(models_dir) else []
 
-    return jsonify({
+    payload = {
         "status": "healthy" if rf_active else "degraded",
         "rf_correction_active": rf_active,
         "mean_absolute_difference": mae_diffs,
@@ -218,7 +220,10 @@ def health_check():
         "last_updated": meta.get("last_updated"),
         "service": "Hybrid Weather AI System",
         "version": "1.0.0"
-    })
+    }
+    if read_error:
+        payload["error_detail"] = read_error
+    return jsonify(payload)
 
 
 @app.route('/api/metadata', methods=['GET'])
