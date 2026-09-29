@@ -21,7 +21,11 @@ def run_healthcheck():
                 meta = json.load(f)
             last_updated_str = meta.get("last_updated", "")
             last_updated = datetime.fromisoformat(last_updated_str)
-            hours_old = (datetime.now() - last_updated).total_seconds() / 3600.0
+            if last_updated.tzinfo is not None:
+                now_cmp = datetime.now(last_updated.tzinfo)
+            else:
+                now_cmp = datetime.now()
+            hours_old = (now_cmp - last_updated).total_seconds() / 3600.0
             print(f"[INFO] Metadata last_updated: {last_updated_str} ({hours_old:.2f} hours old)")
             if hours_old > 12.0:
                 failures.append(f"Check 1: metadata is {hours_old:.2f}h old (> 12h)")

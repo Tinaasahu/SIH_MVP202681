@@ -1,6 +1,7 @@
 city,datetime,event,severity,forecast_value,threshold
-Madurai,2026-09-28 11:00:00,High Temperature,Moderate,35.22,35
-Madurai,2026-09-28 12:00:00,High Temperature,Moderate,36.26,35
-Madurai,2026-09-28 13:00:00,High Temperature,Moderate,36.76,35
-Madurai,2026-09-28 14:00:00,High Temperature,Moderate,36.0,35
 Madurai,2026-09-29 13:00:00,High Temperature,Moderate,35.26,35
+Madurai,2026-09-30 13:00:00,High Temperature,Moderate,35.2,35
+Jodhpur,2026-09-30 14:00:00,High Temperature,Moderate,35.03,35
+Jodhpur,2026-09-30 15:00:00,High Temperature,Moderate,35.13,35
+Jodhpur,2026-10-01 14:00:00,High Temperature,Moderate,35.21,35
+Jodhpur,2026-10-01 15:00:00,High Temperature,Moderate,35.22,35

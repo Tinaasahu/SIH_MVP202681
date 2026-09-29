@@ -184,6 +184,30 @@ def get_metadata():
     return jsonify(meta)
 
 
+@app.route('/api/admin/refresh', methods=['POST'])
+def admin_refresh():
+    """
+    Synchronously forces a forecast cache regeneration and runs RF model predictions.
+    Protected by X-Refresh-Key header check.
+    """
+    secret = os.environ.get("REFRESH_SECRET_KEY", "sih2026_refresh_secret")
+    client_key = request.headers.get("X-Refresh-Key")
+    if not client_key or client_key != secret:
+        return jsonify({"error": "Unauthorized. Invalid or missing X-Refresh-Key header."}), 401
+
+    try:
+        meta = ensure_fresh_forecast(force=True)
+        return jsonify({
+            "status": "refreshed",
+            "last_updated": meta.get("last_updated") if meta else None,
+            "cities": meta.get("cities") if meta else 45,
+            "models": meta.get("models") if meta else 4
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Forecast refresh failed: {str(e)}"}), 500
+
+
+
 @app.route('/api/forecast', methods=['GET'])
 @app.route('/forecast', methods=['GET'])
 def get_forecast():
