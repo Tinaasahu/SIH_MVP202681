@@ -746,12 +746,12 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       const actualConfidence = Math.max(50, Math.round(baseConf - (leadDay - 1) * 3));
 
       // Dynamic uncertainty bands calculated from model residual spread
-      // RAINFALL: Proportional to actual precipitation. If dry (<= 0.1 mm), uncertainty collapses to 0.
+      // RAINFALL: Proportional to actual precipitation. If dry (<= 0.5 mm trace), uncertainty collapses to 0.
       const rainSpread = Math.abs((rec.rainfall ?? 0) - (rec.blend_rainfall ?? 0));
       let rainHigh = rain;
       let rainLow = rain;
-      if (rain > 0.1) {
-        const rainUncertainty = Math.round((Math.min(rain * 0.35, 12) + rainSpread * 1.5 + (leadDay * 0.4)) * 10) / 10;
+      if (rain >= 0.5) {
+        const rainUncertainty = Math.round((rain * (0.2 + 0.08 * leadDay) + Math.min(rainSpread * 0.5, 3)) * 10) / 10;
         rainHigh = Math.round((rain + rainUncertainty) * 10) / 10;
         rainLow = Math.max(0, Math.round((rain - rainUncertainty * 0.7) * 10) / 10);
       }
