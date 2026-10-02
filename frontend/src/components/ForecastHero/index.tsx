@@ -202,7 +202,7 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
 
   return (
     <>
-      <GlassCard padding="md" variant="default" className="relative overflow-hidden">
+      <GlassCard padding="lg" variant="default" className="relative overflow-hidden">
         {/* Subtle Atmospheric Refraction Glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -213,17 +213,17 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
 
         <div className="relative">
           {/* Top Headline Section */}
-          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2.5 mb-1.5">
                 <span
-                  className="text-[11px] font-extrabold tracking-widest text-blue-600 uppercase"
+                  className="text-xs font-extrabold tracking-widest text-blue-600 uppercase"
                   style={{ letterSpacing: '0.14em' }}
                 >
                   HYBRID FORECAST INTELLIGENCE
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-2xs">
-                  <Sparkles size={10} className="text-blue-500" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-2xs">
+                  <Sparkles size={11} className="text-blue-500" />
                   Optimal Dynamic Blend
                 </span>
                 {isFallback && (
@@ -232,10 +232,10 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                   </span>
                 )}
               </div>
-              <h1 className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
                 AI + NWP + Multi-Model Ensemble → One Coherent Forecast
               </h1>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-1">
                 Adaptive weighting dynamically calibrated for region, season, lead-time, and active regime
               </p>
             </div>
@@ -244,19 +244,19 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
               variant="secondary"
               size="sm"
               onClick={() => setWhyOpen(true)}
-              className="text-slate-700 hover:text-blue-600 bg-white/80 border-slate-200/80 shadow-xs text-xs h-8"
+              className="text-slate-700 hover:text-blue-600 bg-white/80 border-slate-200/80 shadow-xs"
             >
-              <HelpCircle size={14} />
+              <HelpCircle size={15} />
               Why this forecast?
             </Button>
           </div>
 
           {/* Metrics Grid with Blue, Orange, Red & Yellow Glass Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {metrics.map((m) => (
               <div
                 key={m.label}
-                className="rounded-xl p-3.5 sm:p-4 transition-all hover:translate-y-[-2px] hover:shadow-md"
+                className="rounded-2xl p-5 transition-all hover:translate-y-[-2px] hover:shadow-md"
                 style={{
                   background: m.bg,
                   backdropFilter: 'blur(16px)',
@@ -265,22 +265,22 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                   boxShadow: m.shadow,
                 }}
               >
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-3">
                   <div
-                    className="w-6 h-6 rounded-md flex items-center justify-center shadow-2xs"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shadow-2xs"
                     style={{ background: `${m.color}15` }}
                   >
-                    <m.icon size={13} style={{ color: m.color }} />
+                    <m.icon size={15} style={{ color: m.color }} />
                   </div>
-                  <span className="text-[11px] text-slate-600 font-bold uppercase tracking-wider">{m.label}</span>
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-wider">{m.label}</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-extrabold text-slate-800 tracking-tight">
+                  <span className="text-4xl font-extrabold text-slate-800 tracking-tight">
                     <AnimatedNumber value={m.value} decimals={m.decimals} />
                   </span>
-                  <span className="text-sm font-bold text-slate-500">{m.unit}</span>
+                  <span className="text-base font-bold text-slate-500">{m.unit}</span>
                 </div>
-                <div className="mt-1.5 text-[11px] text-slate-500 font-medium">
+                <div className="mt-2.5 text-xs text-slate-500 font-medium">
                   Uncertainty: <span className="font-semibold text-slate-700">{m.uncertainty}</span>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
 
             {/* Confidence Ring Card - Yellow/Gold Accent */}
             <div
-              className="rounded-xl p-3.5 sm:p-4 flex flex-col items-center justify-center transition-all hover:translate-y-[-2px] hover:shadow-md"
+              className="rounded-2xl p-5 flex flex-col items-center justify-center transition-all hover:translate-y-[-2px] hover:shadow-md"
               style={{
                 background: 'linear-gradient(145deg, rgba(254, 252, 232, 0.94) 0%, rgba(254, 249, 195, 0.78) 100%)',
                 backdropFilter: 'blur(16px)',
