@@ -39,11 +39,7 @@ function formatStatusStripDate(isoString?: string): string {
 }
 
 export function StatusStrip() {
-  const [metadata, setMetadata] = useState<MetadataRecord>({
-    last_updated: '2026-09-26T23:45:12',
-    cities: 45,
-    models: 4,
-  });
+  const [metadata, setMetadata] = useState<MetadataRecord | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -57,6 +53,8 @@ export function StatusStrip() {
           setMetadata(data);
           setIsWakingUp(false);
           setIsError(false);
+        } else if (mounted) {
+          setIsError(true);
         }
       })
       .catch((err) => {
@@ -95,6 +93,8 @@ export function StatusStrip() {
           setMetadata(data);
           setIsError(false);
           setIsWakingUp(false);
+        } else {
+          setIsError(true);
         }
       })
       .catch((err) => {
@@ -107,9 +107,9 @@ export function StatusStrip() {
       });
   };
 
-  const formattedDate = formatStatusStripDate(metadata.last_updated);
-  const cityCount = metadata.cities || metadata.city_count || 45;
-  const modelCount = metadata.models || metadata.model_count || 4;
+  const formattedDate = metadata?.last_updated ? formatStatusStripDate(metadata.last_updated) : null;
+  const cityCount = metadata ? (metadata.cities || metadata.city_count || 45) : null;
+  const modelCount = metadata ? (metadata.models || metadata.model_count || 4) : null;
 
   return (
     <div
@@ -174,7 +174,13 @@ export function StatusStrip() {
                 Last Updated
               </div>
               <div className="font-bold text-slate-700">
-                {formattedDate}
+                {formattedDate ? (
+                  formattedDate
+                ) : isError ? (
+                  'unavailable'
+                ) : (
+                  <span className="inline-block w-28 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading last updated time" />
+                )}
               </div>
             </div>
           </div>
@@ -211,7 +217,15 @@ export function StatusStrip() {
                 Models Blended
               </div>
               <div className="font-bold text-slate-700">
-                {modelCount} <span className="font-medium text-slate-500">(ECMWF, GFS, ICON, GEM)</span>
+                {modelCount !== null ? (
+                  <>
+                    {modelCount} <span className="font-medium text-slate-500">(ECMWF, GFS, ICON, GEM)</span>
+                  </>
+                ) : isError ? (
+                  'unavailable'
+                ) : (
+                  <span className="inline-block w-14 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading models count" />
+                )}
               </div>
             </div>
           </div>
@@ -228,7 +242,13 @@ export function StatusStrip() {
                 Forecast Stations
               </div>
               <div className="font-bold text-slate-700">
-                {cityCount} Cities
+                {cityCount !== null ? (
+                  <>{cityCount} Cities</>
+                ) : isError ? (
+                  'unavailable'
+                ) : (
+                  <span className="inline-block w-14 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading forecast stations count" />
+                )}
               </div>
             </div>
           </div>

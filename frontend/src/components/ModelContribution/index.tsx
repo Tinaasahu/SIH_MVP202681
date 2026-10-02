@@ -116,7 +116,9 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
                 <span className="text-sm text-slate-700">{w.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400">RMSE {w.rmse}</span>
+                <span className="text-xs text-slate-400">
+                  {w.rmse !== null && w.rmse !== undefined ? `RMSE ${w.rmse}` : 'RMSE —'}
+                </span>
                 <span className="text-sm font-semibold" style={{ color: w.color }}>{w.weight}%</span>
               </div>
             </div>

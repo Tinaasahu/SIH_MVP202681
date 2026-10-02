@@ -115,7 +115,8 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
   const city = selectedCity || 'Kanpur';
   const [whyOpen, setWhyOpen] = useState(false);
   const [forecast, setForecast] = useState<ForecastMetrics>(MOCK_FORECAST);
-  const [lastUpdated, setLastUpdated] = useState<string>('2026-09-26T23:45:12');
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [lastUpdatedError, setLastUpdatedError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isFallback, setIsFallback] = useState(false);
@@ -143,16 +144,22 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       .then((meta) => {
         if (mounted && meta?.last_updated) {
           setLastUpdated(meta.last_updated);
+        } else if (mounted) {
+          setLastUpdatedError(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (mounted) {
+          setLastUpdatedError(true);
+        }
+      });
 
     return () => {
       mounted = false;
     };
   }, [city]);
 
-  const lastUpdatedDisplay = formatLastUpdated(lastUpdated);
+  const lastUpdatedDisplay = lastUpdated ? formatLastUpdated(lastUpdated) : null;
 
   const metrics = [
     {
@@ -303,7 +310,13 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
           <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-3.5 border-t border-slate-100">
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <RefreshCw size={13} className="text-blue-500 animate-spin" style={{ animationDuration: '8s' }} />
-              <span>Last Updated: {lastUpdatedDisplay}</span>
+              {lastUpdatedDisplay ? (
+                <span>Last Updated: {lastUpdatedDisplay}</span>
+              ) : lastUpdatedError ? (
+                <span>Last updated: unavailable</span>
+              ) : (
+                <span className="inline-block w-28 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading last updated time" />
+              )}
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <span className="font-medium text-slate-700">Target Station: {city}</span>

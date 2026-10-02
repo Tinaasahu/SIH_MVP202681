@@ -23,8 +23,9 @@ export interface ModelWeight {
   id: string;
   weight: number;
   color: string;
-  rmse: number;
-  mae: number;
+  rmse: number | null;
+  mae: number | null;
+  skillAvailable?: boolean;
 }
 
 export interface TimelinePoint {

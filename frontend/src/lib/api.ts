@@ -413,7 +413,7 @@ export type { ConfidenceRecord };
  * Formats an ISO datetime string into:
  * "26 Sep 2026 • 11:45 PM"
  */
-export function formatLastUpdated(isoString?: string): string {
+export function formatLastUpdated(isoString?: string | null): string {
   if (!isoString) {
     return '29 Sep 2026 • 12:30 AM';
   }
@@ -456,13 +456,7 @@ export function formatLastUpdated(isoString?: string): string {
  * Returns last_updated timestamp, city count, and model count.
  */
 export async function getMetadata(): Promise<MetadataRecord> {
-  return fetchFromApi<MetadataRecord>('/metadata', {
-    last_updated: '2026-09-26T23:45:12',
-    cities: 45,
-    models: 4,
-    city_count: 45,
-    model_count: 4,
-  });
+  return fetchFromApi<MetadataRecord>('/metadata');
 }
 
 /**
@@ -818,14 +812,16 @@ export async function getModelWeightsData(city: string = 'Kanpur', variable: str
         color: '#64748b',
       };
       const skill = skills?.find(s => s.model.toLowerCase() === w.model.toLowerCase());
+      const skillAvailable = Boolean(skill && typeof skill.rmse === 'number' && typeof skill.mae === 'number');
 
       return {
         id: w.model.toLowerCase(),
         name: info.name,
         weight: Math.round(((w.weight || 0) / totalWeight) * 100),
         color: info.color,
-        rmse: skill?.rmse ? Math.round(skill.rmse * 100) / 100 : 1.25,
-        mae: skill?.mae ? Math.round(skill.mae * 100) / 100 : 0.95,
+        rmse: skillAvailable && skill?.rmse !== undefined ? Math.round(skill.rmse * 100) / 100 : null,
+        mae: skillAvailable && skill?.mae !== undefined ? Math.round(skill.mae * 100) / 100 : null,
+        skillAvailable,
       };
     });
   } catch {

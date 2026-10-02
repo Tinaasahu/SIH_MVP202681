@@ -24,19 +24,30 @@ const NAV_ITEMS: { id: NavPage; label: string }[] = [
 export function Header({ currentPage, onNavigate }: HeaderProps) {
   const [engineOpen, setEngineOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string>('2026-09-26T23:45:12');
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [lastUpdatedError, setLastUpdatedError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    getMetadata().then((data) => {
-      if (mounted && data?.last_updated) {
-        setLastUpdated(data.last_updated);
-      }
-    }).catch(() => {});
-    return () => { mounted = false; };
+    getMetadata()
+      .then((data) => {
+        if (mounted && data?.last_updated) {
+          setLastUpdated(data.last_updated);
+        } else if (mounted) {
+          setLastUpdatedError(true);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setLastUpdatedError(true);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const lastUpdatedDisplay = formatLastUpdated(lastUpdated);
+  const lastUpdatedDisplay = lastUpdated ? formatLastUpdated(lastUpdated) : null;
 
   return (
     <>
@@ -88,7 +99,13 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/70 border border-slate-200/60">
                 <span className="text-slate-400">Last Updated</span>
-                <span className="font-semibold text-slate-700">{lastUpdatedDisplay}</span>
+                {lastUpdatedDisplay ? (
+                  <span className="font-semibold text-slate-700">{lastUpdatedDisplay}</span>
+                ) : lastUpdatedError ? (
+                  <span className="font-semibold text-slate-700">unavailable</span>
+                ) : (
+                  <span className="inline-block w-28 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading last updated time" />
+                )}
               </div>
             </div>
 
