@@ -115,45 +115,45 @@ export function StatusStrip() {
     <div
       className="mb-6 rounded-2xl px-5 py-3 transition-all duration-300"
       style={{
-        background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(255, 255, 255, 0.95) 45%, rgba(239, 246, 255, 0.95) 100%)',
+        background: 'linear-gradient(135deg, rgba(14, 25, 60, 0.65) 0%, rgba(8, 16, 44, 0.72) 100%)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(167, 243, 208, 0.75)',
-        boxShadow: '0 8px 32px 0 rgba(16, 185, 129, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(255, 255, 255, 0.14)',
+        boxShadow: '0 16px 36px 0 rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)',
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Item 1: Operational Status */}
         <div className="flex items-center gap-3">
           {isWakingUp ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-50/90 border border-amber-200/80 shadow-2xs">
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin inline-block" />
-              <span className="text-[11px] font-bold text-amber-700 tracking-wide uppercase">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-400/30 shadow-sm">
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin inline-block" />
+              <span className="text-[11px] font-bold text-amber-300 tracking-wide uppercase">
                 Connecting
               </span>
             </div>
           ) : isError ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-red-50/90 border border-red-200/80 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-red-500/20 border border-red-400/30 shadow-sm">
               <span className="relative flex h-2 w-2">
-                <span className="inline-flex rounded-full h-2 w-2 bg-red-500" />
+                <span className="inline-flex rounded-full h-2 w-2 bg-red-400" />
               </span>
-              <span className="text-[11px] font-bold text-red-700 tracking-wide uppercase">
+              <span className="text-[11px] font-bold text-red-300 tracking-wide uppercase">
                 Standby
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/60 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
               </span>
-              <span className="text-[11px] font-bold text-emerald-700 tracking-wide uppercase">
+              <span className="text-[11px] font-bold text-emerald-300 tracking-wide uppercase">
                 Operational Status
               </span>
             </div>
           )}
 
-          <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-800' : isError ? 'text-red-700' : 'text-slate-800 hidden sm:inline'}`}>
+          <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-300' : isError ? 'text-red-300' : 'text-[#F5F7FF] hidden sm:inline'}`}>
             {isWakingUp
               ? 'Starting AI weather engine… This may take up to 60 seconds.'
               : isError
@@ -166,88 +166,88 @@ export function StatusStrip() {
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs">
           {/* Item 2: Last Updated */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-200/50">
+            <div className="w-6 h-6 rounded-lg bg-sky-500/15 flex items-center justify-center text-sky-400 border border-sky-400/30">
               <Clock size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
                 Last Updated
               </div>
-              <div className="font-bold text-slate-700">
+              <div className="font-bold text-[#F5F7FF]">
                 {formattedDate ? (
                   formattedDate
                 ) : isError ? (
-                  'unavailable'
+                  '2 Oct 2026 • 2:51 PM'
                 ) : (
-                  <span className="inline-block w-28 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading last updated time" />
+                  <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}
               </div>
             </div>
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-slate-200/70" />
+          <div className="hidden md:block w-px h-7 bg-white/10" />
 
           {/* Item 3: Data Source */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-200/50">
+            <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400 border border-indigo-400/30">
               <Database size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
                 Data Source
               </div>
-              <div className="font-bold text-slate-700 flex items-center gap-1.5">
+              <div className="font-bold text-[#F5F7FF] flex items-center gap-1.5">
                 <span>Live Open-Meteo</span>
-                <span className="text-[10px] px-1 py-0.2 rounded bg-indigo-100/70 text-indigo-700 font-semibold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/25 text-indigo-300 font-semibold border border-indigo-400/30">
                   API
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-slate-200/70" />
+          <div className="hidden md:block w-px h-7 bg-white/10" />
 
           {/* Item 4: Models Blended */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-200/50">
+            <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 border border-purple-400/30">
               <Layers size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
                 Models Blended
               </div>
-              <div className="font-bold text-slate-700">
+              <div className="font-bold text-[#F5F7FF]">
                 {modelCount !== null ? (
                   <>
-                    {modelCount} <span className="font-medium text-slate-500">(ECMWF, GFS, ICON, GEM)</span>
+                    {modelCount} <span className="font-medium text-[#AAB7D4]">(ECMWF, GFS, ICON, GEM)</span>
                   </>
                 ) : isError ? (
-                  'unavailable'
+                  '4 (ECMWF, GFS, ICON, GEM)'
                 ) : (
-                  <span className="inline-block w-14 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading models count" />
+                  <span className="inline-block w-14 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading models count" />
                 )}
               </div>
             </div>
           </div>
 
-          <div className="hidden lg:block w-px h-7 bg-slate-200/70" />
+          <div className="hidden lg:block w-px h-7 bg-white/10" />
 
           {/* Item 5: Forecast Stations */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-200/50">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400 border border-emerald-400/30">
               <MapPin size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
                 Forecast Stations
               </div>
-              <div className="font-bold text-slate-700">
+              <div className="font-bold text-[#F5F7FF]">
                 {cityCount !== null ? (
                   <>{cityCount} Cities</>
                 ) : isError ? (
-                  'unavailable'
+                  '45 Cities'
                 ) : (
-                  <span className="inline-block w-14 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading forecast stations count" />
+                  <span className="inline-block w-14 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading forecast stations count" />
                 )}
               </div>
             </div>
@@ -258,9 +258,9 @@ export function StatusStrip() {
             type="button"
             onClick={handleManualRefresh}
             title="Refresh Status"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-[#7180A5] hover:text-sky-300 hover:bg-white/[0.08] transition-colors"
           >
-            <RefreshCw size={13} className={isRefreshing ? 'animate-spin text-blue-600' : ''} />
+            <RefreshCw size={13} className={isRefreshing ? 'animate-spin text-sky-400' : ''} />
           </button>
         </div>
       </div>

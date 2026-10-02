@@ -104,27 +104,27 @@ export function ModelSkillPanel() {
     <GlassCard padding="md" variant="green">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+          <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
             <BarChart2 size={14} />
           </div>
-          <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+          <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
             MODEL SKILL SCORE
           </span>
-          <Tooltip content={<div className="p-1.5 text-xs text-slate-700 max-w-[210px]">RMSE (Root Mean Square Error) against TEST ground truth split. Lower is better.</div>}>
-            <Info size={13} className="text-slate-400 cursor-help" />
+          <Tooltip content={<div className="p-1.5 text-xs text-slate-200 max-w-[210px]">RMSE (Root Mean Square Error) against TEST ground truth split. Lower is better.</div>}>
+            <Info size={13} className="text-[#7180A5] cursor-help hover:text-[#AAB7D4]" />
           </Tooltip>
         </div>
 
         {/* Separated Pill Buttons */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.06] border border-white/10 shadow-sm">
           {PERIOD_TABS.map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
                 period === p
-                  ? 'bg-white text-blue-600 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                  : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/[0.08]'
               }`}
               type="button"
             >
@@ -140,36 +140,36 @@ export function ModelSkillPanel() {
             key={m.key}
             className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all ${
               i === 0
-                ? 'bg-blue-50/80 border border-blue-200/70 shadow-xs'
-                : 'bg-white/40 hover:bg-white/70 border border-slate-100'
+                ? 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.15)]'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]'
             }`}
           >
             <span
-              className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
-              style={{ background: m.color }}
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ background: m.color, boxShadow: `0 0 6px ${m.color}` }}
             />
-            <span className={`text-xs flex-1 ${i === 0 ? 'font-bold text-slate-900' : 'text-slate-700'}`}>
+            <span className={`text-xs flex-1 ${i === 0 ? 'font-bold text-[#F5F7FF]' : 'text-[#AAB7D4]'}`}>
               {m.label}
             </span>
             {i === 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/30">
                 <Award size={11} /> Top Skill
               </span>
             )}
-            <span className="text-xs font-bold text-slate-800">{m.rmse.toFixed(3)}</span>
-            <span className="text-[11px] text-slate-400 font-medium w-16 text-right">RMSE °C</span>
+            <span className="text-xs font-bold text-[#F5F7FF]">{m.rmse.toFixed(3)}</span>
+            <span className="text-[11px] text-[#7180A5] font-medium w-16 text-right">RMSE °C</span>
           </div>
         ))}
       </div>
 
       <div
         className="mt-4 rounded-xl px-3.5 py-3"
-        style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.12)' }}
+        style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.20)' }}
       >
-        <p className="text-xs text-slate-700 leading-relaxed font-medium">
-          Hybrid RF reduces error by <span className="font-bold text-blue-700">{improvementPct}%</span> compared to ECMWF IFS for {period}.
+        <p className="text-xs text-[#F5F7FF] leading-relaxed font-medium">
+          Hybrid RF reduces error by <span className="font-bold text-sky-300">{improvementPct}%</span> compared to ECMWF IFS for {period}.
         </p>
-        <p className="text-[11px] text-slate-500 mt-1">
+        <p className="text-[11px] text-[#7180A5] mt-1">
           Hybrid vs raw ECMWF (no bias correction), 19-day held-out test, ERA5 reference
         </p>
       </div>

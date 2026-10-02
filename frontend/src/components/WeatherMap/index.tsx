@@ -44,34 +44,36 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
       {/* Controls Bar */}
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
-        style={{ borderBottom: '1px solid rgba(148,163,184,0.12)' }}
+        style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.10)' }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+          <div className="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
             <MapPin size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
                 LIVE WEATHER MAP
               </span>
-              <Badge variant="info">45 Indian Stations</Badge>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                45 Indian Stations
+              </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">Real CartoDB Geographic Grid · Smooth Interactive Zoom</p>
+            <p className="text-[11px] text-[#AAB7D4] mt-0.5">Real CartoDB Geographic Grid · Smooth Interactive Zoom</p>
           </div>
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5">
           {/* Lead time selector with proper spacing */}
-          <div className="flex items-center rounded-xl p-1 bg-slate-100/70 border border-slate-200/80">
+          <div className="flex items-center rounded-xl p-1 bg-white/[0.06] border border-white/10 shadow-sm">
             {LEAD_TIMES.map((t) => (
               <button
                 key={t}
                 onClick={() => setLeadTime(t)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   leadTime === t
-                    ? 'bg-white text-blue-600 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                    : 'text-[#AAB7D4] hover:text-[#F5F7FF]'
                 }`}
                 type="button"
               >
@@ -84,20 +86,22 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
           <div className="relative">
             <button
               onClick={() => setLayerMenuOpen(!layerMenuOpen)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white/80 hover:bg-white border border-slate-200/80 shadow-xs transition-all"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#F5F7FF] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 shadow-sm transition-all"
               type="button"
             >
-              <Layers size={14} className="text-blue-500" />
+              <Layers size={14} className="text-sky-400" />
               <span>{LAYERS.find((l) => l.id === layer)?.label}</span>
-              <ChevronDown size={13} className={`text-slate-400 transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={13} className={`text-[#AAB7D4] transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {layerMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-xl border border-white/80 min-w-[170px]"
+                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-2xl border border-white/20 min-w-[170px]"
                 style={{
-                  background: 'rgba(255,255,255,0.95)',
-                  backdropFilter: 'blur(24px)',
+                  background: 'rgba(11, 22, 56, 0.96)',
+                  backdropFilter: 'blur(26px)',
+                  WebkitBackdropFilter: 'blur(26px)',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
                 }}
               >
                 {LAYERS.map((l) => (
@@ -109,8 +113,8 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
                     }}
                     className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
                       layer === l.id
-                        ? 'bg-blue-50 text-blue-600 font-bold'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-sky-500/25 text-sky-300 font-bold'
+                        : 'text-[#AAB7D4] hover:bg-white/[0.08] hover:text-[#F5F7FF]'
                     }`}
                     type="button"
                   >
@@ -123,15 +127,15 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
 
           <Tooltip
             content={
-              <div className="p-1 max-w-[220px] text-xs">
-                <span className="font-semibold text-slate-800">Authentic Cartography</span>
-                <p className="text-slate-500 mt-1">
-                  Shows genuine Indian topography, borders, and coastlines with NO API key needed. Optional Mapbox satellite key can be configured in <code>mapConfig.ts</code>.
+              <div className="p-1 max-w-[220px] text-xs text-[#AAB7D4]">
+                <span className="font-semibold text-[#F5F7FF]">Authentic Cartography</span>
+                <p className="text-[#AAB7D4] mt-1">
+                  Shows genuine Indian topography, borders, and coastlines with NO API key needed.
                 </p>
               </div>
             }
           >
-            <div className="p-2 rounded-xl text-slate-400 hover:text-slate-600 cursor-help">
+            <div className="p-2 rounded-xl text-[#7180A5] hover:text-[#AAB7D4] cursor-help">
               <Info size={15} />
             </div>
           </Tooltip>

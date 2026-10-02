@@ -113,25 +113,7 @@ export function resolveAtmosphereTheme(
     return 'cloudy';
   }
 
-  // 7. Diurnal Clear Cycle according to Indian Standard Time (IST):
-  const hour = forcedHour !== undefined ? forcedHour : getISTHour();
-
-  // 05:00 - 11:59 IST: Morning Dawn & Sunrise
-  if (hour >= 5 && hour < 12) {
-    return 'morning';
-  }
-
-  // 12:00 - 16:59 IST: Bright Afternoon Sun
-  if (hour >= 12 && hour < 17) {
-    return 'sunny';
-  }
-
-  // 17:00 - 19:59 IST: Golden Sunset & Dusk
-  if (hour >= 17 && hour < 20) {
-    return 'evening';
-  }
-
-  // 20:00 - 04:59 IST: Night Moon & Stars
+  // 7. Diurnal Clear Cycle - In this dashboard edition, the default is cinematic NIGHT mode
   return 'night';
 }
 
@@ -156,7 +138,7 @@ export function AtmosphereLayer({
   wind = 12,
   alert_type,
 }: AtmosphereLayerProps) {
-  const [manualTheme, setManualTheme] = useState<AtmosphereTheme | null>(null);
+  const [manualTheme, setManualTheme] = useState<AtmosphereTheme | null>('night');
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentHour, setCurrentHour] = useState<number>(getISTHour());
 
@@ -252,13 +234,12 @@ export function AtmosphereLayer({
           </div>
         )}
 
-        {/* 4. NIGHT BACKDROP: Deep celestial midnight indigo, glowing moon and twinkling stars */}
+        {/* 4. NIGHT BACKDROP: Cinematic realistic night landscape with mountains, lake, glowing moon and stars */}
         {activeTheme === 'night' && (
           <div className="absolute inset-0">
             <div className={styles.nightBackdrop} />
-            <div className={styles.moonDisc}>
-              <div className={styles.moonCrescentInner} />
-            </div>
+            <div className={styles.nightUiVignette} />
+            <div className={styles.gentleMoonGlow} />
             <div className={styles.nightStars}>
               {NIGHT_STARS.map((s, idx) => (
                 <div

@@ -18,39 +18,39 @@ const paddings = {
 
 const variantStyles: Record<CardColorVariant, { background: string; border: string; boxShadow: string }> = {
   default: {
-    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.80) 0%, rgba(248, 250, 252, 0.62) 100%)',
-    border: '1px solid rgba(226, 232, 240, 0.85)',
-    boxShadow: '0 8px 32px -4px rgba(15, 23, 42, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(14, 27, 68, 0.58) 0%, rgba(8, 17, 44, 0.65) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.16)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18)',
   },
   blue: {
-    background: 'linear-gradient(145deg, rgba(240, 249, 255, 0.95) 0%, rgba(224, 242, 254, 0.78) 100%)',
-    border: '1px solid rgba(186, 230, 253, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(2, 132, 199, 0.09), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(16, 34, 82, 0.62) 0%, rgba(10, 20, 52, 0.68) 100%)',
+    border: '1px solid rgba(56, 189, 248, 0.22)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(147, 197, 253, 0.22)',
   },
   orange: {
-    background: 'linear-gradient(145deg, rgba(255, 247, 237, 0.95) 0%, rgba(254, 237, 213, 0.78) 100%)',
-    border: '1px solid rgba(254, 215, 170, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(234, 88, 12, 0.09), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(38, 26, 48, 0.60) 0%, rgba(16, 20, 44, 0.68) 100%)',
+    border: '1px solid rgba(245, 158, 11, 0.22)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(253, 230, 138, 0.18)',
   },
   red: {
-    background: 'linear-gradient(145deg, rgba(254, 242, 242, 0.95) 0%, rgba(254, 226, 226, 0.78) 100%)',
-    border: '1px solid rgba(254, 202, 202, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(220, 38, 38, 0.09), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(42, 20, 44, 0.60) 0%, rgba(18, 16, 42, 0.68) 100%)',
+    border: '1px solid rgba(239, 68, 68, 0.22)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(254, 202, 202, 0.18)',
   },
   yellow: {
-    background: 'linear-gradient(145deg, rgba(254, 252, 232, 0.95) 0%, rgba(254, 249, 195, 0.78) 100%)',
-    border: '1px solid rgba(253, 224, 71, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(202, 138, 4, 0.09), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(28, 28, 56, 0.62) 0%, rgba(14, 18, 44, 0.68) 100%)',
+    border: '1px solid rgba(250, 204, 21, 0.22)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(254, 240, 138, 0.18)',
   },
   green: {
-    background: 'linear-gradient(145deg, rgba(240, 253, 244, 0.95) 0%, rgba(220, 252, 231, 0.78) 100%)',
-    border: '1px solid rgba(187, 247, 208, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(16, 185, 129, 0.09), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(14, 34, 56, 0.62) 0%, rgba(8, 22, 42, 0.68) 100%)',
+    border: '1px solid rgba(16, 185, 129, 0.22)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(167, 243, 208, 0.18)',
   },
   grey: {
-    background: 'linear-gradient(145deg, rgba(248, 250, 252, 0.94) 0%, rgba(241, 245, 249, 0.85) 100%)',
-    border: '1px solid rgba(203, 213, 225, 0.85)',
-    boxShadow: '0 10px 32px -4px rgba(71, 85, 105, 0.07), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    background: 'linear-gradient(145deg, rgba(16, 24, 52, 0.58) 0%, rgba(9, 14, 38, 0.66) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)',
   },
 };
 
@@ -60,15 +60,15 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     return (
       <div
         ref={ref}
-        className={cn('glass-card', paddings[padding], className)}
+        className={cn('glass-card text-[#F5F7FF]', paddings[padding], className)}
         style={{
           background: vStyle.background,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           border: vStyle.border,
           boxShadow: vStyle.boxShadow,
-          borderRadius: '20px',
-          transition: hover ? 'all 0.25s cubic-bezier(0.16,1,0.3,1)' : undefined,
+          borderRadius: '22px',
+          transition: hover ? 'all 0.28s cubic-bezier(0.16,1,0.3,1)' : undefined,
           ...style,
         }}
         {...props}

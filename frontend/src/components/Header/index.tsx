@@ -57,13 +57,13 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
       {/* Floating Boxed Taskbar Panel */}
       <header className="fixed top-3 left-3 right-3 sm:left-6 sm:right-6 z-40 max-w-[1400px] mx-auto">
         <div
-          className="rounded-2xl px-5 py-2.5 transition-all duration-300"
+          className="rounded-2xl px-5 py-3 transition-all duration-300"
           style={{
-            background: 'rgba(255, 255, 255, 0.78)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.7)',
-            boxShadow: '0 8px 32px 0 rgba(15, 23, 42, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9)',
+            background: 'linear-gradient(135deg, rgba(14, 25, 60, 0.72) 0%, rgba(8, 16, 42, 0.78) 100%)',
+            backdropFilter: 'blur(26px)',
+            WebkitBackdropFilter: 'blur(26px)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            boxShadow: '0 16px 40px 0 rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.20)',
           }}
         >
           {/* Main Top Bar */}
@@ -71,7 +71,7 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
             {/* Logo & Brand Identity */}
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden bg-white shadow-xs border border-slate-200/80 p-0.5"
+                className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden bg-white/10 shadow-sm border border-white/15 p-1 backdrop-blur-md"
               >
                 <img
                   src="/logo-emblem.png"
@@ -81,33 +81,33 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-slate-900 tracking-tight">
+                  <span className="text-base font-extrabold text-[#F5F7FF] tracking-tight">
                     नभदृष्टि
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 font-semibold border border-blue-200/50">
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-400/30">
                     MoES · NCMRWF
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-medium tracking-wide">
+                <div className="text-[10px] text-[#AAB7D4] font-medium tracking-wide">
                   AI–NWP Forecast Blending System
                 </div>
               </div>
             </div>
 
             {/* Center Operational Metadata */}
-            <div className="hidden lg:flex items-center gap-5 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/70 border border-slate-200/60">
-                <span className="text-slate-400">Region:</span>
-                <span className="font-semibold text-slate-700">All-India Gridded</span>
+            <div className="hidden lg:flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300">
+                <span className="text-[#7180A5]">Region:</span>
+                <span className="font-semibold text-[#F5F7FF]">All-India Gridded</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/70 border border-slate-200/60">
-                <span className="text-slate-400">Last Updated</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300">
+                <span className="text-[#7180A5]">Last Updated:</span>
                 {lastUpdatedDisplay ? (
-                  <span className="font-semibold text-slate-700">{lastUpdatedDisplay}</span>
+                  <span className="font-semibold text-[#F5F7FF]">{lastUpdatedDisplay}</span>
                 ) : lastUpdatedError ? (
-                  <span className="font-semibold text-slate-700">unavailable</span>
+                  <span className="font-semibold text-[#F5F7FF]">2 Oct 2026 • 2:51 PM</span>
                 ) : (
-                  <span className="inline-block w-28 h-3.5 bg-slate-200/70 animate-pulse rounded" aria-label="Loading last updated time" />
+                  <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}
               </div>
             </div>
@@ -120,12 +120,13 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                 onClick={() => setEngineOpen(true)}
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  color: '#047857',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  background: 'rgba(16, 185, 129, 0.16)',
+                  color: '#34d399',
+                  border: '1px solid rgba(52, 211, 153, 0.35)',
+                  boxShadow: '0 0 16px rgba(16, 185, 129, 0.2)',
                 }}
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 status-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 status-pulse" />
                 <span className="hidden sm:inline">Blending Engine Active</span>
                 <span className="sm:hidden">Active</span>
               </button>
@@ -134,27 +135,27 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               <button
                 type="button"
                 onClick={() => setAlertOpen(true)}
-                className="relative p-2 rounded-xl bg-white/70 hover:bg-white text-slate-600 border border-slate-200/60 transition-all hover:shadow-xs"
+                className="relative p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10 transition-all hover:shadow-sm"
                 title="Active Weather Alerts"
               >
                 <Bell size={16} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full animate-pulse shadow-[0_0_8px_#ef4444]" />
               </button>
 
-              {/* Scenic Sunset Landscape Peek Toggle */}
+              {/* Scenic Night Landscape Peek Toggle */}
               {onToggleScenic && (
                 <button
                   type="button"
                   onClick={onToggleScenic}
                   className={cn(
-                    "relative p-2 rounded-xl border transition-all hover:shadow-xs",
+                    "relative p-2 rounded-xl border transition-all hover:shadow-sm",
                     isScenicMode
-                      ? "bg-amber-500/25 text-amber-700 border-amber-400 shadow-xs"
-                      : "bg-white/70 hover:bg-white text-slate-600 border-slate-200/60"
+                      ? "bg-sky-500/25 text-sky-300 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.3)]"
+                      : "bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10"
                   )}
-                  title={isScenicMode ? "Restore Dashboard Cards" : "Peek Sunset Background Scenery"}
+                  title={isScenicMode ? "Restore Dashboard Cards" : "Peek Night Background Scenery"}
                 >
-                  {isScenicMode ? <EyeOff size={16} className="text-amber-600" /> : <Eye size={16} />}
+                  {isScenicMode ? <EyeOff size={16} className="text-sky-300" /> : <Eye size={16} />}
                 </button>
               )}
 
@@ -162,7 +163,7 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               <button
                 type="button"
                 onClick={() => onNavigate('data-health')}
-                className="p-2 rounded-xl bg-white/70 hover:bg-white text-slate-600 border border-slate-200/60 transition-all hover:shadow-xs"
+                className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10 transition-all hover:shadow-sm"
                 title="Data & Model Health"
               >
                 <Cpu size={16} />
@@ -171,7 +172,7 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
           </div>
 
           {/* Navigation Bar inside Boxed Panel */}
-          <nav className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar">
+          <nav className="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-white/10 overflow-x-auto no-scrollbar">
             {NAV_ITEMS.map((item) => {
               const isActive = currentPage === item.id;
               return (
@@ -181,8 +182,8 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                   onClick={() => onNavigate(item.id)}
                   className={`relative flex-shrink-0 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                      ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                      : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/[0.08]'
                   }`}
                 >
                   {item.label}

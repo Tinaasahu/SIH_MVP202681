@@ -36,23 +36,23 @@ export function CustomDropdown({
 
   return (
     <div className={cn('relative w-full', className)} ref={containerRef}>
-      {label && <label className="block text-xs font-medium text-slate-500 mb-1.5">{label}</label>}
+      {label && <label className="block text-xs font-semibold text-[#AAB7D4] mb-1.5">{label}</label>}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 text-left',
-          'bg-white/70 hover:bg-white/90 border border-slate-200/80 shadow-xs backdrop-blur-md',
-          'focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400',
-          isOpen && 'border-blue-400 ring-2 ring-blue-400/20'
+          'bg-white/[0.05] hover:bg-white/[0.08] border border-white/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)] backdrop-blur-md',
+          'focus:outline-none focus:ring-2 focus:ring-sky-400/30 focus:border-sky-400/60',
+          isOpen && 'border-sky-400/60 ring-2 ring-sky-400/20 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
         )}
       >
-        <span className={cn('truncate font-medium', value ? 'text-slate-800' : 'text-slate-400')}>
+        <span className={cn('truncate font-medium', value ? 'text-[#F5F7FF]' : 'text-[#7180A5]')}>
           {value || placeholder}
         </span>
         <ChevronDown
           size={15}
-          className={cn('text-slate-400 transition-transform duration-200 shrink-0 ml-2', isOpen && 'rotate-180 text-blue-500')}
+          className={cn('text-[#AAB7D4] transition-transform duration-200 shrink-0 ml-2', isOpen && 'rotate-180 text-sky-400')}
         />
       </button>
 
@@ -60,16 +60,18 @@ export function CustomDropdown({
         <div
           className={cn(
             'absolute left-0 right-0 z-50 mt-1.5 max-h-56 overflow-y-auto rounded-xl py-1.5',
-            'bg-white/90 backdrop-blur-2xl border border-white/60 shadow-xl shadow-slate-900/10',
+            'border border-white/20 shadow-2xl',
             'animate-in fade-in-0 zoom-in-95 duration-150'
           )}
           style={{
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            background: 'rgba(11, 22, 56, 0.96)',
+            backdropFilter: 'blur(26px)',
+            WebkitBackdropFilter: 'blur(26px)',
+            boxShadow: '0 20px 45px rgba(0,0,0,0.8), 0 0 20px rgba(56,189,248,0.12)',
           }}
         >
           {options.length === 0 ? (
-            <div className="px-3.5 py-2 text-xs text-slate-400">No options</div>
+            <div className="px-3.5 py-2 text-xs text-[#7180A5]">No options</div>
           ) : (
             options.map((opt) => {
               const isSelected = opt === value;
@@ -84,12 +86,12 @@ export function CustomDropdown({
                   className={cn(
                     'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium transition-colors text-left',
                     isSelected
-                      ? 'bg-blue-500/10 text-blue-600 font-semibold'
-                      : 'text-slate-700 hover:bg-slate-100/70 hover:text-slate-900'
+                      ? 'bg-sky-500/25 text-sky-300 font-semibold'
+                      : 'text-[#AAB7D4] hover:bg-white/[0.08] hover:text-[#F5F7FF]'
                   )}
                 >
                   <span className="truncate">{opt}</span>
-                  {isSelected && <Check size={14} className="text-blue-600 shrink-0 ml-2" />}
+                  {isSelected && <Check size={14} className="text-sky-300 shrink-0 ml-2" />}
                 </button>
               );
             })

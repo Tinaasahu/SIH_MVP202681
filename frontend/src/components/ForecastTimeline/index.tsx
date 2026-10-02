@@ -77,35 +77,35 @@ const CustomTooltip = ({
 
   return (
     <div
-      className="rounded-xl px-4 py-3 shadow-xl"
+      className="rounded-xl px-4 py-3 shadow-2xl"
       style={{
-        background: 'rgba(255,255,255,0.96)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(148,163,184,0.2)',
+        background: 'rgba(11, 22, 56, 0.94)',
+        backdropFilter: 'blur(24px)',
+        border: '1px solid rgba(255, 255, 255, 0.16)',
         minWidth: 160,
       }}
     >
-      <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
-        <span className="font-bold text-slate-700">{label}</span>
-        {data?.label && <span className="text-slate-400 font-normal">({data.label} IST)</span>}
+      <div className="text-[11px] font-semibold text-[#AAB7D4] mb-1.5 flex items-center justify-between">
+        <span className="font-bold text-[#F5F7FF]">{label}</span>
+        {data?.label && <span className="text-[#7180A5] font-normal">({data.label} IST)</span>}
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-xl font-bold text-slate-900">
+        <span className="text-xl font-bold text-[#F5F7FF]">
           {typeof val === 'number' ? val.toFixed(1) : val}
         </span>
-        <span className="text-xs font-semibold text-slate-500">{cfg.unit}</span>
+        <span className="text-xs font-semibold text-[#AAB7D4]">{cfg.unit}</span>
       </div>
       {hasSpread ? (
-        <div className="text-[10px] text-slate-500 font-medium mt-1">
+        <div className="text-[10px] text-[#AAB7D4] font-medium mt-1">
           Uncertainty: {low?.toFixed(1)} – {high?.toFixed(1)} {cfg.unit}
         </div>
       ) : (
-        <div className="text-[10px] text-slate-400 font-medium mt-1">
+        <div className="text-[10px] text-[#7180A5] font-medium mt-1">
           Consensus: High confidence
         </div>
       )}
       {data && (
-        <div className="text-[11px] text-emerald-600 font-medium mt-1">
+        <div className="text-[11px] text-emerald-400 font-semibold mt-1">
           Confidence: {data.confidence}%
         </div>
       )}
@@ -168,31 +168,31 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+            <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/20 flex items-center justify-center text-sky-400">
               <Calendar size={14} />
             </div>
-            <span className="text-xs font-bold tracking-widest text-slate-700 uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
               FORECAST TIMELINE
             </span>
             {isFallback && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
                 Demo data (backend unavailable)
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-1">72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands</p>
+          <p className="text-xs text-[#AAB7D4] mt-1">72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands</p>
         </div>
 
-        {/* Separated Pill Buttons with Breathing Room */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200/80 shadow-2xs">
+        {/* Separated Pill Buttons with Dark Glass Styling */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[rgba(10,20,50,0.65)] border border-white/10 shadow-xs backdrop-blur-md">
           {(Object.keys(VARIABLE_CONFIG) as Variable[]).map((v) => (
             <button
               key={v}
               onClick={() => setVariable(v)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 variable === v
-                  ? 'bg-white text-blue-600 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
+                  : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/5 border border-transparent'
               }`}
               type="button"
             >
@@ -207,25 +207,25 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
           <AreaChart data={chartData} margin={{ top: 10, right: 16, bottom: 0, left: -10 }}>
             <defs>
               <linearGradient id={`grad-${variable}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={config.color} stopOpacity={0.25} />
-                <stop offset="95%" stopColor={config.color} stopOpacity={0.01} />
-              </linearGradient>
-              <linearGradient id="uncertainty-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={config.color} stopOpacity={0.12} />
+                <stop offset="5%" stopColor={config.color} stopOpacity={0.35} />
                 <stop offset="95%" stopColor={config.color} stopOpacity={0.02} />
               </linearGradient>
+              <linearGradient id="uncertainty-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={config.color} stopOpacity={0.2} />
+                <stop offset="95%" stopColor={config.color} stopOpacity={0.04} />
+              </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.18)" />
-            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
+            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#AAB7D4' }} axisLine={false} tickLine={false} />
             <YAxis
               domain={config.domain as any}
-              tick={{ fontSize: 11, fill: '#64748b' }}
+              tick={{ fontSize: 11, fill: '#AAB7D4' }}
               axisLine={false}
               tickLine={false}
               unit={config.unit === 'mm' ? ' mm' : ` ${config.unit}`}
             />
             <ReTooltip content={<CustomTooltip dataList={timeline} variable={variable} />} />
-            <ReferenceLine x="NOW" stroke={config.color} strokeDasharray="3 3" opacity={0.6} />
+            <ReferenceLine x="NOW" stroke={config.color} strokeDasharray="3 3" opacity={0.7} />
             {config.uncertaintyHigh && (
               <Area
                 type="monotone"
@@ -241,7 +241,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 type="monotone"
                 dataKey="low"
                 stroke="none"
-                fill="white"
+                fill="rgba(14, 27, 68, 0.75)"
                 fillOpacity={1}
                 tooltipType="none"
               />
@@ -252,27 +252,27 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               stroke={config.color}
               strokeWidth={3}
               fill={`url(#grad-${variable})`}
-              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6, fill: config.color, stroke: '#fff', strokeWidth: 2 }}
+              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#F5F7FF' }}
+              activeDot={{ r: 6, fill: config.color, stroke: '#F5F7FF', strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-slate-100">
-        <div className="flex items-center gap-5 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-white/10">
+        <div className="flex items-center gap-5 text-xs text-[#AAB7D4]">
           <div className="flex items-center gap-2">
             <div className="w-3.5 h-1 rounded-full" style={{ background: config.color }} />
             <span>Optimal Blended Curve</span>
           </div>
           {config.uncertaintyHigh && (
             <div className="flex items-center gap-2">
-              <div className="w-3.5 h-2.5 rounded opacity-40" style={{ background: config.color }} />
+              <div className="w-3.5 h-2.5 rounded opacity-50" style={{ background: config.color }} />
               <span>Multi-Model Uncertainty Spread</span>
             </div>
           )}
         </div>
-        <div className="text-xs text-slate-400 font-medium">
+        <div className="text-xs text-[#7180A5] font-medium">
           Lead Range: 0h – 72h
         </div>
       </div>

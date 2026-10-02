@@ -190,23 +190,23 @@ export default function RealLeafletMap({
 
       // Station detail popup
       const popupContent = `
-        <div style="font-family: inherit; min-width: 170px; padding: 4px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
-            <span style="font-weight: 800; font-size: 13px; color: #1e293b; text-transform: uppercase;">${city.city}</span>
-            <span style="font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 9999px;">${city.state}</span>
+        <div style="font-family: inherit; min-width: 170px; padding: 4px; color: #F5F7FF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 4px;">
+            <span style="font-weight: 800; font-size: 13px; color: #F5F7FF; text-transform: uppercase;">${city.city}</span>
+            <span style="font-size: 10px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); padding: 2px 6px; border-radius: 9999px;">${city.state}</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px;">
-            <div><span style="color: #64748b; font-size: 10px; display: block;">Rainfall</span><strong style="color: #0284c7; font-size: 12px;">${city.rainfall} mm</strong></div>
-            <div><span style="color: #64748b; font-size: 10px; display: block;">Temp</span><strong style="color: #ea580c; font-size: 12px;">${city.temperature}°C</strong></div>
-            <div><span style="color: #64748b; font-size: 10px; display: block;">Wind</span><strong style="color: #7c3aed; font-size: 12px;">${city.wind} km/h</strong></div>
-            <div><span style="color: #64748b; font-size: 10px; display: block;">Reliability</span><strong style="color: #059669; font-size: 12px;">${city.confidence}% ${city.confidenceLabel ? '(' + city.confidenceLabel + ')' : ''}</strong></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; font-size: 11px;">
+            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Rainfall</span><strong style="color: #38bdf8; font-size: 12px;">${city.rainfall} mm</strong></div>
+            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Temp</span><strong style="color: #f59e0b; font-size: 12px;">${city.temperature}°C</strong></div>
+            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Wind</span><strong style="color: #c084fc; font-size: 12px;">${city.wind} km/h</strong></div>
+            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Reliability</span><strong style="color: #34d399; font-size: 12px;">${city.confidence}% ${city.confidenceLabel ? '(' + city.confidenceLabel + ')' : ''}</strong></div>
           </div>
-          <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #f1f5f9; font-size: 10px; color: #64748b; display: flex; justify-content: space-between;">
+          <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: #AAB7D4; display: flex; justify-content: space-between;">
             <span>Dominant Model:</span>
-            <strong style="color: #1d4ed8;">${city.dominantModel}</strong>
+            <strong style="color: #38bdf8;">${city.dominantModel}</strong>
           </div>
           ${city.explanation ? `
-          <div style="margin-top: 4px; font-size: 9.5px; color: #475569; font-style: italic; background: #f8fafc; padding: 4px 6px; border-radius: 6px; border: 1px solid #e2e8f0; line-height: 1.3;">
+          <div style="margin-top: 4px; font-size: 9.5px; color: #AAB7D4; font-style: italic; background: rgba(14,27,68,0.5); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.3;">
             &quot;${city.explanation}&quot;
           </div>` : ''}
         </div>
@@ -277,28 +277,28 @@ export default function RealLeafletMap({
       {/* Floating Map Controls Bar */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2.5">
         {/* Zoom & Reset Controls */}
-        <div className="flex flex-col bg-white/85 backdrop-blur-md rounded-xl p-1 shadow-lg border border-white/70">
+        <div className="flex flex-col bg-[rgba(11,22,56,0.88)] backdrop-blur-xl rounded-xl p-1 shadow-2xl border border-white/15">
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
+            className="p-2 hover:bg-white/10 rounded-lg text-[#F5F7FF] transition-colors"
             title="Zoom In"
             type="button"
           >
             <ZoomIn size={16} />
           </button>
-          <div className="h-px bg-slate-200 my-0.5" />
+          <div className="h-px bg-white/10 my-0.5" />
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
+            className="p-2 hover:bg-white/10 rounded-lg text-[#F5F7FF] transition-colors"
             title="Zoom Out"
             type="button"
           >
             <ZoomOut size={16} />
           </button>
-          <div className="h-px bg-slate-200 my-0.5" />
+          <div className="h-px bg-white/10 my-0.5" />
           <button
             onClick={handleReset}
-            className="p-2 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-lg transition-colors"
+            className="p-2 hover:bg-sky-500/20 text-[#AAB7D4] hover:text-sky-300 rounded-lg transition-colors"
             title="Reset to All-India View"
             type="button"
           >
@@ -307,16 +307,16 @@ export default function RealLeafletMap({
         </div>
 
         {/* Mapbox & Cartographic Tile Mode Switcher */}
-        <div className="bg-white/85 backdrop-blur-md rounded-xl p-1.5 shadow-lg border border-white/70 flex flex-col gap-1 min-w-[130px]">
-          <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 uppercase tracking-wider">
+        <div className="bg-[rgba(11,22,56,0.88)] backdrop-blur-xl rounded-xl p-1.5 shadow-2xl border border-white/15 flex flex-col gap-1 min-w-[130px]">
+          <span className="text-[10px] font-bold text-[#7180A5] px-2 py-0.5 uppercase tracking-wider">
             Imagery
           </span>
           <button
             onClick={() => setActiveTile('satellite')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'satellite'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-sky-500/30 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
+                : 'text-[#AAB7D4] hover:bg-white/5 hover:text-[#F5F7FF] border border-transparent'
             }`}
             type="button"
           >
@@ -328,8 +328,8 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('terrain')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'terrain'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-sky-500/30 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
+                : 'text-[#AAB7D4] hover:bg-white/5 hover:text-[#F5F7FF] border border-transparent'
             }`}
             type="button"
           >
@@ -341,8 +341,8 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('positron')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'positron'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-sky-500/30 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
+                : 'text-[#AAB7D4] hover:bg-white/5 hover:text-[#F5F7FF] border border-transparent'
             }`}
             type="button"
           >
@@ -354,8 +354,8 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('osm')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'osm'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-sky-500/30 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
+                : 'text-[#AAB7D4] hover:bg-white/5 hover:text-[#F5F7FF] border border-transparent'
             }`}
             type="button"
           >
@@ -372,52 +372,52 @@ export default function RealLeafletMap({
 
         return (
           <div
-            className="absolute bottom-4 left-4 z-10 p-4 rounded-2xl shadow-xl border border-white/80 max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200"
+            className="absolute bottom-4 left-4 z-10 p-4 rounded-2xl shadow-2xl border border-white/15 max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200"
             style={{
-              background: 'rgba(255, 255, 255, 0.90)',
+              background: 'rgba(11, 22, 56, 0.92)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
             }}
           >
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-sm font-extrabold uppercase tracking-wide text-slate-800">
+              <span className="text-sm font-extrabold uppercase tracking-wide text-[#F5F7FF]">
                 {activeCardCity.city}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100/70 text-blue-700 font-bold border border-blue-200/50">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold border border-sky-400/30">
                 {activeCardCity.state}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] font-medium">Rainfall</span>
-                <span className="font-extrabold text-sky-600 text-sm">{activeCardCity.rainfall} mm</span>
+              <div className="bg-[rgba(14,27,68,0.65)] p-2 rounded-xl border border-white/10">
+                <span className="text-[#AAB7D4] block text-[10px] font-medium">Rainfall</span>
+                <span className="font-extrabold text-sky-400 text-sm">{activeCardCity.rainfall} mm</span>
               </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] font-medium">Temperature</span>
-                <span className="font-extrabold text-orange-600 text-sm">{activeCardCity.temperature}°C</span>
+              <div className="bg-[rgba(14,27,68,0.65)] p-2 rounded-xl border border-white/10">
+                <span className="text-[#AAB7D4] block text-[10px] font-medium">Temperature</span>
+                <span className="font-extrabold text-amber-400 text-sm">{activeCardCity.temperature}°C</span>
               </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] font-medium">Wind Speed</span>
-                <span className="font-extrabold text-purple-600 text-sm">{activeCardCity.wind} km/h</span>
+              <div className="bg-[rgba(14,27,68,0.65)] p-2 rounded-xl border border-white/10">
+                <span className="text-[#AAB7D4] block text-[10px] font-medium">Wind Speed</span>
+                <span className="font-extrabold text-purple-400 text-sm">{activeCardCity.wind} km/h</span>
               </div>
-              <div className="bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] font-medium">Confidence</span>
-                <span className="font-extrabold text-emerald-600 text-sm">{activeCardCity.confidence}%</span>
+              <div className="bg-[rgba(14,27,68,0.65)] p-2 rounded-xl border border-white/10">
+                <span className="text-[#AAB7D4] block text-[10px] font-medium">Confidence</span>
+                <span className="font-extrabold text-emerald-400 text-sm">{activeCardCity.confidence}%</span>
               </div>
             </div>
-            <div className="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+            <div className="mt-2.5 pt-2 border-t border-white/10 text-[11px] text-[#AAB7D4] flex items-center justify-between">
               <span>Dominant Model:</span>
-              <span className="font-bold text-blue-700">{activeCardCity.dominantModel}</span>
+              <span className="font-bold text-sky-400">{activeCardCity.dominantModel}</span>
             </div>
             {activeCardCity.confidenceLabel && (
-              <div className="mt-1 text-[10px] text-slate-500 flex items-center justify-between">
+              <div className="mt-1 text-[10px] text-[#AAB7D4] flex items-center justify-between">
                 <span>Rating:</span>
-                <span className="font-semibold text-emerald-600">{activeCardCity.confidenceLabel}</span>
+                <span className="font-semibold text-emerald-400">{activeCardCity.confidenceLabel}</span>
               </div>
             )}
             {activeCardCity.explanation && (
-              <div className="mt-1.5 pt-1.5 border-t border-slate-100/80 text-[10px] text-slate-500 italic leading-snug">
+              <div className="mt-1.5 pt-1.5 border-t border-white/10 text-[10px] text-[#AAB7D4] italic leading-snug">
                 &quot;{activeCardCity.explanation}&quot;
               </div>
             )}
@@ -428,21 +428,21 @@ export default function RealLeafletMap({
       {/* Model Dominance Overlay */}
       {layer === 'model_dominance' && (
         <div
-          className="absolute top-4 left-4 z-10 rounded-2xl p-3.5 shadow-lg border border-white/80 max-w-[220px]"
+          className="absolute top-4 left-4 z-10 rounded-2xl p-3.5 shadow-2xl border border-white/15 max-w-[220px]"
           style={{
-            background: 'rgba(255, 255, 255, 0.90)',
+            background: 'rgba(11, 22, 56, 0.92)',
             backdropFilter: 'blur(20px)',
           }}
         >
-          <div className="text-[11px] font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-            <Sparkles size={13} className="text-blue-600" />
+          <div className="text-[11px] font-bold text-[#F5F7FF] mb-2 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-sky-400" />
             REGIONAL DOMINANCE
           </div>
-          <div className="space-y-1.5 text-[11px] text-slate-600">
+          <div className="space-y-1.5 text-[11px] text-[#AAB7D4]">
             {MOCK_REGION_DOMINANCE.slice(0, 4).map((r) => (
               <div key={r.region} className="flex justify-between items-center">
-                <span className="text-slate-400">{r.region}:</span>
-                <span className="font-bold text-slate-800">{r.dominantModel}</span>
+                <span className="text-[#7180A5]">{r.region}:</span>
+                <span className="font-bold text-[#F5F7FF]">{r.dominantModel}</span>
               </div>
             ))}
           </div>
