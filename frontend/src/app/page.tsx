@@ -93,14 +93,14 @@ export default function Home() {
       case 'overview':
       default:
         return (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             {/* Top Forecast Decision Hero */}
             <ForecastHero selectedCity={selectedCity} />
 
             {/* Core Operational Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
               {/* Left Column (Primary Visualizations) - 7 cols */}
-              <div className="lg:col-span-7 space-y-6">
+              <div className="lg:col-span-7 space-y-4 sm:space-y-5">
                 <WeatherMap
                   selectedCity={selectedCity}
                   onSelectCity={handleCitySelect}
@@ -108,14 +108,14 @@ export default function Home() {
                 <ForecastTimeline selectedCity={selectedCity} />
                 
                 {/* 2-Column Equal Height Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   <ModelComparison selectedCity={selectedCity} />
                   <ExtremeWeatherPanel selectedCity={selectedCity} />
                 </div>
               </div>
 
               {/* Right Column (Controls & Deep Intelligence) - 5 cols */}
-              <div className="lg:col-span-5 space-y-6">
+              <div className="lg:col-span-5 space-y-4 sm:space-y-5">
                 <RegionSelector selectedCity={selectedCity} onSelectCity={handleCitySelect} />
                 <ModelContribution selectedCity={selectedCity} />
                 <ModelSkillPanel />
@@ -147,15 +147,15 @@ export default function Home() {
       {/* Global Backend Connecting / Cold Start Indicator */}
       <BackendConnectingIndicator />
 
-      {/* Main Content with generous top padding to prevent ANY header overlap */}
-      <main className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 pt-36 pb-20">
+      {/* Main Content framed neatly so background landscape shines through */}
+      <main className="relative z-10 max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
         <StatusStrip />
         {renderContent()}
       </main>
 
       {/* Enterprise Scientific Footer */}
       <footer
-        className="relative z-10 max-w-[1440px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500"
+        className="relative z-10 max-w-[1220px] mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500"
         style={{ borderTop: '1px solid rgba(148,163,184,0.18)' }}
       >
         <div className="flex flex-wrap items-center gap-2.5">

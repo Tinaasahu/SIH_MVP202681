@@ -11,14 +11,14 @@ interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
 
 const paddings = {
   none: '',
-  sm: 'p-4',
-  md: 'p-6',
-  lg: 'p-8',
+  sm: 'p-3 sm:p-3.5',
+  md: 'p-4 sm:p-5',
+  lg: 'p-5 sm:p-6',
 };
 
 const variantStyles: Record<CardColorVariant, { background: string; border: string; boxShadow: string }> = {
   default: {
-    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.74) 100%)',
+    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 250, 252, 0.68) 100%)',
     border: '1px solid rgba(226, 232, 240, 0.85)',
     boxShadow: '0 8px 32px -4px rgba(15, 23, 42, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
   },
