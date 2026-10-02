@@ -244,51 +244,11 @@ export function AtmosphereLayer({
           </div>
         )}
 
-        {/* 3. EVENING (DUSK/SUNSET) BACKDROP: Vivid Golden Sunset with Glowing Sun & Twilight Sunbeams */}
+        {/* 3. EVENING (DUSK/SUNSET) BACKDROP: Premium Stylized Vector Sunset Landscape */}
         {activeTheme === 'evening' && (
           <div className="absolute inset-0">
             <div className={styles.eveningBackdrop} />
-            <div className={styles.sunsetSun} />
-            {/* Golden sunset sunbeams radiating into twilight sky */}
-            <div className={styles.sunsetRays}>
-              <svg viewBox="0 0 800 800" width="100%" height="100%" fill="none">
-                <defs>
-                  <radialGradient id="sunsetRayGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#fb923c" stopOpacity="0.8" />
-                    <stop offset="35%" stopColor="#f97316" stopOpacity="0.5" />
-                    <stop offset="70%" stopColor="#ec4899" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                  </radialGradient>
-                </defs>
-                {Array.from({ length: 12 }).map((_, i) => {
-                  const x1 = Math.round((400 + 400 * Math.cos((i * 30 * Math.PI) / 180)) * 100) / 100;
-                  const y1 = Math.round((400 + 400 * Math.sin((i * 30 * Math.PI) / 180)) * 100) / 100;
-                  const x2 = Math.round((400 + 400 * Math.cos(((i * 30 + 12) * Math.PI) / 180)) * 100) / 100;
-                  const y2 = Math.round((400 + 400 * Math.sin(((i * 30 + 12) * Math.PI) / 180)) * 100) / 100;
-                  return (
-                    <path
-                      key={i}
-                      d={`M 400 400 L ${x1} ${y1} L ${x2} ${y2} Z`}
-                      fill="url(#sunsetRayGrad)"
-                    />
-                  );
-                })}
-              </svg>
-            </div>
-            {/* Backlit sunset clouds drifting across the setting sun */}
-            <div className={styles.sunsetCloudDeck}>
-              <svg viewBox="0 0 500 120" width="100%" height="100%" fill="none">
-                <path
-                  d="M 20 80 Q 90 20 180 60 Q 260 10 350 50 Q 420 20 480 75 Q 490 100 450 110 Q 300 120 150 110 Q 30 110 20 80 Z"
-                  fill="rgba(136, 19, 55, 0.45)"
-                />
-                <path
-                  d="M 50 85 Q 120 35 200 70 Q 280 25 360 60 Q 430 35 470 85 L 450 105 L 80 105 Z"
-                  fill="rgba(244, 63, 94, 0.3)"
-                />
-              </svg>
-            </div>
-            <div className={styles.sunsetGlow} />
+            <div className={styles.sunsetUiVignette} />
           </div>
         )}
 

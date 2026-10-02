@@ -583,75 +583,30 @@
 }
 
 /* ==========================================================================
-   EVENING THEME (Vivid Golden Sunset & Twilight Dusk: 17:00 - 19:59 IST)
-   Cinematic Indian sunset:
-   - Radiant glowing sunset disc dipping in the upper-right sky
-   - Fanning golden-amber sun rays radiating upwards across the purple/rose sky
-   - Backlit sunset cirrus clouds drifting across the glowing twilight
+   EVENING THEME (Premium Cinematic Stylized Sunset Landscape: 17:00 - 19:59 IST)
+   High-resolution stylized vector sunset landscape:
+   - Deep twilight purple/indigo sky at top transitioning through violet, magenta,
+     crimson, coral, orange, and warm golden yellow
+   - Glowing sun setting behind layered purple mountain silhouettes
+   - Elegant geometric fanning sun rays and soft horizon clouds
+   - Subtle UI vignette for visual calm behind frosted glass cards
    ========================================================================== */
 .eveningBackdrop {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle 950px at 85% 15%, rgba(251, 146, 60, 0.55) 0%, rgba(244, 63, 94, 0.3) 45%, transparent 75%),
-    radial-gradient(circle 850px at 20% 30%, rgba(217, 70, 239, 0.22) 0%, transparent 65%),
-    linear-gradient(180deg, 
-      #1e1b4b 0%, 
-      #3b0764 16%, 
-      #701a75 36%, 
-      #9f1239 56%, 
-      #c2410c 74%, 
-      #ea580c 88%, 
-      #f59e0b 100%
-    );
+  background-image: url('/backgrounds/sunset.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  transition: opacity 1.2s ease, filter 1.2s ease;
 }
 
-.sunsetSun {
+.sunsetUiVignette {
   position: absolute;
-  top: -40px;
-  right: 6%;
-  width: 370px;
-  height: 370px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 12%, #fef08a 32%, #fb923c 65%, #ea580c 85%, transparent 100%);
-  box-shadow: 
-    0 0 160px rgba(251, 146, 60, 0.95), 
-    0 0 80px rgba(249, 115, 22, 0.8),
-    0 0 40px rgba(254, 240, 138, 0.9);
-  opacity: 0.94;
-  filter: drop-shadow(0 0 40px rgba(249, 115, 22, 0.6));
-}
-
-.sunsetRays {
-  position: absolute;
-  top: -260px;
-  right: -200px;
-  width: 1200px;
-  height: 1200px;
-  opacity: 0.5;
-  transform-origin: center center;
-  animation: rotateRays 120s linear infinite;
-  will-change: transform;
-}
-
-.sunsetCloudDeck {
-  position: absolute;
-  top: 70px;
-  right: -2%;
-  width: 560px;
-  height: 140px;
-  opacity: 0.68;
-  filter: drop-shadow(0 8px 20px rgba(159, 18, 57, 0.45));
-  pointer-events: none;
-}
-
-.sunsetGlow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 480px;
-  background: radial-gradient(ellipse 90% 70% at 80% 20%, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 80% 55% at 50% 35%, rgba(255, 255, 255, 0.08) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.15) 0%, transparent 20%, transparent 65%, rgba(15, 23, 42, 0.35) 100%);
   pointer-events: none;
 }
 
