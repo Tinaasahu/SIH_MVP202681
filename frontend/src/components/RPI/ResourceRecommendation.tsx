@@ -179,9 +179,25 @@ export function ResourceRecommendation({ rpiData }: ResourceRecommendationProps)
                       </span>
                     </div>
 
-                    <Badge variant={getPriorityBadgeVariant(rec.priority)}>
-                      {rec.priority.toUpperCase()}
-                    </Badge>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider border uppercase ${
+                        rec.priority === 'critical'
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : rec.priority === 'high'
+                          ? 'bg-orange-50 text-orange-700 border-orange-200'
+                          : rec.priority === 'medium'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}
+                    >
+                      {rec.priority === 'critical'
+                        ? 'STAGE 4 (RED)'
+                        : rec.priority === 'high'
+                        ? 'STAGE 3 (ORANGE)'
+                        : rec.priority === 'medium'
+                        ? 'STAGE 2 (YELLOW)'
+                        : 'STAGE 1 (GREEN)'}
+                    </span>
                   </div>
 
                   {/* Title */}

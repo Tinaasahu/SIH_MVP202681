@@ -55,7 +55,7 @@ export default function Home() {
       const isRain = metrics.rainfall > 10;
       const isHeatwave = metrics.temperature >= 38;
       const isCloudy = metrics.rainfall > 1 || metrics.wind > 20;
-      const cond = isRain ? 'rain' : isHeatwave ? 'heatwave' : isCloudy ? 'cloudy' : 'sunny';
+      const cond = isRain ? 'rain' : isHeatwave ? 'heatwave' : isCloudy ? 'cloudy' : 'clear';
 
       setAtmoWeather({
         condition: cond,

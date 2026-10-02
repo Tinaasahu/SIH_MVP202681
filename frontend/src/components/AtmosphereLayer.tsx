@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import styles from './atmosphere.module.css';
 
 export interface AtmosphereLayerProps {
@@ -11,17 +11,68 @@ export interface AtmosphereLayerProps {
   alert_type?: string;
 }
 
-export type AtmosphereTheme = 'simple' | 'sunny' | 'cloudy' | 'rain' | 'thunderstorm' | 'heatwave' | 'fog' | 'snow';
+export type AtmosphereTheme = 
+  | 'simple' 
+  | 'morning' 
+  | 'sunny' 
+  | 'evening' 
+  | 'night' 
+  | 'cloudy' 
+  | 'rain' 
+  | 'thunderstorm' 
+  | 'heatwave' 
+  | 'fog' 
+  | 'snow';
+
+/** Deterministic star positions for clean hydration */
+const NIGHT_STARS = [
+  { top: '8%', left: '12%', size: 2, delay: '0s' },
+  { top: '15%', left: '28%', size: 3, delay: '1.2s' },
+  { top: '22%', left: '45%', size: 1.5, delay: '0.4s' },
+  { top: '10%', left: '62%', size: 2.5, delay: '2.1s' },
+  { top: '18%', left: '78%', size: 2, delay: '0.9s' },
+  { top: '25%', left: '90%', size: 1.5, delay: '1.7s' },
+  { top: '32%', left: '18%', size: 2, delay: '0.6s' },
+  { top: '38%', left: '34%', size: 1.5, delay: '2.4s' },
+  { top: '45%', left: '55%', size: 2.5, delay: '1.1s' },
+  { top: '50%', left: '72%', size: 1.8, delay: '0.3s' },
+  { top: '58%', left: '85%', size: 2.2, delay: '1.9s' },
+  { top: '12%', left: '38%', size: 2, delay: '2.7s' },
+  { top: '28%', left: '6%', size: 1.5, delay: '1.4s' },
+  { top: '65%', left: '22%', size: 2.4, delay: '0.8s' },
+  { top: '72%', left: '48%', size: 1.6, delay: '2.2s' },
+  { top: '80%', left: '68%', size: 2, delay: '1.5s' },
+  { top: '85%', left: '14%', size: 1.8, delay: '0.5s' },
+  { top: '42%', left: '92%', size: 2.2, delay: '2.8s' },
+];
 
 /**
- * Resolves the atmospheric theme according to live blended weather values.
+ * Returns the current hour in Indian Standard Time (IST - Asia/Kolkata).
+ */
+export function getISTHour(): number {
+  try {
+    const istTimeStr = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      hour: 'numeric',
+    }).format(new Date());
+    const h = parseInt(istTimeStr, 10);
+    return isNaN(h) ? new Date().getHours() : h;
+  } catch {
+    return new Date().getHours();
+  }
+}
+
+/**
+ * Resolves the atmospheric theme according to live blended weather values and diurnal IST cycle.
  */
 export function resolveAtmosphereTheme(
   condition?: string,
   rainfall: number = 0,
   temperature: number = 28,
   wind: number = 12,
-  alert_type?: string
+  alert_type?: string,
+  forcedHour?: number
 ): AtmosphereTheme {
   const cond = (condition || '').toLowerCase().trim();
   const alert = (alert_type || '').toLowerCase().trim();
@@ -58,23 +109,44 @@ export function resolveAtmosphereTheme(
   }
 
   // 6. Cloudy: cloudy or overcast or moderate rain/wind
-  if (cond.includes('cloud') || cond.includes('overcast') || rainfall > 1 || wind > 20) {
+  if (cond.includes('cloud') || cond.includes('overcast') || rainfall > 1 || wind > 25) {
     return 'cloudy';
   }
 
-  // 7. Sunny: clear or sunny (default)
-  return 'sunny';
+  // 7. Diurnal Clear Cycle according to Indian Standard Time (IST):
+  const hour = forcedHour !== undefined ? forcedHour : getISTHour();
+
+  // 05:00 - 11:59 IST: Morning Dawn & Sunrise
+  if (hour >= 5 && hour < 12) {
+    return 'morning';
+  }
+
+  // 12:00 - 16:59 IST: Bright Afternoon Sun
+  if (hour >= 12 && hour < 17) {
+    return 'sunny';
+  }
+
+  // 17:00 - 19:59 IST: Golden Sunset & Dusk
+  if (hour >= 17 && hour < 20) {
+    return 'evening';
+  }
+
+  // 20:00 - 04:59 IST: Night Moon & Stars
+  return 'night';
 }
 
-const THEME_LABELS: Record<AtmosphereTheme, { label: string; icon: string; dotColor: string }> = {
-  simple: { label: 'Simple UI', icon: '✨', dotColor: '#94a3b8' },
-  sunny: { label: 'Sunny', icon: '☀️', dotColor: '#f59e0b' },
-  rain: { label: 'Rain', icon: '🌧️', dotColor: '#60a5fa' },
-  thunderstorm: { label: 'Thunderstorm', icon: '⚡', dotColor: '#a855f7' },
-  cloudy: { label: 'Cloudy', icon: '☁️', dotColor: '#94a3b8' },
-  heatwave: { label: 'Heatwave', icon: '🔥', dotColor: '#f97316' },
-  fog: { label: 'Fog', icon: '🌫️', dotColor: '#cbd5e1' },
-  snow: { label: 'Snow', icon: '❄️', dotColor: '#67e8f9' },
+const THEME_LABELS: Record<AtmosphereTheme, { label: string; icon: string; dotColor: string; category: string }> = {
+  simple: { label: 'Simple UI', icon: '✨', dotColor: '#94a3b8', category: 'General' },
+  morning: { label: 'Morning Dawn', icon: '🌅', dotColor: '#f59e0b', category: 'Diurnal' },
+  sunny: { label: 'Bright Afternoon', icon: '☀️', dotColor: '#eab308', category: 'Diurnal' },
+  evening: { label: 'Golden Sunset', icon: '🌇', dotColor: '#f97316', category: 'Diurnal' },
+  night: { label: 'Clear Night', icon: '🌙', dotColor: '#6366f1', category: 'Diurnal' },
+  rain: { label: 'Rain', icon: '🌧️', dotColor: '#60a5fa', category: 'Weather' },
+  thunderstorm: { label: 'Thunderstorm', icon: '⚡', dotColor: '#a855f7', category: 'Weather' },
+  cloudy: { label: 'Cloudy', icon: '☁️', dotColor: '#94a3b8', category: 'Weather' },
+  heatwave: { label: 'Heatwave', icon: '🔥', dotColor: '#ef4444', category: 'Weather' },
+  fog: { label: 'Fog', icon: '🌫️', dotColor: '#cbd5e1', category: 'Weather' },
+  snow: { label: 'Snow', icon: '❄️', dotColor: '#67e8f9', category: 'Weather' },
 };
 
 export function AtmosphereLayer({
@@ -86,10 +158,19 @@ export function AtmosphereLayer({
 }: AtmosphereLayerProps) {
   const [manualTheme, setManualTheme] = useState<AtmosphereTheme | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentHour, setCurrentHour] = useState<number>(getISTHour());
+
+  useEffect(() => {
+    // Automatically checks IST hour every 10 seconds for seamless real-time transitions
+    const interval = setInterval(() => {
+      setCurrentHour(getISTHour());
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const autoTheme = useMemo(
-    () => resolveAtmosphereTheme(condition, rainfall, temperature, wind, alert_type),
-    [condition, rainfall, temperature, wind, alert_type]
+    () => resolveAtmosphereTheme(condition, rainfall, temperature, wind, alert_type, currentHour),
+    [condition, rainfall, temperature, wind, alert_type, currentHour]
   );
 
   const activeTheme = manualTheme || autoTheme;
@@ -120,7 +201,16 @@ export function AtmosphereLayer({
           </div>
         )}
 
-        {/* 1. SUNNY BACKDROP: Warm golden yellow sky with sun rays behind */}
+        {/* 1. MORNING BACKDROP: Soft golden dawn, rising sun with fresh warm glow */}
+        {activeTheme === 'morning' && (
+          <div className="absolute inset-0">
+            <div className={styles.morningBackdrop} />
+            <div className={styles.morningSun} />
+            <div className={styles.morningMist} />
+          </div>
+        )}
+
+        {/* 2. BRIGHT AFTERNOON (SUNNY) BACKDROP: Warm golden yellow sky with sun rays behind */}
         {activeTheme === 'sunny' && (
           <div className="absolute inset-0">
             <div className={styles.sunnyBackdrop} />
@@ -154,7 +244,41 @@ export function AtmosphereLayer({
           </div>
         )}
 
-        {/* 2. CLOUDY BACKDROP */}
+        {/* 3. EVENING (DUSK/SUNSET) BACKDROP: Rich sunset twilight gradient with amber horizon */}
+        {activeTheme === 'evening' && (
+          <div className="absolute inset-0">
+            <div className={styles.eveningBackdrop} />
+            <div className={styles.sunsetSun} />
+            <div className={styles.sunsetGlow} />
+          </div>
+        )}
+
+        {/* 4. NIGHT BACKDROP: Deep celestial midnight indigo, glowing moon and twinkling stars */}
+        {activeTheme === 'night' && (
+          <div className="absolute inset-0">
+            <div className={styles.nightBackdrop} />
+            <div className={styles.moonDisc}>
+              <div className={styles.moonCrescentInner} />
+            </div>
+            <div className={styles.nightStars}>
+              {NIGHT_STARS.map((s, idx) => (
+                <div
+                  key={idx}
+                  className={styles.star}
+                  style={{
+                    top: s.top,
+                    left: s.left,
+                    width: `${s.size}px`,
+                    height: `${s.size}px`,
+                    animationDelay: s.delay,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. CLOUDY BACKDROP */}
         {activeTheme === 'cloudy' && (
           <div className="absolute inset-0">
             <div className={styles.cloudyBackdrop} />
@@ -370,46 +494,74 @@ export function AtmosphereLayer({
         <button
           type="button"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="flex items-center gap-2 text-white hover:text-sky-200 transition-colors cursor-pointer"
-          title="Atmospheric Environment Mode"
+          className="flex items-center gap-2.5 text-white hover:text-sky-200 transition-all cursor-pointer py-0.5 px-1"
+          title="Atmospheric Environment Mode (Diurnal & Weather Simulation)"
         >
           <span
             className={styles.atmoDot}
-            style={{ background: currentMeta.dotColor, boxShadow: `0 0 8px ${currentMeta.dotColor}` }}
+            style={{ background: currentMeta.dotColor, boxShadow: `0 0 10px ${currentMeta.dotColor}` }}
           />
-          <span className="font-semibold text-xs tracking-wide">
-            {currentMeta.icon}{' '}
-            {manualTheme === null
-              ? `${currentMeta.label} (Auto)`
-              : manualTheme === 'simple'
-              ? currentMeta.label
-              : `${currentMeta.label} (Test)`}
-          </span>
-          <span className="text-[10px] opacity-70">▾</span>
+          <div className="flex flex-col text-left leading-tight">
+            <span className="font-bold text-xs tracking-wide flex items-center gap-1.5">
+              <span>{currentMeta.icon}</span>
+              <span>
+                {manualTheme === null
+                  ? activeTheme === 'morning'
+                    ? temperature >= 32 ? 'Warm Morning' : 'Fresh Morning'
+                    : activeTheme === 'sunny'
+                    ? temperature >= 34 ? 'Hot Afternoon' : 'Sunny Afternoon'
+                    : activeTheme === 'evening'
+                    ? 'Sunset Twilight'
+                    : activeTheme === 'night'
+                    ? temperature < 20 ? 'Chilly Night' : temperature >= 28 ? 'Warm Night' : 'Clear Night'
+                    : currentMeta.label
+                  : currentMeta.label}
+              </span>
+              <span className="text-[10px] font-normal text-sky-300/80">
+                {manualTheme === null ? `• ${temperature.toFixed(0)}°C` : '(Test)'}
+              </span>
+            </span>
+          </div>
+          <span className="text-[10px] opacity-60 ml-0.5">▾</span>
         </button>
 
         {menuOpen && (
           <div
-            className="absolute bottom-11 right-0 w-48 max-h-[380px] overflow-y-auto rounded-xl p-1.5 shadow-2xl backdrop-blur-xl border border-white/20 scrollbar-thin"
-            style={{ background: 'rgba(15, 23, 42, 0.94)' }}
+            className="absolute bottom-12 right-0 w-56 max-h-[440px] overflow-y-auto rounded-xl p-2 shadow-2xl backdrop-blur-2xl border border-white/20 scrollbar-thin"
+            style={{ background: 'rgba(11, 17, 32, 0.96)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.7), 0 0 20px rgba(56, 189, 248, 0.15)' }}
           >
-            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-white/10 mb-1">
-              Select Atmosphere
+            <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-widest text-sky-400/90 border-b border-white/10 mb-1 flex items-center justify-between">
+              <span>Atmospheric Mode</span>
+              <span className="text-[9px] text-slate-400 font-normal">IST Synced</span>
             </div>
+
+            {/* Auto Live Option */}
             <button
               type="button"
               onClick={() => {
                 setManualTheme(null);
                 setMenuOpen(false);
               }}
-              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                manualTheme === null ? 'bg-sky-500/20 text-sky-300 font-semibold' : 'text-slate-300 hover:bg-white/10'
+              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors mb-1.5 ${
+                manualTheme === null
+                  ? 'bg-sky-500/25 text-sky-300 font-bold border border-sky-400/30'
+                  : 'text-slate-300 hover:bg-white/10'
               }`}
             >
-              <span>🌐 Auto (City Live)</span>
-              {manualTheme === null && <span className="text-sky-400 text-[10px]">Active</span>}
+              <span className="flex items-center gap-1.5">
+                <span>🌐</span>
+                <span>Auto Live (IST Diurnal)</span>
+              </span>
+              {manualTheme === null && (
+                <span className="text-[10px] bg-sky-400/20 text-sky-300 px-1.5 py-0.2 rounded font-semibold">Active</span>
+              )}
             </button>
-            {(Object.keys(THEME_LABELS) as AtmosphereTheme[]).map((t) => (
+
+            {/* Diurnal Sky Cycle */}
+            <div className="px-2 pt-1.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-amber-400/80 border-t border-white/10">
+              Diurnal Sky (Clear)
+            </div>
+            {(['morning', 'sunny', 'evening', 'night'] as AtmosphereTheme[]).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -418,15 +570,66 @@ export function AtmosphereLayer({
                   setMenuOpen(false);
                 }}
                 className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                  manualTheme === t ? 'bg-sky-500/20 text-sky-300 font-semibold' : 'text-slate-300 hover:bg-white/10'
+                  manualTheme === t
+                    ? 'bg-amber-500/25 text-amber-200 font-bold border border-amber-400/30'
+                    : 'text-slate-300 hover:bg-white/10'
                 }`}
               >
-                <span>
-                  {THEME_LABELS[t].icon} {THEME_LABELS[t].label}
+                <span className="flex items-center gap-1.5">
+                  <span>{THEME_LABELS[t].icon}</span>
+                  <span>{THEME_LABELS[t].label}</span>
                 </span>
-                {manualTheme === t && <span className="text-sky-400 text-[10px]">Active</span>}
+                {manualTheme === t && <span className="text-amber-400 text-[10px]">Active</span>}
               </button>
             ))}
+
+            {/* Weather & Hazards */}
+            <div className="px-2 pt-2 pb-1 text-[9px] font-bold uppercase tracking-wider text-rose-400/80 border-t border-white/10 mt-1">
+              Hazard & Weather Presets
+            </div>
+            {(['rain', 'thunderstorm', 'heatwave', 'fog', 'cloudy', 'snow'] as AtmosphereTheme[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setManualTheme(t);
+                  setMenuOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                  manualTheme === t
+                    ? 'bg-rose-500/25 text-rose-200 font-bold border border-rose-400/30'
+                    : 'text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>{THEME_LABELS[t].icon}</span>
+                  <span>{THEME_LABELS[t].label}</span>
+                </span>
+                {manualTheme === t && <span className="text-rose-400 text-[10px]">Active</span>}
+              </button>
+            ))}
+
+            {/* Simple Mode */}
+            <div className="border-t border-white/10 mt-1 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setManualTheme('simple');
+                  setMenuOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                  manualTheme === 'simple'
+                    ? 'bg-slate-500/25 text-slate-200 font-bold border border-slate-400/30'
+                    : 'text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>✨</span>
+                  <span>Simple Minimalist UI</span>
+                </span>
+                {manualTheme === 'simple' && <span className="text-slate-400 text-[10px]">Active</span>}
+              </button>
+            </div>
           </div>
         )}
       </div>

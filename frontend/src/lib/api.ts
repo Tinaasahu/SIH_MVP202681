@@ -1217,8 +1217,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const shelterCap = Math.max(200, Math.floor(rainfall * 50));
     recs.push({
       id: `${cKey}-rec-rain-crit`,
-      title: 'Deploy SDRF & NDRF Water Rescue Battalions',
-      description: `Stage 4 Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: ${rainfall.toFixed(1)} mm/24h. Estimated requirement: ${boats} inflatable rescue boats, ${personnel} response personnel.`,
+      title: 'Stage 4 (Red) Critical Alert: Deploy SDRF & NDRF Rescue Battalions',
+      description: `Stage 4 (Red) Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: ${rainfall.toFixed(1)} mm/24h. Estimated requirement: ${boats} inflatable rescue boats, ${personnel} response personnel.`,
       category: 'rain',
       priority: 'critical',
       department: 'Disaster Management Authority (SDMA / DDMA)',
@@ -1237,8 +1237,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const personnel = Math.max(12, Math.floor(rainfall * 1.2));
     recs.push({
       id: `${cKey}-rec-rain-high`,
-      title: 'Pre-emptive Drainage Sump Mobilization & SDRF Standby',
-      description: `Stage 3 High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing ${rainfall.toFixed(1)} mm/24h rainfall. Standby rescue squads on 30-min notice.`,
+      title: 'Stage 3 (Orange) High Alert: Pre-emptive Sump Mobilization & SDRF Standby',
+      description: `Stage 3 (Orange) High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing ${rainfall.toFixed(1)} mm/24h rainfall. Standby rescue squads on 30-min notice.`,
       category: 'rain',
       priority: 'high',
       department: 'Municipal Corporation / PWD & SDRF',
@@ -1255,8 +1255,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const personnel = Math.max(6, Math.floor(rainfall * 0.8));
     recs.push({
       id: `${cKey}-rec-rain-med`,
-      title: 'Catchment Basin & Storm Sump Surveillance',
-      description: `Stage 2 Alert: Moderate rainfall expected (${rainfall.toFixed(1)} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.`,
+      title: 'Stage 2 (Yellow) Alert: Catchment Basin & Storm Sump Surveillance',
+      description: `Stage 2 (Yellow) Alert: Moderate rainfall expected (${rainfall.toFixed(1)} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.`,
       category: 'rain',
       priority: 'medium',
       department: 'Urban Water Supply & Drainage Cell',
@@ -1270,8 +1270,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
   } else {
     recs.push({
       id: `${cKey}-rec-rain-base`,
-      title: 'Baseline Synoptic Pluviometer Monitoring & Readiness',
-      description: `Stage 1 Baseline: Light/normal rainfall (${rainfall.toFixed(1)} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.`,
+      title: 'Stage 1 (Green) Baseline: Synoptic Pluviometer Monitoring & Readiness',
+      description: `Stage 1 (Green) Baseline: Light/normal rainfall (${rainfall.toFixed(1)} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.`,
       category: 'rain',
       priority: 'routine',
       department: 'State Meteorological Control Cell',
@@ -1292,8 +1292,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const heatBeds = Math.max(20, Math.floor((temp - 35) * 10));
     recs.push({
       id: `${cKey}-rec-heat-crit`,
-      title: 'Issue Heatwave Red Alert & Outdoor Work Curfew',
-      description: `Stage 4 Emergency: Severe heatwave conditions (${temp.toFixed(1)}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.`,
+      title: 'Stage 4 (Red) Emergency: Heatwave Red Alert & Outdoor Work Curfew',
+      description: `Stage 4 (Red) Emergency: Severe heatwave conditions (${temp.toFixed(1)}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.`,
       category: 'heat',
       priority: 'critical',
       department: 'Dept of Public Health & Disaster Management',
@@ -1312,8 +1312,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const coolingCenters = Math.max(2, Math.floor((temp - 33) * 1.5));
     recs.push({
       id: `${cKey}-rec-heat-high`,
-      title: 'Activate Civic Air-Cooled Relief Shelters & Tankers',
-      description: `Stage 3 High Alert: Elevated thermal stress (${temp.toFixed(1)}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.`,
+      title: 'Stage 3 (Orange) High Alert: Civic Air-Cooled Relief Shelters & Tankers',
+      description: `Stage 3 (Orange) High Alert: Elevated thermal stress (${temp.toFixed(1)}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.`,
       category: 'heat',
       priority: 'high',
       department: 'Urban Local Bodies / Health Dept',
@@ -1330,8 +1330,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const orsPkts = Math.max(500, Math.floor((temp - 28) * 500));
     recs.push({
       id: `${cKey}-rec-heat-med`,
-      title: 'Thermal Index Advisory & Public Hydration Points',
-      description: `Stage 2 Alert: Warm conditions (${temp.toFixed(1)}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.`,
+      title: 'Stage 2 (Yellow) Alert: Thermal Index Advisory & Public Hydration Points',
+      description: `Stage 2 (Yellow) Alert: Warm conditions (${temp.toFixed(1)}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.`,
       category: 'heat',
       priority: 'medium',
       department: 'Municipal Public Health Wing',
@@ -1345,8 +1345,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
   } else {
     recs.push({
       id: `${cKey}-rec-heat-base`,
-      title: 'Thermal Baseline & Heat Index Surveillance',
-      description: `Stage 1 Baseline: Temperature (${temp.toFixed(1)}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.`,
+      title: 'Stage 1 (Green) Baseline: Thermal Baseline & Heat Index Surveillance',
+      description: `Stage 1 (Green) Baseline: Temperature (${temp.toFixed(1)}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.`,
       category: 'heat',
       priority: 'routine',
       department: 'Health Surveillance & Met Cell',
@@ -1366,8 +1366,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const vessels = Math.max(2, Math.floor(wind * 0.1));
     recs.push({
       id: `${cKey}-rec-wind-crit`,
-      title: 'Suspend Marine Operations & Halt High-Altitude Cranes',
-      description: `Stage 4 Critical: Dangerous wind gusts (${wind.toFixed(1)} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.`,
+      title: 'Stage 4 (Red) Critical: Suspend Marine Operations & Halt High-Altitude Cranes',
+      description: `Stage 4 (Red) Critical: Dangerous wind gusts (${wind.toFixed(1)} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.`,
       category: 'wind',
       priority: 'critical',
       department: 'Port Authority, Labour & Police Safety',
@@ -1384,8 +1384,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const crews = Math.max(4, Math.floor(wind * 0.25));
     recs.push({
       id: `${cKey}-rec-wind-high`,
-      title: 'Secure Overhead Hoardings & Scaffolding Inspections',
-      description: `Stage 3 High Alert: Strong wind gusts (${wind.toFixed(1)} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.`,
+      title: 'Stage 3 (Orange) High Alert: Secure Overhead Hoardings & Scaffolding Inspections',
+      description: `Stage 3 (Orange) High Alert: Strong wind gusts (${wind.toFixed(1)} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.`,
       category: 'wind',
       priority: 'high',
       department: 'Municipal Town Planning / Safety Wing',
@@ -1400,8 +1400,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
     const crews = Math.max(2, Math.floor(wind * 0.2));
     recs.push({
       id: `${cKey}-rec-wind-med`,
-      title: 'Power Grid Line Patrol & Tree Clearing Squads',
-      description: `Stage 2 Alert: Moderate wind activity (${wind.toFixed(1)} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.`,
+      title: 'Stage 2 (Yellow) Alert: Power Grid Line Patrol & Tree Clearing Squads',
+      description: `Stage 2 (Yellow) Alert: Moderate wind activity (${wind.toFixed(1)} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.`,
       category: 'wind',
       priority: 'medium',
       department: 'State Electricity Board / Forestry Works',
@@ -1415,8 +1415,8 @@ export function generateResourceRecommendations(city: string, rainfall: number, 
   } else {
     recs.push({
       id: `${cKey}-rec-wind-base`,
-      title: 'Anemometer Verification & Baseline Grid Monitoring',
-      description: `Stage 1 Baseline: Wind velocity (${wind.toFixed(1)} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.`,
+      title: 'Stage 1 (Green) Baseline: Anemometer Verification & Baseline Grid Monitoring',
+      description: `Stage 1 (Green) Baseline: Wind velocity (${wind.toFixed(1)} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.`,
       category: 'wind',
       priority: 'routine',
       department: 'State Meteorological Control Cell',
@@ -1462,13 +1462,42 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
   const windRisk = Math.min(100, Math.max(0, Math.round((wind / 65) * 100 * 10) / 10));
   const confScore = Math.min(100, Math.max(0, conf));
 
-  // Formula: RPI = 35% Rain Risk + 25% Heat Risk + 20% Wind Risk + 20% Confidence
-  const rpiScore = Math.round((0.35 * rainRisk + 0.25 * heatRisk + 0.20 * windRisk + 0.20 * confScore) * 10) / 10;
+  // Decoupled Formula: Hazard = 70% Max Hazard + 30% Mean Hazard (Confidence-free)
+  const hazardMean = (rainRisk + heatRisk + windRisk) / 3;
+  const hazardMax = Math.max(rainRisk, heatRisk, windRisk);
+  const hazardRaw = Math.min(100, Math.max(0, Math.round((hazardMax * 0.70 + hazardMean * 0.30) * 10) / 10));
+  const rpiScore = hazardRaw;
 
+  let tierLevel: 'Green' | 'Yellow' | 'Orange' | 'Red' = 'Green';
   let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
-  if (rpiScore > 75) priority = 'Critical';
-  else if (rpiScore > 55) priority = 'High';
-  else if (rpiScore > 30) priority = 'Moderate';
+  let actionTier = 'Stage 1 (Green) — Routine Monitoring';
+  let confidenceBadge: string | null = null;
+  let actionDirective = 'Routine Synoptic Surveillance, Standard Sensor Telemetry';
+
+  if (hazardRaw >= 75) {
+    tierLevel = 'Red';
+    priority = 'Critical';
+    actionTier = 'Stage 4 (Red) — Critical Emergency';
+    if (confScore >= 70) {
+      confidenceBadge = 'High Confidence — Immediate Action';
+      actionDirective = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions';
+    } else {
+      confidenceBadge = 'Low Confidence — Verify Before Escalating';
+      actionDirective = 'High Vigilance, Urgent Radar/Satellite Reconnaissance, SDRF Standby';
+    }
+  } else if (hazardRaw >= 56) {
+    tierLevel = 'Orange';
+    priority = 'High';
+    actionTier = 'Stage 3 (Orange) — High Alert';
+    confidenceBadge = null;
+    actionDirective = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps';
+  } else if (hazardRaw >= 31) {
+    tierLevel = 'Yellow';
+    priority = 'Moderate';
+    actionTier = 'Stage 2 (Yellow) — Moderate Watch';
+    confidenceBadge = null;
+    actionDirective = 'Heightened Watch, Localized Municipal Drainage Clearing';
+  }
 
   let domModel = confRecords && confRecords.length > 0 ? confRecords[0].dominant_model : matchCity.dominantModel || 'ECMWF';
   if (domModel === 'AI') domModel = 'ECMWF';
@@ -1496,10 +1525,15 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
     temperature: Math.round(temp * 10) / 10,
     wind: Math.round(wind * 10) / 10,
     confidence: confScore,
+    confidenceBadge,
+    actionDirective,
+    tierLevel,
     rainRisk,
     heatRisk,
     windRisk,
+    rpi: rpiScore,
     rpiScore,
+    actionTier,
     priority,
     dominantModel: domModel,
     modelWeights: weights,
@@ -1530,12 +1564,42 @@ export async function getAllRpiData(): Promise<RpiData[]> {
     const heatRisk = Math.min(100, Math.max(0, Math.round(((temp - 25) / 20) * 100 * 10) / 10));
     const windRisk = Math.min(100, Math.max(0, Math.round((wind / 65) * 100 * 10) / 10));
 
-    const rpiScore = Math.round((0.35 * rainRisk + 0.25 * heatRisk + 0.20 * windRisk + 0.20 * conf) * 10) / 10;
+    // Decoupled Formula: Hazard = 70% Max Hazard + 30% Mean Hazard (Confidence-free)
+    const hazardMean = (rainRisk + heatRisk + windRisk) / 3;
+    const hazardMax = Math.max(rainRisk, heatRisk, windRisk);
+    const hazardRaw = Math.min(100, Math.max(0, Math.round((hazardMax * 0.70 + hazardMean * 0.30) * 10) / 10));
+    const rpiScore = hazardRaw;
 
+    let tierLevel: 'Green' | 'Yellow' | 'Orange' | 'Red' = 'Green';
     let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
-    if (rpiScore > 75) priority = 'Critical';
-    else if (rpiScore > 55) priority = 'High';
-    else if (rpiScore > 30) priority = 'Moderate';
+    let actionTier = 'Stage 1 (Green) — Routine Monitoring';
+    let confidenceBadge: string | null = null;
+    let actionDirective = 'Routine Synoptic Surveillance, Standard Sensor Telemetry';
+
+    if (hazardRaw >= 75) {
+      tierLevel = 'Red';
+      priority = 'Critical';
+      actionTier = 'Stage 4 (Red) — Critical Emergency';
+      if (conf >= 70) {
+        confidenceBadge = 'High Confidence — Immediate Action';
+        actionDirective = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions';
+      } else {
+        confidenceBadge = 'Low Confidence — Verify Before Escalating';
+        actionDirective = 'High Vigilance, Urgent Radar/Satellite Reconnaissance, SDRF Standby';
+      }
+    } else if (hazardRaw >= 56) {
+      tierLevel = 'Orange';
+      priority = 'High';
+      actionTier = 'Stage 3 (Orange) — High Alert';
+      confidenceBadge = null;
+      actionDirective = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps';
+    } else if (hazardRaw >= 31) {
+      tierLevel = 'Yellow';
+      priority = 'Moderate';
+      actionTier = 'Stage 2 (Yellow) — Moderate Watch';
+      confidenceBadge = null;
+      actionDirective = 'Heightened Watch, Localized Municipal Drainage Clearing';
+    }
 
     let domModel = c.dominantModel || 'ECMWF';
     if (domModel === 'AI' || domModel === 'Ensemble') {
@@ -1560,10 +1624,15 @@ export async function getAllRpiData(): Promise<RpiData[]> {
       temperature: temp,
       wind: wind,
       confidence: conf,
+      confidenceBadge,
+      actionDirective,
+      tierLevel,
       rainRisk,
       heatRisk,
       windRisk,
+      rpi: rpiScore,
       rpiScore,
+      actionTier,
       priority,
       dominantModel: domModel,
       modelWeights: weights,

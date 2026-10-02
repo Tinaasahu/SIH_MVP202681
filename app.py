@@ -764,16 +764,40 @@ def get_rpi():
         wind_risk = min(100.0, max(0.0, round((wind / 65.0) * 100.0, 1)))
         conf_score = min(100.0, max(0.0, conf))
 
-        rpi = round(0.35 * rain_risk + 0.25 * heat_risk + 0.20 * wind_risk + 0.20 * conf_score, 1)
+        hazard_mean = (rain_risk + heat_risk + wind_risk) / 3.0
+        hazard_max = max(rain_risk, heat_risk, wind_risk)
+        hazard_raw = round(hazard_max * 0.70 + hazard_mean * 0.30, 1)
+        hazard_raw = min(100.0, max(0.0, hazard_raw))
+        rpi = hazard_raw
 
-        if rpi <= 30:
-            priority = 'Low'
-        elif rpi <= 55:
-            priority = 'Moderate'
-        elif rpi <= 75:
-            priority = 'High'
-        else:
+        if hazard_raw >= 75.0:
+            tier_level = 'Red'
             priority = 'Critical'
+            action_tier = 'Stage 4 (Red) — Critical Emergency'
+            if conf_score >= 70.0:
+                confidence_badge = 'High Confidence — Immediate Action'
+                action_directive = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions'
+            else:
+                confidence_badge = 'Low Confidence — Verify Before Escalating'
+                action_directive = 'High Vigilance, Urgent Radar/Satellite Reconnaissance, SDRF Standby'
+        elif hazard_raw >= 56.0:
+            tier_level = 'Orange'
+            priority = 'High'
+            action_tier = 'Stage 3 (Orange) — High Alert'
+            confidence_badge = None
+            action_directive = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps'
+        elif hazard_raw >= 31.0:
+            tier_level = 'Yellow'
+            priority = 'Moderate'
+            action_tier = 'Stage 2 (Yellow) — Moderate Watch'
+            confidence_badge = None
+            action_directive = 'Heightened Watch, Localized Municipal Drainage Clearing'
+        else:
+            tier_level = 'Green'
+            priority = 'Low'
+            action_tier = 'Stage 1 (Green) — Routine Monitoring'
+            confidence_badge = None
+            action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
 
         # Real model weights from outputs/model_weights_lead.csv
         real_w = city_model_weights.get(c_key)
@@ -799,8 +823,8 @@ def get_rpi():
             shelter_cap = int(max(200, rain * 50))
             recommendations.append({
                 'id': f'{c_key}-rec-rain-crit',
-                'title': 'Deploy SDRF & NDRF Water Rescue Battalions',
-                'description': f'Stage 4 Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: {rain:.1f} mm/24h. Estimated requirement: {boats} inflatable rescue boats, {personnel} response personnel.',
+                'title': 'Stage 4 (Red) Critical Alert: Deploy SDRF & NDRF Rescue Battalions',
+                'description': f'Stage 4 (Red) Critical Alert: Pre-position rescue boats & diving personnel at low-lying riverine basins. Projected rainfall: {rain:.1f} mm/24h. Estimated requirement: {boats} inflatable rescue boats, {personnel} response personnel.',
                 'category': 'rain',
                 'priority': 'critical',
                 'department': 'Disaster Management Authority (SDMA / DDMA)',
@@ -819,8 +843,8 @@ def get_rpi():
             personnel = max(12, int(rain * 1.2))
             recommendations.append({
                 'id': f'{c_key}-rec-rain-high',
-                'title': 'Pre-emptive Drainage Sump Mobilization & SDRF Standby',
-                'description': f'Stage 3 High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing {rain:.1f} mm/24h rainfall. Standby rescue squads on 30-min notice.',
+                'title': 'Stage 3 (Orange) High Alert: Pre-emptive Sump Mobilization & SDRF Standby',
+                'description': f'Stage 3 (Orange) High Alert: Position mobile dewatering pumps at major urban underpasses and storm drains facing {rain:.1f} mm/24h rainfall. Standby rescue squads on 30-min notice.',
                 'category': 'rain',
                 'priority': 'high',
                 'department': 'Municipal Corporation / PWD & SDRF',
@@ -837,8 +861,8 @@ def get_rpi():
             personnel = max(6, int(rain * 0.8))
             recommendations.append({
                 'id': f'{c_key}-rec-rain-med',
-                'title': 'Catchment Basin & Storm Sump Surveillance',
-                'description': f'Stage 2 Alert: Moderate rainfall expected ({rain:.1f} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.',
+                'title': 'Stage 2 (Yellow) Alert: Catchment Basin & Storm Sump Surveillance',
+                'description': f'Stage 2 (Yellow) Alert: Moderate rainfall expected ({rain:.1f} mm/24h). Monitor municipal culverts and test automated sump sensors. Maintain emergency clearing teams.',
                 'category': 'rain',
                 'priority': 'medium',
                 'department': 'Urban Water Supply & Drainage Cell',
@@ -852,8 +876,8 @@ def get_rpi():
         else:
             recommendations.append({
                 'id': f'{c_key}-rec-rain-base',
-                'title': 'Baseline Synoptic Pluviometer Monitoring & Readiness',
-                'description': f'Stage 1 Baseline: Light/normal rainfall ({rain:.1f} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.',
+                'title': 'Stage 1 (Green) Baseline: Synoptic Pluviometer Monitoring & Readiness',
+                'description': f'Stage 1 (Green) Baseline: Light/normal rainfall ({rain:.1f} mm/24h). Maintain automated radar rain-gauge calibration and synoptic telemetry monitoring.',
                 'category': 'rain',
                 'priority': 'routine',
                 'department': 'State Meteorological Control Cell',
@@ -873,8 +897,8 @@ def get_rpi():
             heat_beds = max(20, int((temp - 35) * 10))
             recommendations.append({
                 'id': f'{c_key}-rec-heat-crit',
-                'title': 'Issue Heatwave Red Alert & Outdoor Work Curfew',
-                'description': f'Stage 4 Emergency: Severe heatwave conditions ({temp:.1f}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.',
+                'title': 'Stage 4 (Red) Emergency: Heatwave Red Alert & Outdoor Work Curfew',
+                'description': f'Stage 4 (Red) Emergency: Severe heatwave conditions ({temp:.1f}°C). Enforce physical outdoor labor ban from 11:30 AM to 03:30 PM. Mobilize hospital burn/heat stroke wards.',
                 'category': 'heat',
                 'priority': 'critical',
                 'department': 'Dept of Public Health & Disaster Management',
@@ -893,8 +917,8 @@ def get_rpi():
             cooling_centers = max(2, int((temp - 33) * 1.5))
             recommendations.append({
                 'id': f'{c_key}-rec-heat-high',
-                'title': 'Activate Civic Air-Cooled Relief Shelters & Tankers',
-                'description': f'Stage 3 High Alert: Elevated thermal stress ({temp:.1f}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.',
+                'title': 'Stage 3 (Orange) High Alert: Civic Air-Cooled Relief Shelters & Tankers',
+                'description': f'Stage 3 (Orange) High Alert: Elevated thermal stress ({temp:.1f}°C). Open air-conditioned public transit hubs & libraries with ORS kiosks. Dispatch water bowsers to unshaded wards.',
                 'category': 'heat',
                 'priority': 'high',
                 'department': 'Urban Local Bodies / Health Dept',
@@ -911,8 +935,8 @@ def get_rpi():
             ors_pkts = max(500, int((temp - 28) * 500))
             recommendations.append({
                 'id': f'{c_key}-rec-heat-med',
-                'title': 'Thermal Index Advisory & Public Hydration Points',
-                'description': f'Stage 2 Alert: Warm conditions ({temp:.1f}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.',
+                'title': 'Stage 2 (Yellow) Alert: Thermal Index Advisory & Public Hydration Points',
+                'description': f'Stage 2 (Yellow) Alert: Warm conditions ({temp:.1f}°C). Setup civic water kiosks at major bus terminals and marketplaces. Issue heat avoidance guidelines.',
                 'category': 'heat',
                 'priority': 'medium',
                 'department': 'Municipal Public Health Wing',
@@ -926,8 +950,8 @@ def get_rpi():
         else:
             recommendations.append({
                 'id': f'{c_key}-rec-heat-base',
-                'title': 'Thermal Baseline & Heat Index Surveillance',
-                'description': f'Stage 1 Baseline: Temperature ({temp:.1f}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.',
+                'title': 'Stage 1 (Green) Baseline: Thermal Baseline & Heat Index Surveillance',
+                'description': f'Stage 1 (Green) Baseline: Temperature ({temp:.1f}°C) within normal seasonal comfort thresholds. Maintain surface air temperature sensor calibration.',
                 'category': 'heat',
                 'priority': 'routine',
                 'department': 'Health Surveillance & Met Cell',
@@ -946,8 +970,8 @@ def get_rpi():
             vessels = max(2, int(wind * 0.1))
             recommendations.append({
                 'id': f'{c_key}-rec-wind-crit',
-                'title': 'Suspend Marine Operations & Halt High-Altitude Cranes',
-                'description': f'Stage 4 Critical: Dangerous wind gusts ({wind:.1f} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.',
+                'title': 'Stage 4 (Red) Critical: Suspend Marine Operations & Halt High-Altitude Cranes',
+                'description': f'Stage 4 (Red) Critical: Dangerous wind gusts ({wind:.1f} km/h). Issue immediate port and artisanal fishing craft bans. Halt construction tower cranes and evacuate vulnerable scaffolding.',
                 'category': 'wind',
                 'priority': 'critical',
                 'department': 'Port Authority, Labour & Police Safety',
@@ -964,8 +988,8 @@ def get_rpi():
             crews = max(4, int(wind * 0.25))
             recommendations.append({
                 'id': f'{c_key}-rec-wind-high',
-                'title': 'Secure Overhead Hoardings & Scaffolding Inspections',
-                'description': f'Stage 3 High Alert: Strong wind gusts ({wind:.1f} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.',
+                'title': 'Stage 3 (Orange) High Alert: Secure Overhead Hoardings & Scaffolding Inspections',
+                'description': f'Stage 3 (Orange) High Alert: Strong wind gusts ({wind:.1f} km/h). Inspect and dismantle unauthorized billboards and temporary construction hoardings.',
                 'category': 'wind',
                 'priority': 'high',
                 'department': 'Municipal Town Planning / Safety Wing',
@@ -980,8 +1004,8 @@ def get_rpi():
             crews = max(2, int(wind * 0.2))
             recommendations.append({
                 'id': f'{c_key}-rec-wind-med',
-                'title': 'Power Grid Line Patrol & Tree Clearing Squads',
-                'description': f'Stage 2 Alert: Moderate wind activity ({wind:.1f} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.',
+                'title': 'Stage 2 (Yellow) Alert: Power Grid Line Patrol & Tree Clearing Squads',
+                'description': f'Stage 2 (Yellow) Alert: Moderate wind activity ({wind:.1f} km/h). Pre-position power transmission line maintenance crews and hydraulic branch trimming teams.',
                 'category': 'wind',
                 'priority': 'medium',
                 'department': 'State Electricity Board / Forestry Works',
@@ -995,8 +1019,8 @@ def get_rpi():
         else:
             recommendations.append({
                 'id': f'{c_key}-rec-wind-base',
-                'title': 'Anemometer Verification & Baseline Grid Monitoring',
-                'description': f'Stage 1 Baseline: Wind velocity ({wind:.1f} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.',
+                'title': 'Stage 1 (Green) Baseline: Anemometer Verification & Baseline Grid Monitoring',
+                'description': f'Stage 1 (Green) Baseline: Wind velocity ({wind:.1f} km/h) well within safe operational engineering parameters. Continuous sonic anemometer tracking.',
                 'category': 'wind',
                 'priority': 'routine',
                 'department': 'State Meteorological Control Cell',
@@ -1017,10 +1041,15 @@ def get_rpi():
             'temperature': round(temp, 1),
             'wind': round(wind, 1),
             'confidence': round(conf_score, 1),
+            'confidenceBadge': confidence_badge,
+            'actionDirective': action_directive,
+            'tierLevel': tier_level,
             'rainRisk': rain_risk,
             'heatRisk': heat_risk,
             'windRisk': wind_risk,
+            'rpi': rpi,
             'rpiScore': rpi,
+            'actionTier': action_tier,
             'priority': priority,
             'dominantModel': dom_model,
             'modelWeights': weights,
@@ -1121,9 +1150,43 @@ def get_rpi_map():
         rain_risk = min(100.0, max(0.0, round((rain / 80.0) * 100.0, 1)))
         heat_risk = min(100.0, max(0.0, round(((temp - 25.0) / 20.0) * 100.0, 1)))
         wind_risk = min(100.0, max(0.0, round((wind / 65.0) * 100.0, 1)))
-        rpi = round(0.35 * rain_risk + 0.25 * heat_risk + 0.20 * wind_risk + 0.20 * conf, 1)
+        conf_score = min(100.0, max(0.0, conf))
 
-        priority = 'Low' if rpi <= 30 else 'Moderate' if rpi <= 55 else 'High' if rpi <= 75 else 'Critical'
+        hazard_mean = (rain_risk + heat_risk + wind_risk) / 3.0
+        hazard_max = max(rain_risk, heat_risk, wind_risk)
+        hazard_raw = round(hazard_max * 0.70 + hazard_mean * 0.30, 1)
+        hazard_raw = min(100.0, max(0.0, hazard_raw))
+        rpi = hazard_raw
+
+        if hazard_raw >= 75.0:
+            tier_level = 'Red'
+            priority = 'Critical'
+            action_tier = 'Stage 4 (Red) — Critical Emergency'
+            if conf_score >= 70.0:
+                confidence_badge = 'High Confidence — Immediate Action'
+                action_directive = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions'
+            else:
+                confidence_badge = 'Low Confidence — Verify Before Escalating'
+                action_directive = 'High Vigilance, Urgent Radar/Satellite Reconnaissance, SDRF Standby'
+        elif hazard_raw >= 56.0:
+            tier_level = 'Orange'
+            priority = 'High'
+            action_tier = 'Stage 3 (Orange) — High Alert'
+            confidence_badge = None
+            action_directive = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps'
+        elif hazard_raw >= 31.0:
+            tier_level = 'Yellow'
+            priority = 'Moderate'
+            action_tier = 'Stage 2 (Yellow) — Moderate Watch'
+            confidence_badge = None
+            action_directive = 'Heightened Watch, Localized Municipal Drainage Clearing'
+        else:
+            tier_level = 'Green'
+            priority = 'Low'
+            action_tier = 'Stage 1 (Green) — Routine Monitoring'
+            confidence_badge = None
+            action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
+
         real_w = city_model_weights.get(c_key)
         if real_w and len(real_w) >= 4:
             dom_model = max(real_w.items(), key=lambda x: x[1])[0].upper()
@@ -1141,7 +1204,12 @@ def get_rpi_map():
             "properties": {
                 "city": c_display,
                 "state": meta.get('state', 'India'),
+                "rpi": rpi,
                 "rpiScore": rpi,
+                "tierLevel": tier_level,
+                "actionTier": action_tier,
+                "confidenceBadge": confidence_badge,
+                "actionDirective": action_directive,
                 "priority": priority,
                 "dominantModel": dom_model,
                 "rainfall": round(rain, 1),

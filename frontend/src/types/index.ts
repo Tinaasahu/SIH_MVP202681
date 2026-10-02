@@ -125,6 +125,62 @@ export interface SkillMetric {
 }
 
 export type RpiPriority = 'Low' | 'Moderate' | 'High' | 'Critical';
+export type HazardTierLevel = 'Green' | 'Yellow' | 'Orange' | 'Red';
+
+export const SEVERITY_PALETTE: Record<
+  HazardTierLevel,
+  {
+    name: string;
+    strokeColor: string;
+    bgBadge: string;
+    textBadge: string;
+    borderBadge: string;
+    glow: string;
+    label: string;
+    sublabel: string;
+  }
+> = {
+  Green: {
+    name: 'Green',
+    strokeColor: '#10b981',
+    bgBadge: 'bg-emerald-500/15',
+    textBadge: 'text-emerald-700',
+    borderBadge: 'border-emerald-500/30',
+    glow: 'rgba(16, 185, 129, 0.25)',
+    label: 'STAGE 1 (GREEN) · ROUTINE',
+    sublabel: 'Routine Surveillance · All Parameters Normal',
+  },
+  Yellow: {
+    name: 'Yellow',
+    strokeColor: '#f59e0b',
+    bgBadge: 'bg-amber-500/15',
+    textBadge: 'text-amber-700',
+    borderBadge: 'border-amber-500/30',
+    glow: 'rgba(245, 158, 11, 0.25)',
+    label: 'STAGE 2 (YELLOW) · MODERATE',
+    sublabel: 'Heightened Watch · Localized Mitigation Standby',
+  },
+  Orange: {
+    name: 'Orange',
+    strokeColor: '#f97316',
+    bgBadge: 'bg-orange-500/15',
+    textBadge: 'text-orange-700',
+    borderBadge: 'border-orange-500/30',
+    glow: 'rgba(249, 115, 22, 0.30)',
+    label: 'STAGE 3 (ORANGE) · HIGH ALERT',
+    sublabel: 'Urgent Action Mandated · Field Units Mobilized',
+  },
+  Red: {
+    name: 'Red',
+    strokeColor: '#ef4444',
+    bgBadge: 'bg-red-500/20',
+    textBadge: 'text-red-700',
+    borderBadge: 'border-red-500/40',
+    glow: 'rgba(239, 68, 68, 0.35)',
+    label: 'STAGE 4 (RED) · CRITICAL EMERGENCY',
+    sublabel: 'Tier-1 Emergency · SDRF / NDRF Pre-Positioning Active',
+  },
+};
 
 export interface ResourceAction {
   id: string;
@@ -150,7 +206,12 @@ export interface RpiData {
   rainRisk: number;
   heatRisk: number;
   windRisk: number;
+  rpi?: number;
   rpiScore: number;
+  tierLevel?: HazardTierLevel;
+  actionTier?: string;
+  confidenceBadge?: string | null;
+  actionDirective?: string;
   priority: RpiPriority;
   dominantModel: string;
   modelWeights: {

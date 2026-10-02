@@ -16,64 +16,17 @@ import {
   Calendar,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { RpiData, RpiPriority } from '@/types';
+import { RpiData, RpiPriority, HazardTierLevel, SEVERITY_PALETTE } from '@/types';
 
 interface RpiHeroProps {
   rpiData: RpiData;
 }
 
-const PRIORITY_CONFIG: Record<
-  RpiPriority,
-  {
-    label: string;
-    sublabel: string;
-    strokeColor: string;
-    bgBadge: string;
-    textBadge: string;
-    borderBadge: string;
-    glow: string;
-  }
-> = {
-  Low: {
-    label: 'LOW RISK',
-    sublabel: 'Routine Surveillance · All Parameters Normal',
-    strokeColor: '#10b981',
-    bgBadge: 'bg-emerald-500/15',
-    textBadge: 'text-emerald-700',
-    borderBadge: 'border-emerald-500/30',
-    glow: 'rgba(16, 185, 129, 0.25)',
-  },
-  Moderate: {
-    label: 'MODERATE RISK',
-    sublabel: 'Heightened Watch · Localized Mitigation Standby',
-    strokeColor: '#f59e0b',
-    bgBadge: 'bg-amber-500/15',
-    textBadge: 'text-amber-700',
-    borderBadge: 'border-amber-500/30',
-    glow: 'rgba(245, 158, 11, 0.25)',
-  },
-  High: {
-    label: 'HIGH RISK',
-    sublabel: 'Urgent Action Mandated · Field Units Mobilized',
-    strokeColor: '#f97316',
-    bgBadge: 'bg-orange-500/15',
-    textBadge: 'text-orange-700',
-    borderBadge: 'border-orange-500/30',
-    glow: 'rgba(249, 115, 22, 0.3)',
-  },
-  Critical: {
-    label: 'CRITICAL EMERGENCY',
-    sublabel: 'Tier-1 Emergency · SDRF Pre-Positioning Active',
-    strokeColor: '#ef4444',
-    bgBadge: 'bg-red-500/20',
-    textBadge: 'text-red-700',
-    borderBadge: 'border-red-500/40',
-    glow: 'rgba(239, 68, 68, 0.35)',
-  },
-};
-
 export function RpiHero({ rpiData }: RpiHeroProps) {
-  const priorityInfo = PRIORITY_CONFIG[rpiData.priority] || PRIORITY_CONFIG['Low'];
+  const tier: HazardTierLevel =
+    rpiData.tierLevel ||
+    (rpiData.rpiScore >= 75 ? 'Red' : rpiData.rpiScore >= 56 ? 'Orange' : rpiData.rpiScore >= 31 ? 'Yellow' : 'Green');
+  const palette = SEVERITY_PALETTE[tier];
 
   // SVG Circular Ring geometry
   const radius = 68;
@@ -132,31 +85,60 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
             </div>
           </div>
 
-          {/* Priority Badge with Framer Motion color transition */}
-          <motion.div
-            layout
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${priorityInfo.bgBadge} ${priorityInfo.textBadge} ${priorityInfo.borderBadge}`}
-            style={{ boxShadow: `0 0 16px ${priorityInfo.glow}` }}
-          >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>{priorityInfo.label}</span>
-          </motion.div>
+          {/* Universal Hazard Tier Badge & Red-only Confidence Badge */}
+          <div className="flex flex-wrap items-center gap-2">
+            <motion.div
+              layout
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${palette.bgBadge} ${palette.textBadge} ${palette.borderBadge}`}
+              style={{ boxShadow: `0 0 16px ${palette.glow}` }}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{palette.label}</span>
+            </motion.div>
+
+            {/* Step 3: Confidence Badge ONLY shown when Tier == Red */}
+            {tier === 'Red' && (
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border shadow-xs ${
+                  rpiData.confidence >= 70
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {rpiData.confidence >= 70
+                  ? 'High Confidence — Immediate Action'
+                  : 'Low Confidence — Verify Before Escalating'}
+              </span>
+            )}
+          </div>
 
           <p className="text-xs text-slate-600 leading-relaxed font-medium">
-            {priorityInfo.sublabel}. RPI synthesizes multi-hazard meteorological severity with numerical weather prediction confidence scores.
+            {palette.sublabel}. Physical hazard severity is independently decoupled from NWP consensus confidence to eliminate hazard dilution.
           </p>
+
+          {/* Action Directive Banner */}
+          {rpiData.actionDirective && (
+            <div className="px-3.5 py-2.5 rounded-xl bg-slate-900 text-white text-[11.5px] font-semibold flex items-center gap-2.5 shadow-sm border border-slate-800">
+              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+              <div className="leading-snug">
+                <span className="text-slate-400 font-mono text-[9.5px] uppercase tracking-wider block">Operational Action Directive:</span>
+                <span className="text-slate-100 font-bold">{rpiData.actionDirective}</span>
+              </div>
+            </div>
+          )}
 
           {/* RPI Formula Reference Banner */}
           <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-snug">
             <div className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-blue-600" />
-              <span>Standard Operational Formula:</span>
+              <span>Decoupled Sendai / NDMA Operational Formula:</span>
             </div>
-            <code className="text-slate-800 font-mono text-[10.5px] block bg-white px-2 py-1 rounded border border-slate-200/60 font-semibold">
-              RPI = 35% Rain + 25% Heat + 20% Wind + 20% Confidence
+            <code className="text-slate-800 font-mono text-[10px] block bg-white px-2 py-1 rounded border border-slate-200/60 font-semibold">
+              Hazard = 70% Max(Hazard) + 30% Mean(Hazards) · Confidence Gates Red Action
             </code>
           </div>
         </div>
@@ -174,12 +156,12 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
                 strokeWidth={strokeWidth}
                 fill="none"
               />
-              {/* Animated Progress Ring */}
+              {/* Animated Progress Ring with Shared Severity Palette */}
               <motion.circle
                 cx="80"
                 cy="80"
                 r={radius}
-                stroke={priorityInfo.strokeColor}
+                stroke={palette.strokeColor}
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeLinecap="round"
@@ -187,7 +169,7 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
                 transition={{ duration: 1.2, ease: 'easeOut' }}
-                style={{ filter: `drop-shadow(0 0 6px ${priorityInfo.strokeColor})` }}
+                style={{ filter: `drop-shadow(0 0 6px ${palette.strokeColor})` }}
               />
             </svg>
 
@@ -211,7 +193,7 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
             </div>
           </div>
           <span className="text-xs font-semibold text-slate-600 mt-2">
-            Priority Index: <strong style={{ color: priorityInfo.strokeColor }}>{rpiData.priority}</strong>
+            Hazard Index: <strong style={{ color: palette.strokeColor }}>{palette.name.toUpperCase()} ({rpiData.priority})</strong>
           </span>
         </div>
 
