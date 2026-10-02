@@ -22,10 +22,13 @@ import { DataHealthPage } from '@/components/pages/DataHealthPage';
 import { RpiPage } from '@/components/pages/RpiPage';
 import { NavPage, CityForecast } from '@/types';
 import { getForecastMetrics, getAlerts } from '@/lib/api';
+import { EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<NavPage>('overview');
   const [selectedCity, setSelectedCity] = useState<string | null>('Kanpur');
+  const [isScenicMode, setIsScenicMode] = useState(false);
   const [atmoWeather, setAtmoWeather] = useState<{
     condition: string;
     rainfall: number;
@@ -142,16 +145,43 @@ export default function Home() {
       <CursorEffect />
 
       {/* Floating Boxed Taskbar Panel */}
-      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Header
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        isScenicMode={isScenicMode}
+        onToggleScenic={() => setIsScenicMode(!isScenicMode)}
+      />
 
       {/* Global Backend Connecting / Cold Start Indicator */}
       <BackendConnectingIndicator />
 
-      {/* Main Content with generous top padding to prevent ANY header overlap */}
-      <main className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 pt-36 pb-20">
+      {/* Main Content with generous top padding & smooth Scenic View fade */}
+      <main
+        onClick={() => {
+          if (isScenicMode) setIsScenicMode(false);
+        }}
+        className={cn(
+          "relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 pt-36 pb-20 transition-all duration-500",
+          isScenicMode ? "opacity-10 scale-[0.99] pointer-events-none filter blur-[0.5px]" : "opacity-100 scale-100"
+        )}
+      >
         <StatusStrip />
         {renderContent()}
       </main>
+
+      {/* Scenic View Floating Dismiss Banner */}
+      {isScenicMode && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+          <button
+            type="button"
+            onClick={() => setIsScenicMode(false)}
+            className="px-5 py-2.5 rounded-full bg-slate-900/90 text-white text-xs font-bold tracking-wide backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 hover:bg-slate-900 hover:scale-105 transition-all cursor-pointer"
+          >
+            <EyeOff size={15} className="text-amber-400" />
+            <span>Click Anywhere to Return to Dashboard</span>
+          </button>
+        </div>
+      )}
 
       {/* Enterprise Scientific Footer */}
       <footer

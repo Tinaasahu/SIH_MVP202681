@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Bell, Settings, ChevronDown, Wind, ShieldAlert, Cpu } from 'lucide-react';
+import { Bell, Settings, ChevronDown, Wind, ShieldAlert, Cpu, Eye, EyeOff } from 'lucide-react';
 import { NavPage } from '@/types';
+import { cn } from '@/lib/utils';
 import { BlendingEngineModal } from '@/components/BlendingEngine';
 import { AlertDrawer } from '@/components/AlertCenter';
 import { getMetadata, formatLastUpdated } from '@/lib/api';
@@ -9,6 +10,8 @@ import { getMetadata, formatLastUpdated } from '@/lib/api';
 interface HeaderProps {
   currentPage: NavPage;
   onNavigate: (page: NavPage) => void;
+  isScenicMode?: boolean;
+  onToggleScenic?: () => void;
 }
 
 const NAV_ITEMS: { id: NavPage; label: string }[] = [
@@ -21,7 +24,7 @@ const NAV_ITEMS: { id: NavPage; label: string }[] = [
   { id: 'data-health', label: 'Data Health' },
 ];
 
-export function Header({ currentPage, onNavigate }: HeaderProps) {
+export function Header({ currentPage, onNavigate, isScenicMode = false, onToggleScenic }: HeaderProps) {
   const [engineOpen, setEngineOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -137,6 +140,23 @@ export function Header({ currentPage, onNavigate }: HeaderProps) {
                 <Bell size={16} />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               </button>
+
+              {/* Scenic Sunset Landscape Peek Toggle */}
+              {onToggleScenic && (
+                <button
+                  type="button"
+                  onClick={onToggleScenic}
+                  className={cn(
+                    "relative p-2 rounded-xl border transition-all hover:shadow-xs",
+                    isScenicMode
+                      ? "bg-amber-500/25 text-amber-700 border-amber-400 shadow-xs"
+                      : "bg-white/70 hover:bg-white text-slate-600 border-slate-200/60"
+                  )}
+                  title={isScenicMode ? "Restore Dashboard Cards" : "Peek Sunset Background Scenery"}
+                >
+                  {isScenicMode ? <EyeOff size={16} className="text-amber-600" /> : <Eye size={16} />}
+                </button>
+              )}
 
               {/* System Diagnostics Trigger */}
               <button

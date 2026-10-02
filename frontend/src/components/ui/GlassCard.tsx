@@ -18,9 +18,9 @@ const paddings = {
 
 const variantStyles: Record<CardColorVariant, { background: string; border: string; boxShadow: string }> = {
   default: {
-    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.74) 100%)',
+    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.80) 0%, rgba(248, 250, 252, 0.62) 100%)',
     border: '1px solid rgba(226, 232, 240, 0.85)',
-    boxShadow: '0 8px 32px -4px rgba(15, 23, 42, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
+    boxShadow: '0 8px 32px -4px rgba(15, 23, 42, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)',
   },
   blue: {
     background: 'linear-gradient(145deg, rgba(240, 249, 255, 0.95) 0%, rgba(224, 242, 254, 0.78) 100%)',
