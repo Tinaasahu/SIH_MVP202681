@@ -81,28 +81,28 @@ function ConfidenceRing({
     >
       <div className="flex flex-col items-center justify-center cursor-help">
         <svg width="84" height="84" viewBox="0 0 84 84">
-          <circle cx="42" cy="42" r={radius} fill="none" strokeWidth="6" stroke="rgba(255,255,255,0.10)" />
+          <circle cx="42" cy="42" r={radius} fill="none" strokeWidth="5.5" stroke="rgba(255,255,255,0.08)" />
           <circle
             cx="42" cy="42" r={radius}
-            fill="none" strokeWidth="6"
-            stroke={color}
+            fill="none" strokeWidth="5.5"
+            stroke="#34d399"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             transform="rotate(-90 42 42)"
             style={{
               transition: 'stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)',
-              filter: `drop-shadow(0 0 6px ${color}60)`
+              filter: 'drop-shadow(0 0 3px rgba(52, 211, 153, 0.45))'
             }}
           />
-          <text x="42" y="42" textAnchor="middle" dominantBaseline="central" fill="#F5F7FF" fontSize="18" fontWeight="800">
+          <text x="42" y="42" textAnchor="middle" dominantBaseline="central" fill="#F3F5FA" fontSize="18" fontWeight="800">
             {value}%
           </text>
         </svg>
-        <span className="text-[11px] font-semibold text-[#F5F7FF] mt-1.5">
+        <span className="text-[11px] font-semibold text-[#F3F5FA] mt-1.5">
           {label ? `${label} Confidence` : 'Blend Reliability'}
         </span>
-        <span className="text-[10px] text-[#AAB7D4]">
+        <span className="text-[10px] text-[#A9B2C8]">
           {dominantModel ? `Dominant: ${dominantModel}` : 'High Agreement'}
         </span>
       </div>
@@ -172,9 +172,6 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       uncertainty: `±${forecast.rainfallUncertainty} mm`,
       color: '#38bdf8',
       decimals: 0,
-      bg: 'linear-gradient(145deg, rgba(14, 28, 68, 0.65) 0%, rgba(8, 18, 48, 0.72) 100%)',
-      border: 'rgba(56, 189, 248, 0.25)',
-      shadow: '0 12px 30px -4px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)',
     },
     {
       icon: Thermometer,
@@ -184,9 +181,6 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       uncertainty: `±${forecast.temperatureUncertainty} °C`,
       color: '#f59e0b',
       decimals: 1,
-      bg: 'linear-gradient(145deg, rgba(38, 26, 48, 0.65) 0%, rgba(16, 18, 44, 0.72) 100%)',
-      border: 'rgba(245, 158, 11, 0.25)',
-      shadow: '0 12px 30px -4px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)',
     },
     {
       icon: Wind,
@@ -196,23 +190,22 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       uncertainty: `±${forecast.windUncertainty} km/h`,
       color: '#22d3ee',
       decimals: 0,
-      bg: 'linear-gradient(145deg, rgba(12, 32, 60, 0.65) 0%, rgba(8, 22, 48, 0.72) 100%)',
-      border: 'rgba(34, 211, 238, 0.25)',
-      shadow: '0 12px 30px -4px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)',
     },
   ];
 
   return (
     <>
-      <GlassCard padding="lg" variant="default" className="relative overflow-hidden">
-        {/* Subtle Atmospheric Refraction Glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse 70% 60% at 85% 15%, rgba(56,189,248,0.06) 0%, transparent 65%)',
-          }}
-        />
-
+      <div
+        className="rounded-2xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300"
+        style={{
+          background: 'rgba(8, 14, 35, 0.52)',
+          backdropFilter: 'blur(24px) saturate(115%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(115%)',
+          border: '1px solid rgba(220, 225, 255, 0.12)',
+          boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+          borderRadius: '20px',
+        }}
+      >
         <div className="relative">
           {/* Top Headline Section */}
           <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
@@ -224,8 +217,8 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                 >
                   HYBRID FORECAST INTELLIGENCE
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-400/30 shadow-sm">
-                  <Sparkles size={11} className="text-sky-400" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/[0.06] text-[#F3F5FA] border border-white/12 shadow-sm">
+                  <Sparkles size={11} className="text-amber-300" />
                   Optimal Dynamic Blend
                 </span>
                 {isFallback && (
@@ -234,10 +227,10 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                   </span>
                 )}
               </div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#F5F7FF] tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#F3F5FA] tracking-tight">
                 AI + NWP + Multi-Model Ensemble → One Coherent Forecast
               </h1>
-              <p className="text-xs text-[#AAB7D4] mt-1">
+              <p className="text-xs text-[#A9B2C8] mt-1">
                 Adaptive weighting dynamically calibrated for region, season, lead-time, and active regime
               </p>
             </div>
@@ -246,57 +239,59 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
               variant="secondary"
               size="sm"
               onClick={() => setWhyOpen(true)}
-              className="text-[#F5F7FF] hover:text-sky-300 bg-white/[0.08] hover:bg-white/[0.14] border-white/15 shadow-sm"
+              className="text-[#F3F5FA] hover:text-white bg-white/[0.06] hover:bg-white/[0.12] border-white/12 shadow-sm"
             >
               <HelpCircle size={15} />
               Why this forecast?
             </Button>
           </div>
 
-          {/* Metrics Grid with Blue, Orange, Cyan & Green Dark Glass Cards */}
+          {/* Metrics Grid with Lighter Internal Glass Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {metrics.map((m) => (
               <div
                 key={m.label}
                 className="rounded-2xl p-5 transition-all hover:translate-y-[-2px] hover:shadow-lg"
                 style={{
-                  background: m.bg,
+                  background: 'rgba(15, 21, 45, 0.48)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  border: `1px solid ${m.border}`,
-                  boxShadow: m.shadow,
+                  border: '1px solid rgba(220, 225, 255, 0.10)',
+                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                  borderRadius: '18px',
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: `${m.color}20` }}
+                    style={{ background: `${m.color}18` }}
                   >
                     <m.icon size={15} style={{ color: m.color }} />
                   </div>
-                  <span className="text-xs text-[#AAB7D4] font-bold uppercase tracking-wider">{m.label}</span>
+                  <span className="text-xs text-[#A9B2C8] font-bold uppercase tracking-wider">{m.label}</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-4xl font-extrabold text-[#F5F7FF] tracking-tight">
+                  <span className="text-4xl font-extrabold text-[#F3F5FA] tracking-tight">
                     <AnimatedNumber value={m.value} decimals={m.decimals} />
                   </span>
                   <span className="text-base font-bold" style={{ color: m.color }}>{m.unit}</span>
                 </div>
-                <div className="mt-2.5 text-xs text-[#7180A5] font-medium">
-                  Uncertainty: <span className="font-semibold text-[#AAB7D4]">{m.uncertainty}</span>
+                <div className="mt-2.5 text-xs text-[#747F9C] font-medium">
+                  Uncertainty: <span className="font-semibold text-[#A9B2C8]">{m.uncertainty}</span>
                 </div>
               </div>
             ))}
 
-            {/* Confidence Ring Card - Soft Green Accent */}
+            {/* Confidence Ring Card - Soft Mint Green Accent */}
             <div
               className="rounded-2xl p-5 flex flex-col items-center justify-center transition-all hover:translate-y-[-2px] hover:shadow-lg"
               style={{
-                background: 'linear-gradient(145deg, rgba(14, 34, 52, 0.65) 0%, rgba(8, 20, 42, 0.72) 100%)',
+                background: 'rgba(15, 21, 45, 0.48)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                boxShadow: '0 12px 30px -4px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(220, 225, 255, 0.10)',
+                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                borderRadius: '18px',
               }}
             >
               <ConfidenceRing
@@ -309,8 +304,8 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
           </div>
 
           {/* Footer Metadata */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-3.5 border-t border-white/10">
-            <div className="flex items-center gap-2 text-xs text-[#7180A5]">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-3.5 border-t border-white/[0.08]">
+            <div className="flex items-center gap-2 text-xs text-[#747F9C]">
               <RefreshCw size={13} className="text-sky-400 animate-spin" style={{ animationDuration: '8s' }} />
               {lastUpdatedDisplay ? (
                 <span>Last Updated: {lastUpdatedDisplay}</span>
@@ -320,16 +315,16 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                 <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#AAB7D4]">
-              <span className="font-medium text-[#F5F7FF]">Target Station: {city}</span>
-              <span className="text-[#7180A5]">·</span>
+            <div className="flex items-center gap-2 text-xs text-[#A9B2C8]">
+              <span className="font-medium text-[#F3F5FA]">Target Station: {city}</span>
+              <span className="text-[#747F9C]">·</span>
               <span>Lead Time: 24h</span>
-              <span className="text-[#7180A5]">·</span>
+              <span className="text-[#747F9C]">·</span>
               <span className="text-emerald-400 font-semibold">Active Monsoon Regime</span>
             </div>
           </div>
         </div>
-      </GlassCard>
+      </div>
 
       <WhyForecastModal open={whyOpen} onClose={() => setWhyOpen(false)} selectedCity={city} />
     </>

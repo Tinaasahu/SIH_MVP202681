@@ -40,11 +40,11 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
   const [layerMenuOpen, setLayerMenuOpen] = useState(false);
 
   return (
-    <GlassCard padding="none" variant="blue" className="overflow-hidden">
+    <GlassCard padding="none" variant="default" className="overflow-hidden">
       {/* Controls Bar */}
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
-        style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.10)' }}
+        style={{ borderBottom: '1px solid rgba(220, 225, 255, 0.08)' }}
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
@@ -52,14 +52,14 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
                 LIVE WEATHER MAP
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30">
                 45 Indian Stations
               </span>
             </div>
-            <p className="text-[11px] text-[#AAB7D4] mt-0.5">Real CartoDB Geographic Grid · Smooth Interactive Zoom</p>
+            <p className="text-[11px] text-[#A9B2C8] mt-0.5">Real CartoDB Geographic Grid · Smooth Interactive Zoom</p>
           </div>
         </div>
 
@@ -72,8 +72,8 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
                 onClick={() => setLeadTime(t)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   leadTime === t
-                    ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                    : 'text-[#AAB7D4] hover:text-[#F5F7FF]'
+                    ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                    : 'text-[#A9B2C8] hover:text-[#F3F5FA]'
                 }`}
                 type="button"
               >
@@ -86,19 +86,19 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
           <div className="relative">
             <button
               onClick={() => setLayerMenuOpen(!layerMenuOpen)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#F5F7FF] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 shadow-sm transition-all"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#F3F5FA] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 shadow-sm transition-all"
               type="button"
             >
               <Layers size={14} className="text-sky-400" />
               <span>{LAYERS.find((l) => l.id === layer)?.label}</span>
-              <ChevronDown size={13} className={`text-[#AAB7D4] transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={13} className={`text-[#A9B2C8] transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {layerMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-2xl border border-white/20 min-w-[170px]"
+                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-2xl border border-[rgba(220,225,255,0.16)] min-w-[170px]"
                 style={{
-                  background: 'rgba(11, 22, 56, 0.96)',
+                  background: 'rgba(8, 13, 32, 0.94)',
                   backdropFilter: 'blur(26px)',
                   WebkitBackdropFilter: 'blur(26px)',
                   boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
@@ -114,7 +114,7 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
                     className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
                       layer === l.id
                         ? 'bg-sky-500/25 text-sky-300 font-bold'
-                        : 'text-[#AAB7D4] hover:bg-white/[0.08] hover:text-[#F5F7FF]'
+                        : 'text-[#A9B2C8] hover:bg-white/[0.08] hover:text-[#F3F5FA]'
                     }`}
                     type="button"
                   >
@@ -127,15 +127,15 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
 
           <Tooltip
             content={
-              <div className="p-1 max-w-[220px] text-xs text-[#AAB7D4]">
-                <span className="font-semibold text-[#F5F7FF]">Authentic Cartography</span>
-                <p className="text-[#AAB7D4] mt-1">
+              <div className="p-1 max-w-[220px] text-xs text-[#A9B2C8]">
+                <span className="font-semibold text-[#F3F5FA]">Authentic Cartography</span>
+                <p className="text-[#A9B2C8] mt-1">
                   Shows genuine Indian topography, borders, and coastlines with NO API key needed.
                 </p>
               </div>
             }
           >
-            <div className="p-2 rounded-xl text-[#7180A5] hover:text-[#AAB7D4] cursor-help">
+            <div className="p-2 rounded-xl text-[#747F9C] hover:text-[#A9B2C8] cursor-help">
               <Info size={15} />
             </div>
           </Tooltip>

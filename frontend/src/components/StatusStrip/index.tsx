@@ -115,34 +115,35 @@ export function StatusStrip() {
     <div
       className="mb-6 rounded-2xl px-5 py-3 transition-all duration-300"
       style={{
-        background: 'linear-gradient(135deg, rgba(14, 25, 60, 0.65) 0%, rgba(8, 16, 44, 0.72) 100%)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.14)',
-        boxShadow: '0 16px 36px 0 rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)',
+        background: 'rgba(8, 13, 32, 0.48)',
+        backdropFilter: 'blur(22px) saturate(115%)',
+        WebkitBackdropFilter: 'blur(22px) saturate(115%)',
+        border: '1px solid rgba(220, 225, 255, 0.10)',
+        boxShadow: '0 16px 45px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+        borderRadius: '20px',
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Item 1: Operational Status */}
         <div className="flex items-center gap-3">
           {isWakingUp ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-400/30 shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-400/25 shadow-sm">
               <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin inline-block" />
               <span className="text-[11px] font-bold text-amber-300 tracking-wide uppercase">
                 Connecting
               </span>
             </div>
           ) : isError ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-red-500/20 border border-red-400/30 shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-400/25 shadow-sm">
               <span className="relative flex h-2 w-2">
-                <span className="inline-flex rounded-full h-2 w-2 bg-red-400" />
+                <span className="inline-flex rounded-full h-2 w-2 bg-rose-400" />
               </span>
-              <span className="text-[11px] font-bold text-red-300 tracking-wide uppercase">
+              <span className="text-[11px] font-bold text-rose-300 tracking-wide uppercase">
                 Standby
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-500/12 border border-emerald-400/25 shadow-[0_0_12px_rgba(16,185,129,0.12)]">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
@@ -153,7 +154,7 @@ export function StatusStrip() {
             </div>
           )}
 
-          <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-300' : isError ? 'text-red-300' : 'text-[#F5F7FF] hidden sm:inline'}`}>
+          <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-300' : isError ? 'text-rose-300' : 'text-[#F3F5FA] hidden sm:inline'}`}>
             {isWakingUp
               ? 'Starting AI weather engine… This may take up to 60 seconds.'
               : isError
@@ -166,14 +167,14 @@ export function StatusStrip() {
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs">
           {/* Item 2: Last Updated */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-sky-500/15 flex items-center justify-center text-sky-400 border border-sky-400/30">
+            <div className="w-6 h-6 rounded-lg bg-sky-500/15 flex items-center justify-center text-sky-400 border border-sky-400/20">
               <Clock size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#747F9C] font-bold uppercase tracking-wider">
                 Last Updated
               </div>
-              <div className="font-bold text-[#F5F7FF]">
+              <div className="font-bold text-[#F3F5FA]">
                 {formattedDate ? (
                   formattedDate
                 ) : isError ? (
@@ -185,41 +186,41 @@ export function StatusStrip() {
             </div>
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-white/10" />
+          <div className="hidden md:block w-px h-7 bg-white/[0.08]" />
 
           {/* Item 3: Data Source */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400 border border-indigo-400/30">
+            <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400 border border-indigo-400/20">
               <Database size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#747F9C] font-bold uppercase tracking-wider">
                 Data Source
               </div>
-              <div className="font-bold text-[#F5F7FF] flex items-center gap-1.5">
+              <div className="font-bold text-[#F3F5FA] flex items-center gap-1.5">
                 <span>Live Open-Meteo</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/25 text-indigo-300 font-semibold border border-indigo-400/30">
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-400/25">
                   API
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-white/10" />
+          <div className="hidden md:block w-px h-7 bg-white/[0.08]" />
 
           {/* Item 4: Models Blended */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 border border-purple-400/30">
+            <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 border border-purple-400/20">
               <Layers size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#747F9C] font-bold uppercase tracking-wider">
                 Models Blended
               </div>
-              <div className="font-bold text-[#F5F7FF]">
+              <div className="font-bold text-[#F3F5FA]">
                 {modelCount !== null ? (
                   <>
-                    {modelCount} <span className="font-medium text-[#AAB7D4]">(ECMWF, GFS, ICON, GEM)</span>
+                    {modelCount} <span className="font-medium text-[#A9B2C8]">(ECMWF, GFS, ICON, GEM)</span>
                   </>
                 ) : isError ? (
                   '4 (ECMWF, GFS, ICON, GEM)'
@@ -230,18 +231,18 @@ export function StatusStrip() {
             </div>
           </div>
 
-          <div className="hidden lg:block w-px h-7 bg-white/10" />
+          <div className="hidden lg:block w-px h-7 bg-white/[0.08]" />
 
           {/* Item 5: Forecast Stations */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400 border border-emerald-400/30">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400 border border-emerald-400/20">
               <MapPin size={13} />
             </div>
             <div>
-              <div className="text-[10px] text-[#7180A5] font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-[#747F9C] font-bold uppercase tracking-wider">
                 Forecast Stations
               </div>
-              <div className="font-bold text-[#F5F7FF]">
+              <div className="font-bold text-[#F3F5FA]">
                 {cityCount !== null ? (
                   <>{cityCount} Cities</>
                 ) : isError ? (

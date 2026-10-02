@@ -36,7 +36,7 @@ export function CustomDropdown({
 
   return (
     <div className={cn('relative w-full', className)} ref={containerRef}>
-      {label && <label className="block text-xs font-semibold text-[#AAB7D4] mb-1.5">{label}</label>}
+      {label && <label className="block text-xs font-semibold text-[#A9B2C8] mb-1.5">{label}</label>}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -47,12 +47,12 @@ export function CustomDropdown({
           isOpen && 'border-sky-400/60 ring-2 ring-sky-400/20 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
         )}
       >
-        <span className={cn('truncate font-medium', value ? 'text-[#F5F7FF]' : 'text-[#7180A5]')}>
+        <span className={cn('truncate font-medium', value ? 'text-[#F3F5FA]' : 'text-[#747F9C]')}>
           {value || placeholder}
         </span>
         <ChevronDown
           size={15}
-          className={cn('text-[#AAB7D4] transition-transform duration-200 shrink-0 ml-2', isOpen && 'rotate-180 text-sky-400')}
+          className={cn('text-[#A9B2C8] transition-transform duration-200 shrink-0 ml-2', isOpen && 'rotate-180 text-sky-400')}
         />
       </button>
 
@@ -60,18 +60,18 @@ export function CustomDropdown({
         <div
           className={cn(
             'absolute left-0 right-0 z-50 mt-1.5 max-h-56 overflow-y-auto rounded-xl py-1.5',
-            'border border-white/20 shadow-2xl',
+            'border border-[rgba(220,225,255,0.16)] shadow-2xl',
             'animate-in fade-in-0 zoom-in-95 duration-150'
           )}
           style={{
-            background: 'rgba(11, 22, 56, 0.96)',
+            background: 'rgba(8, 13, 32, 0.94)',
             backdropFilter: 'blur(26px)',
             WebkitBackdropFilter: 'blur(26px)',
-            boxShadow: '0 20px 45px rgba(0,0,0,0.8), 0 0 20px rgba(56,189,248,0.12)',
+            boxShadow: '0 20px 45px rgba(0,0,0,0.8), 0 0 20px rgba(56,189,248,0.08)',
           }}
         >
           {options.length === 0 ? (
-            <div className="px-3.5 py-2 text-xs text-[#7180A5]">No options</div>
+            <div className="px-3.5 py-2 text-xs text-[#747F9C]">No options</div>
           ) : (
             options.map((opt) => {
               const isSelected = opt === value;
@@ -87,7 +87,7 @@ export function CustomDropdown({
                     'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium transition-colors text-left',
                     isSelected
                       ? 'bg-sky-500/25 text-sky-300 font-semibold'
-                      : 'text-[#AAB7D4] hover:bg-white/[0.08] hover:text-[#F5F7FF]'
+                      : 'text-[#A9B2C8] hover:bg-white/[0.08] hover:text-[#F3F5FA]'
                   )}
                 >
                   <span className="truncate">{opt}</span>

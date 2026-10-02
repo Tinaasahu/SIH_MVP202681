@@ -59,11 +59,11 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
         <div
           className="rounded-2xl px-5 py-3 transition-all duration-300"
           style={{
-            background: 'linear-gradient(135deg, rgba(14, 25, 60, 0.72) 0%, rgba(8, 16, 42, 0.78) 100%)',
-            backdropFilter: 'blur(26px)',
-            WebkitBackdropFilter: 'blur(26px)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            boxShadow: '0 16px 40px 0 rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.20)',
+            background: 'rgba(8, 13, 32, 0.65)',
+            backdropFilter: 'blur(22px) saturate(115%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(115%)',
+            border: '1px solid rgba(220, 225, 255, 0.14)',
+            boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
           }}
         >
           {/* Main Top Bar */}
@@ -81,14 +81,14 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-[#F5F7FF] tracking-tight">
+                  <span className="text-base font-extrabold text-[#F3F5FA] tracking-tight">
                     नभदृष्टि
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-400/30">
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.08] text-[#F3F5FA] font-semibold border border-white/15">
                     MoES · NCMRWF
                   </span>
                 </div>
-                <div className="text-[10px] text-[#AAB7D4] font-medium tracking-wide">
+                <div className="text-[10px] text-[#A9B2C8] font-medium tracking-wide">
                   AI–NWP Forecast Blending System
                 </div>
               </div>
@@ -96,16 +96,16 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
 
             {/* Center Operational Metadata */}
             <div className="hidden lg:flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300">
-                <span className="text-[#7180A5]">Region:</span>
-                <span className="font-semibold text-[#F5F7FF]">All-India Gridded</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#A9B2C8]">
+                <span className="text-[#747F9C]">Region:</span>
+                <span className="font-semibold text-[#F3F5FA]">All-India Gridded</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300">
-                <span className="text-[#7180A5]">Last Updated:</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#A9B2C8]">
+                <span className="text-[#747F9C]">Last Updated:</span>
                 {lastUpdatedDisplay ? (
-                  <span className="font-semibold text-[#F5F7FF]">{lastUpdatedDisplay}</span>
+                  <span className="font-semibold text-[#F3F5FA]">{lastUpdatedDisplay}</span>
                 ) : lastUpdatedError ? (
-                  <span className="font-semibold text-[#F5F7FF]">2 Oct 2026 • 2:51 PM</span>
+                  <span className="font-semibold text-[#F3F5FA]">2 Oct 2026 • 2:51 PM</span>
                 ) : (
                   <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}
@@ -120,10 +120,10 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                 onClick={() => setEngineOpen(true)}
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: 'rgba(16, 185, 129, 0.16)',
+                  background: 'rgba(16, 185, 129, 0.12)',
                   color: '#34d399',
-                  border: '1px solid rgba(52, 211, 153, 0.35)',
-                  boxShadow: '0 0 16px rgba(16, 185, 129, 0.2)',
+                  border: '1px solid rgba(52, 211, 153, 0.25)',
+                  boxShadow: '0 0 12px rgba(16, 185, 129, 0.12)',
                 }}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 status-pulse" />
@@ -135,11 +135,11 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               <button
                 type="button"
                 onClick={() => setAlertOpen(true)}
-                className="relative p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10 transition-all hover:shadow-sm"
+                className="relative p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#A9B2C8] hover:text-[#F3F5FA] border border-white/10 transition-all hover:shadow-sm"
                 title="Active Weather Alerts"
               >
                 <Bell size={16} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full animate-pulse shadow-[0_0_8px_#ef4444]" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-400 rounded-full animate-pulse shadow-[0_0_8px_#f87171]" />
               </button>
 
               {/* Scenic Night Landscape Peek Toggle */}
@@ -150,8 +150,8 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                   className={cn(
                     "relative p-2 rounded-xl border transition-all hover:shadow-sm",
                     isScenicMode
-                      ? "bg-sky-500/25 text-sky-300 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.3)]"
-                      : "bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10"
+                      ? "bg-sky-500/20 text-sky-300 border-sky-400/40 shadow-sm"
+                      : "bg-white/[0.06] hover:bg-white/[0.12] text-[#A9B2C8] hover:text-[#F3F5FA] border border-white/10"
                   )}
                   title={isScenicMode ? "Restore Dashboard Cards" : "Peek Night Background Scenery"}
                 >
@@ -163,7 +163,7 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
               <button
                 type="button"
                 onClick={() => onNavigate('data-health')}
-                className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#AAB7D4] hover:text-[#F5F7FF] border border-white/10 transition-all hover:shadow-sm"
+                className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[#A9B2C8] hover:text-[#F3F5FA] border border-white/10 transition-all hover:shadow-sm"
                 title="Data & Model Health"
               >
                 <Cpu size={16} />
@@ -182,8 +182,8 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                   onClick={() => onNavigate(item.id)}
                   className={`relative flex-shrink-0 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                     isActive
-                      ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
-                      : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/[0.08]'
+                      ? 'bg-sky-500/20 text-[#F3F5FA] border border-sky-400/30 shadow-sm'
+                      : 'text-[#A9B2C8] hover:text-[#F3F5FA] hover:bg-white/[0.06]'
                   }`}
                 >
                   {item.label}

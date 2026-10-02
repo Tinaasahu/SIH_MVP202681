@@ -185,18 +185,18 @@ export default function Home() {
 
       {/* Enterprise Scientific Footer */}
       <footer
-        className="relative z-10 max-w-[1440px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#AAB7D4]"
-        style={{ borderTop: '1px solid rgba(255, 255, 255, 0.10)' }}
+        className="relative z-10 max-w-[1440px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A9B2C8]"
+        style={{ borderTop: '1px solid rgba(220, 225, 255, 0.08)' }}
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <img src="/logo-emblem.png" alt="नभदृष्टि Logo" className="w-5 h-5 object-contain rounded" />
-          <span className="font-bold text-[#F5F7FF]">नभदृष्टि Hybrid AI–NWP Platform</span>
+          <span className="font-bold text-[#F3F5FA]">नभदृष्टि Hybrid AI–NWP Platform</span>
           <span>·</span>
           <span>MoES / NCMRWF</span>
           <span>·</span>
           <span>Smart India Hackathon 2026 (PS: 26081)</span>
         </div>
-        <div className="text-[#7180A5] text-center sm:text-right">
+        <div className="text-[#747F9C] text-center sm:text-right">
           Real CartoDB Geographic Grid · 45 Indian Synoptic Observation Stations
         </div>
       </footer>

@@ -103,13 +103,13 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
   };
 
   return (
-    <GlassCard padding="md" variant="blue">
+    <GlassCard padding="md" variant="default">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
             <MapPin size={14} />
           </div>
-          <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
+          <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
             REGION SELECTOR
           </span>
           {isFallback && (
@@ -148,16 +148,16 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
 
       <div
         className="mt-4 rounded-xl px-3.5 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.20)' }}
+        style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(220, 225, 255, 0.10)' }}
       >
         <div className="flex items-center gap-2">
           <MapPin size={13} className="text-sky-400" />
-          <span className="text-xs text-[#F5F7FF]">
+          <span className="text-xs text-[#F3F5FA]">
             <span className="font-bold text-sky-300">{district === 'All Districts' ? state : district}</span>
-            <span className="text-[#AAB7D4]"> · {state}</span>
+            <span className="text-[#A9B2C8]"> · {state}</span>
           </span>
         </div>
-        <span className="text-[10px] text-[#7180A5] font-medium">Synced with Map</span>
+        <span className="text-[10px] text-[#747F9C] font-medium">Synced with Map</span>
       </div>
     </GlassCard>
   );

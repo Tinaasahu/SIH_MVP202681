@@ -101,17 +101,17 @@ export function ModelSkillPanel() {
   const improvementPct = ecmwfRmse > 0 ? (((ecmwfRmse - hybridRmse) / ecmwfRmse) * 100).toFixed(1) : '0.0';
 
   return (
-    <GlassCard padding="md" variant="green">
+    <GlassCard padding="md" variant="default">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
             <BarChart2 size={14} />
           </div>
-          <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
+          <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
             MODEL SKILL SCORE
           </span>
           <Tooltip content={<div className="p-1.5 text-xs text-slate-200 max-w-[210px]">RMSE (Root Mean Square Error) against TEST ground truth split. Lower is better.</div>}>
-            <Info size={13} className="text-[#7180A5] cursor-help hover:text-[#AAB7D4]" />
+            <Info size={13} className="text-[#747F9C] cursor-help hover:text-[#A9B2C8]" />
           </Tooltip>
         </div>
 
@@ -123,8 +123,8 @@ export function ModelSkillPanel() {
               onClick={() => setPeriod(p)}
               className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
                 period === p
-                  ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                  : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/[0.08]'
+                  ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                  : 'text-[#A9B2C8] hover:text-[#F3F5FA] hover:bg-white/[0.08]'
               }`}
               type="button"
             >
@@ -148,7 +148,7 @@ export function ModelSkillPanel() {
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ background: m.color, boxShadow: `0 0 6px ${m.color}` }}
             />
-            <span className={`text-xs flex-1 ${i === 0 ? 'font-bold text-[#F5F7FF]' : 'text-[#AAB7D4]'}`}>
+            <span className={`text-xs flex-1 ${i === 0 ? 'font-bold text-[#F3F5FA]' : 'text-[#A9B2C8]'}`}>
               {m.label}
             </span>
             {i === 0 && (
@@ -156,20 +156,20 @@ export function ModelSkillPanel() {
                 <Award size={11} /> Top Skill
               </span>
             )}
-            <span className="text-xs font-bold text-[#F5F7FF]">{m.rmse.toFixed(3)}</span>
-            <span className="text-[11px] text-[#7180A5] font-medium w-16 text-right">RMSE °C</span>
+            <span className="text-xs font-bold text-[#F3F5FA]">{m.rmse.toFixed(3)}</span>
+            <span className="text-[11px] text-[#747F9C] font-medium w-16 text-right">RMSE °C</span>
           </div>
         ))}
       </div>
 
       <div
         className="mt-4 rounded-xl px-3.5 py-3"
-        style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.20)' }}
+        style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(220, 225, 255, 0.10)' }}
       >
-        <p className="text-xs text-[#F5F7FF] leading-relaxed font-medium">
+        <p className="text-xs text-[#F3F5FA] leading-relaxed font-medium">
           Hybrid RF reduces error by <span className="font-bold text-sky-300">{improvementPct}%</span> compared to ECMWF IFS for {period}.
         </p>
-        <p className="text-[11px] text-[#7180A5] mt-1">
+        <p className="text-[11px] text-[#747F9C] mt-1">
           Hybrid vs raw ECMWF (no bias correction), 19-day held-out test, ERA5 reference
         </p>
       </div>

@@ -2,19 +2,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #050b24;
-  --bg-secondary: #0b1638;
-  --glass-bg: rgba(14, 25, 60, 0.58);
-  --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  --bg-primary: #050817;
+  --bg-secondary: #080D22;
+  --glass-bg: rgba(8, 13, 32, 0.58);
+  --glass-border: rgba(220, 225, 255, 0.14);
+  --glass-shadow: 0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --accent-moon: #FFF7DC;
+  --accent-moon-outer: #FFE9AE;
+  --accent-moon-glow: rgba(255, 225, 170, 0.25);
+  --text-primary: #F3F5FA;
+  --text-secondary: #A9B2C8;
+  --text-muted: #747F9C;
   --accent-blue: #38bdf8;
   --accent-cyan: #22d3ee;
-  --text-primary: #F5F7FF;
-  --text-secondary: #AAB7D4;
-  --text-muted: #7180A5;
-  --success: #10b981;
+  --success: #34d399;
   --warning: #f59e0b;
-  --danger: #ef4444;
+  --danger: #f87171;
 }
 
 /* Force Custom Cursor on All Elements & Prevent Native Cursor from leaking (Fine pointers only) */
@@ -47,7 +50,7 @@ html {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #050b24;
+  background-color: #050817;
   background-image: url('/backgrounds/night.png');
   background-size: cover;
   background-position: center bottom;
@@ -67,21 +70,21 @@ body {
   background: transparent;
 }
 
-/* True Translucent Dark Glass Card Effect */
+/* True Translucent Dark Frosted Glass Card Effect */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 22px;
+  background: rgba(8, 13, 32, 0.58);
+  backdrop-filter: blur(22px) saturate(115%);
+  -webkit-backdrop-filter: blur(22px) saturate(115%);
+  border: 1px solid rgba(220, 225, 255, 0.14);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  background: rgba(18, 32, 75, 0.68);
-  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.26);
-  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(12, 18, 42, 0.64);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-color: rgba(220, 225, 255, 0.24);
   transform: translateY(-2px);
 }
 

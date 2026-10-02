@@ -48,11 +48,11 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
   const total = weights.reduce((s, w) => s + w.weight, 0);
 
   return (
-    <GlassCard padding="md" variant="blue">
+    <GlassCard padding="md" variant="default">
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
               MODEL CONTRIBUTION
             </span>
             {isFallback && (
@@ -63,19 +63,19 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
             <Tooltip
               content={
                 <div className="space-y-1 p-1 text-slate-200">
-                  <p className="font-medium text-[#F5F7FF] text-xs">Weights adapt according to:</p>
+                  <p className="font-medium text-[#F3F5FA] text-xs">Weights adapt according to:</p>
                   {['Region', 'Season', 'Lead Time', 'Historical Skill', 'Weather Regime'].map(f => (
-                    <div key={f} className="text-[#AAB7D4] text-xs flex items-center gap-1">
+                    <div key={f} className="text-[#A9B2C8] text-xs flex items-center gap-1">
                       <span className="w-1 h-1 bg-sky-400 rounded-full" />{f}
                     </div>
                   ))}
                 </div>
               }
             >
-              <Info size={13} className="text-[#7180A5] cursor-help hover:text-[#AAB7D4]" />
+              <Info size={13} className="text-[#747F9C] cursor-help hover:text-[#A9B2C8]" />
             </Tooltip>
           </div>
-          <p className="text-xs text-[#AAB7D4] mt-0.5">Adaptive blending weights</p>
+          <p className="text-xs text-[#A9B2C8] mt-0.5">Adaptive blending weights</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30">
           <TrendingUp size={13} />
@@ -113,10 +113,10 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: w.color, boxShadow: `0 0 6px ${w.color}` }}
                 />
-                <span className="text-sm font-medium text-[#F5F7FF]">{w.name}</span>
+                <span className="text-sm font-medium text-[#F3F5FA]">{w.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-[#7180A5]">
+                <span className="text-xs text-[#747F9C]">
                   {w.rmse !== null && w.rmse !== undefined ? `RMSE ${w.rmse}` : 'RMSE —'}
                 </span>
                 <span className="text-sm font-bold" style={{ color: w.color }}>{w.weight}%</span>
@@ -143,9 +143,9 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
       {/* NCMRWF note */}
       <div
         className="mt-5 rounded-xl px-3.5 py-3"
-        style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.20)' }}
+        style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(220, 225, 255, 0.10)' }}
       >
-        <p className="text-xs text-[#AAB7D4]">
+        <p className="text-xs text-[#A9B2C8]">
           <span className="font-bold text-sky-300">Hybrid (Final)</span> applies Random Forest residual correction on top of the 4 NWP consensus weights for localized precision.
         </p>
       </div>

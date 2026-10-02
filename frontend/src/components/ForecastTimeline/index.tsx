@@ -79,28 +79,28 @@ const CustomTooltip = ({
     <div
       className="rounded-xl px-4 py-3 shadow-2xl"
       style={{
-        background: 'rgba(11, 22, 56, 0.94)',
+        background: 'rgba(8, 13, 32, 0.92)',
         backdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.16)',
+        border: '1px solid rgba(220, 225, 255, 0.16)',
         minWidth: 160,
       }}
     >
-      <div className="text-[11px] font-semibold text-[#AAB7D4] mb-1.5 flex items-center justify-between">
-        <span className="font-bold text-[#F5F7FF]">{label}</span>
-        {data?.label && <span className="text-[#7180A5] font-normal">({data.label} IST)</span>}
+      <div className="text-[11px] font-semibold text-[#A9B2C8] mb-1.5 flex items-center justify-between">
+        <span className="font-bold text-[#F3F5FA]">{label}</span>
+        {data?.label && <span className="text-[#747F9C] font-normal">({data.label} IST)</span>}
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-xl font-bold text-[#F5F7FF]">
+        <span className="text-xl font-bold text-[#F3F5FA]">
           {typeof val === 'number' ? val.toFixed(1) : val}
         </span>
-        <span className="text-xs font-semibold text-[#AAB7D4]">{cfg.unit}</span>
+        <span className="text-xs font-semibold text-[#A9B2C8]">{cfg.unit}</span>
       </div>
       {hasSpread ? (
-        <div className="text-[10px] text-[#AAB7D4] font-medium mt-1">
+        <div className="text-[10px] text-[#A9B2C8] font-medium mt-1">
           Uncertainty: {low?.toFixed(1)} – {high?.toFixed(1)} {cfg.unit}
         </div>
       ) : (
-        <div className="text-[10px] text-[#7180A5] font-medium mt-1">
+        <div className="text-[10px] text-[#747F9C] font-medium mt-1">
           Consensus: High confidence
         </div>
       )}
@@ -164,14 +164,14 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
   }));
 
   return (
-    <GlassCard padding="md" variant="blue">
+    <GlassCard padding="md" variant="default">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/20 flex items-center justify-center text-sky-400">
               <Calendar size={14} />
             </div>
-            <span className="text-xs font-bold tracking-widest text-[#F5F7FF] uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
               FORECAST TIMELINE
             </span>
             {isFallback && (
@@ -180,19 +180,19 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               </span>
             )}
           </div>
-          <p className="text-xs text-[#AAB7D4] mt-1">72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands</p>
+          <p className="text-xs text-[#A9B2C8] mt-1">72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands</p>
         </div>
 
         {/* Separated Pill Buttons with Dark Glass Styling */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[rgba(10,20,50,0.65)] border border-white/10 shadow-xs backdrop-blur-md">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.06] border border-white/10 shadow-xs backdrop-blur-md">
           {(Object.keys(VARIABLE_CONFIG) as Variable[]).map((v) => (
             <button
               key={v}
               onClick={() => setVariable(v)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 variable === v
-                  ? 'bg-sky-500/25 text-[#F5F7FF] border border-sky-400/40 shadow-xs'
-                  : 'text-[#AAB7D4] hover:text-[#F5F7FF] hover:bg-white/5 border border-transparent'
+                  ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
+                  : 'text-[#A9B2C8] hover:text-[#F3F5FA] hover:bg-white/5 border border-transparent'
               }`}
               type="button"
             >
@@ -216,10 +216,10 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
-            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#AAB7D4' }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#A9B2C8' }} axisLine={false} tickLine={false} />
             <YAxis
               domain={config.domain as any}
-              tick={{ fontSize: 11, fill: '#AAB7D4' }}
+              tick={{ fontSize: 11, fill: '#A9B2C8' }}
               axisLine={false}
               tickLine={false}
               unit={config.unit === 'mm' ? ' mm' : ` ${config.unit}`}
@@ -241,7 +241,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 type="monotone"
                 dataKey="low"
                 stroke="none"
-                fill="rgba(14, 27, 68, 0.75)"
+                fill="rgba(8, 13, 32, 0.75)"
                 fillOpacity={1}
                 tooltipType="none"
               />
@@ -252,15 +252,15 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               stroke={config.color}
               strokeWidth={3}
               fill={`url(#grad-${variable})`}
-              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#F5F7FF' }}
-              activeDot={{ r: 6, fill: config.color, stroke: '#F5F7FF', strokeWidth: 2 }}
+              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#F3F5FA' }}
+              activeDot={{ r: 6, fill: config.color, stroke: '#F3F5FA', strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-white/10">
-        <div className="flex items-center gap-5 text-xs text-[#AAB7D4]">
+        <div className="flex items-center gap-5 text-xs text-[#A9B2C8]">
           <div className="flex items-center gap-2">
             <div className="w-3.5 h-1 rounded-full" style={{ background: config.color }} />
             <span>Optimal Blended Curve</span>
@@ -272,7 +272,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             </div>
           )}
         </div>
-        <div className="text-xs text-[#7180A5] font-medium">
+        <div className="text-xs text-[#747F9C] font-medium">
           Lead Range: 0h – 72h
         </div>
       </div>

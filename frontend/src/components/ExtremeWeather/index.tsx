@@ -96,11 +96,12 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
     <div
       className="rounded-2xl p-6 flex flex-col justify-between h-full transition-all duration-300 relative overflow-hidden"
       style={{
-        background: 'linear-gradient(145deg, rgba(20, 38, 96, 0.72) 0%, rgba(14, 28, 72, 0.80) 100%)',
-        backdropFilter: 'blur(26px)',
-        WebkitBackdropFilter: 'blur(26px)',
-        border: '1px solid rgba(56, 189, 248, 0.35)',
-        boxShadow: '0 20px 48px -6px rgba(0, 4, 24, 0.65), inset 0 1px 2px 0 rgba(255, 255, 255, 0.28), 0 0 24px rgba(56, 189, 248, 0.12)',
+        background: 'rgba(8, 14, 35, 0.52)',
+        backdropFilter: 'blur(24px) saturate(115%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(115%)',
+        border: '1px solid rgba(220, 225, 255, 0.14)',
+        boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+        borderRadius: '20px',
       }}
     >
       {/* Top Header */}
@@ -146,11 +147,11 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
                   strokeDashoffset={2 * Math.PI * 42 * (1 - safeProb / 100)}
                   transform="rotate(-90 52 52)"
                   style={{
-                    filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.75))',
+                    filter: 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.35))',
                     transition: 'stroke-dashoffset 1.2s ease',
                   }}
                 />
-                <text x="52" y="47" textAnchor="middle" dominantBaseline="central" fill="#F5F7FF" fontSize="22" fontWeight="800">
+                <text x="52" y="47" textAnchor="middle" dominantBaseline="central" fill="#F3F5FA" fontSize="22" fontWeight="800">
                   {safeProb}%
                 </text>
                 <text x="52" y="66" textAnchor="middle" dominantBaseline="central" fill="#38bdf8" fontSize="10" fontWeight="600">
@@ -164,11 +165,11 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
               <div className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 Next 72 Hours
               </div>
-              <p className="text-xs text-[#F5F7FF] font-medium leading-relaxed">
+              <p className="text-xs text-[#F3F5FA] font-medium leading-relaxed">
                 All forecast parameters for <span className="font-bold text-sky-300">{city}</span> remain safely below severe hazard thresholds.
               </p>
-              <div className="text-xs text-[#AAB7D4] pt-0.5">
-                Model Confidence: <span className="font-bold text-[#F5F7FF]">88%</span>
+              <div className="text-xs text-[#A9B2C8] pt-0.5">
+                Model Confidence: <span className="font-bold text-[#F3F5FA]">88%</span>
               </div>
             </div>
           </div>
@@ -182,22 +183,22 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
               return (
                 <div
                   key={`${event.type}-${event.window}-${idx}`}
-                  className="w-full text-left rounded-xl p-3 transition-all bg-white/[0.04] hover:bg-white/[0.08] border border-white/10"
+                  className="w-full text-left rounded-xl p-3 transition-all bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
                 >
                   <div className="flex items-center gap-3">
                     <ProbabilityArc value={event.probability} color={color} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <Icon size={13} style={{ color, flexShrink: 0 }} />
-                        <span className="text-xs font-bold text-[#F5F7FF]">{event.label}</span>
+                        <span className="text-xs font-bold text-[#F3F5FA]">{event.label}</span>
                         <span className="text-[10px] px-2 py-0.2 rounded-full font-semibold uppercase" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>
                           {event.severity}
                         </span>
                       </div>
                       <div className="text-[11px] font-semibold text-sky-300">{event.window}</div>
-                      <div className="text-[11px] text-[#AAB7D4] leading-snug line-clamp-1">{event.description}</div>
-                      <div className="text-[10px] text-[#7180A5] mt-0.5">
-                        Model Confidence: <span className="font-bold text-[#F5F7FF]">{event.confidence}%</span>
+                      <div className="text-[11px] text-[#A9B2C8] leading-snug line-clamp-1">{event.description}</div>
+                      <div className="text-[10px] text-[#747F9C] mt-0.5">
+                        Model Confidence: <span className="font-bold text-[#F3F5FA]">{event.confidence}%</span>
                       </div>
                     </div>
                   </div>
@@ -209,7 +210,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
       </div>
 
       {/* Footer */}
-      <div className="border-t border-white/10 mt-3 pt-2 text-[11px] text-[#7180A5] text-center font-medium">
+      <div className="border-t border-white/[0.08] mt-3 pt-2 text-[11px] text-[#747F9C] text-center font-medium">
         Calibrated to disaster warning thresholds (Orange/Red Alerts)
       </div>
     </div>

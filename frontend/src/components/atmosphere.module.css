@@ -510,23 +510,24 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 13, 32, 0.68);
+  backdrop-filter: blur(22px) saturate(115%);
+  -webkit-backdrop-filter: blur(22px) saturate(115%);
+  border: 1px solid rgba(220, 225, 255, 0.16);
   border-radius: 9999px;
-  color: #ffffff;
+  color: #FFF7DC;
   font-size: 11px;
   font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: all 0.25s ease;
   user-select: none;
 }
 
 .atmoPill:hover {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(12, 18, 42, 0.80);
+  border-color: rgba(220, 225, 255, 0.28);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
 }
 
 .atmoDot {
@@ -628,32 +629,31 @@
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse 90% 70% at 50% 20%, rgba(5, 11, 36, 0.40) 0%, rgba(5, 11, 36, 0.65) 100%),
-    linear-gradient(180deg, rgba(5, 11, 36, 0.55) 0%, rgba(11, 22, 56, 0.25) 30%, rgba(20, 38, 90, 0.15) 60%, rgba(5, 11, 36, 0.60) 100%);
+    linear-gradient(180deg, rgba(5, 8, 23, 0.22) 0%, rgba(8, 13, 34, 0.08) 40%, rgba(5, 8, 23, 0.18) 100%);
   pointer-events: none;
 }
 
 .gentleMoonGlow {
   position: absolute;
-  bottom: 24%;
-  right: 18%;
-  width: 380px;
-  height: 380px;
+  bottom: 22%;
+  right: 17%;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(244, 211, 138, 0.22) 0%, rgba(213, 182, 180, 0.10) 40%, rgba(117, 99, 154, 0.05) 65%, transparent 75%);
-  filter: blur(40px);
+  background: radial-gradient(circle, rgba(255, 247, 220, 0.28) 0%, rgba(255, 233, 174, 0.18) 35%, rgba(196, 181, 253, 0.08) 60%, transparent 75%);
+  filter: blur(36px);
   pointer-events: none;
-  animation: gentleMoonPulse 7s ease-in-out infinite alternate;
+  animation: gentleMoonPulse 8s ease-in-out infinite alternate;
 }
 
 @keyframes gentleMoonPulse {
   0% {
-    opacity: 0.55;
-    transform: scale(0.96);
+    opacity: 0.65;
+    transform: scale(0.97);
   }
   100% {
-    opacity: 0.95;
-    transform: scale(1.08);
+    opacity: 0.92;
+    transform: scale(1.05);
   }
 }
 
@@ -667,17 +667,17 @@
   position: absolute;
   border-radius: 50%;
   background: #ffffff;
-  animation: starTwinkle 3s ease-in-out infinite alternate;
+  animation: starTwinkle 3.5s ease-in-out infinite alternate;
 }
 
 @keyframes starTwinkle {
   0% {
-    opacity: 0.2;
-    transform: scale(0.8);
+    opacity: 0.25;
+    transform: scale(0.85);
   }
   100% {
-    opacity: 1;
-    transform: scale(1.3);
+    opacity: 0.80;
+    transform: scale(1.15);
   }
 }
 

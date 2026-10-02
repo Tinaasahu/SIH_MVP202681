@@ -18,39 +18,39 @@ const paddings = {
 
 const variantStyles: Record<CardColorVariant, { background: string; border: string; boxShadow: string }> = {
   default: {
-    background: 'linear-gradient(145deg, rgba(14, 27, 68, 0.58) 0%, rgba(8, 17, 44, 0.65) 100%)',
-    border: '1px solid rgba(255, 255, 255, 0.16)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18)',
+    background: 'rgba(8, 13, 32, 0.58)',
+    border: '1px solid rgba(220, 225, 255, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   },
   blue: {
-    background: 'linear-gradient(145deg, rgba(16, 34, 82, 0.62) 0%, rgba(10, 20, 52, 0.68) 100%)',
-    border: '1px solid rgba(56, 189, 248, 0.22)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(147, 197, 253, 0.22)',
+    background: 'rgba(9, 15, 36, 0.58)',
+    border: '1px solid rgba(220, 225, 255, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   },
   orange: {
-    background: 'linear-gradient(145deg, rgba(38, 26, 48, 0.60) 0%, rgba(16, 20, 44, 0.68) 100%)',
-    border: '1px solid rgba(245, 158, 11, 0.22)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(253, 230, 138, 0.18)',
+    background: 'rgba(16, 14, 28, 0.58)',
+    border: '1px solid rgba(255, 230, 190, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 230, 190, 0.06)',
   },
   red: {
-    background: 'linear-gradient(145deg, rgba(42, 20, 44, 0.60) 0%, rgba(18, 16, 42, 0.68) 100%)',
-    border: '1px solid rgba(239, 68, 68, 0.22)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(254, 202, 202, 0.18)',
+    background: 'rgba(20, 12, 22, 0.58)',
+    border: '1px solid rgba(248, 113, 113, 0.16)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   },
   yellow: {
-    background: 'linear-gradient(145deg, rgba(28, 28, 56, 0.62) 0%, rgba(14, 18, 44, 0.68) 100%)',
-    border: '1px solid rgba(250, 204, 21, 0.22)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(254, 240, 138, 0.18)',
+    background: 'rgba(16, 15, 28, 0.58)',
+    border: '1px solid rgba(255, 230, 190, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 230, 190, 0.06)',
   },
   green: {
-    background: 'linear-gradient(145deg, rgba(14, 34, 56, 0.62) 0%, rgba(8, 22, 42, 0.68) 100%)',
-    border: '1px solid rgba(16, 185, 129, 0.22)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(167, 243, 208, 0.18)',
+    background: 'rgba(10, 16, 30, 0.58)',
+    border: '1px solid rgba(220, 225, 255, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   },
   grey: {
-    background: 'linear-gradient(145deg, rgba(16, 24, 52, 0.58) 0%, rgba(9, 14, 38, 0.66) 100%)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    boxShadow: '0 16px 36px -6px rgba(0, 4, 18, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)',
+    background: 'rgba(8, 13, 32, 0.58)',
+    border: '1px solid rgba(220, 225, 255, 0.14)',
+    boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   },
 };
 
@@ -60,14 +60,14 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     return (
       <div
         ref={ref}
-        className={cn('glass-card text-[#F5F7FF]', paddings[padding], className)}
+        className={cn('glass-card text-[#F3F5FA]', paddings[padding], className)}
         style={{
           background: vStyle.background,
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          backdropFilter: 'blur(22px) saturate(115%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(115%)',
           border: vStyle.border,
           boxShadow: vStyle.boxShadow,
-          borderRadius: '22px',
+          borderRadius: '20px',
           transition: hover ? 'all 0.28s cubic-bezier(0.16,1,0.3,1)' : undefined,
           ...style,
         }}

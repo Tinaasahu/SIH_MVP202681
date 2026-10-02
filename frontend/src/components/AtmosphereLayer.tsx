@@ -474,35 +474,23 @@ export function AtmosphereLayer({
         <button
           type="button"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="flex items-center gap-2.5 text-white hover:text-sky-200 transition-all cursor-pointer py-0.5 px-1"
-          title="Atmospheric Environment Mode (Diurnal & Weather Simulation)"
+          className="flex items-center gap-2.5 text-[#FFF7DC] hover:text-white transition-all cursor-pointer py-0.5 px-1"
+          title="Atmospheric Environment Mode (Moonlit Night Atmosphere)"
         >
           <span
             className={styles.atmoDot}
-            style={{ background: currentMeta.dotColor, boxShadow: `0 0 10px ${currentMeta.dotColor}` }}
+            style={{ background: '#c4b5fd', boxShadow: '0 0 8px rgba(196, 181, 253, 0.6)' }}
           />
           <div className="flex flex-col text-left leading-tight">
-            <span className="font-bold text-xs tracking-wide flex items-center gap-1.5">
-              <span>{currentMeta.icon}</span>
-              <span>
-                {manualTheme === null
-                  ? activeTheme === 'morning'
-                    ? temperature >= 32 ? 'Warm Morning' : 'Fresh Morning'
-                    : activeTheme === 'sunny'
-                    ? temperature >= 34 ? 'Hot Afternoon' : 'Sunny Afternoon'
-                    : activeTheme === 'evening'
-                    ? 'Sunset Twilight'
-                    : activeTheme === 'night'
-                    ? temperature < 20 ? 'Chilly Night' : temperature >= 28 ? 'Warm Night' : 'Clear Night'
-                    : currentMeta.label
-                  : currentMeta.label}
-              </span>
-              <span className="text-[10px] font-normal text-sky-300/80">
-                {manualTheme === null ? `• ${temperature.toFixed(0)}°C` : '(Test)'}
+            <span className="font-bold text-xs tracking-wide flex items-center gap-1.5 text-[#FFF7DC]">
+              <span>🌙</span>
+              <span>Clear Night</span>
+              <span className="text-[10px] font-normal text-[#A9B2C8]">
+                • {temperature.toFixed(0)}°C
               </span>
             </span>
           </div>
-          <span className="text-[10px] opacity-60 ml-0.5">▾</span>
+          <span className="text-[10px] opacity-60 ml-0.5 text-[#A9B2C8]">▾</span>
         </button>
 
         {menuOpen && (
