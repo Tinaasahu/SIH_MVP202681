@@ -621,6 +621,8 @@ def get_contingency():
             r for r in records
             if thresh_lower in str(r.get('threshold_name', '')).lower()
             or str(r.get('threshold_mm', '')).lower() == thresh_lower
+        ]
+
     import math
     cleaned = []
     for r in records:
