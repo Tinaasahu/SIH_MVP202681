@@ -168,31 +168,36 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/20 flex items-center justify-center text-sky-400">
+            <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
               <Calendar size={14} />
             </div>
-            <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span
+              className="text-xs font-bold tracking-widest uppercase"
+              style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+            >
               FORECAST TIMELINE
             </span>
             {isFallback && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40">
                 Demo data (backend unavailable)
               </span>
             )}
           </div>
-          <p className="text-xs text-[#A9B2C8] mt-1">72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #566075)' }}>
+            72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands
+          </p>
         </div>
 
-        {/* Separated Pill Buttons with Dark Glass Styling */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.06] border border-white/10 shadow-xs backdrop-blur-md">
+        {/* Separated Pill Buttons */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/10 dark:border-white/10 shadow-xs">
           {(Object.keys(VARIABLE_CONFIG) as Variable[]).map((v) => (
             <button
               key={v}
               onClick={() => setVariable(v)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 variable === v
-                  ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
-                  : 'text-[#A9B2C8] hover:text-[#F3F5FA] hover:bg-white/5 border border-transparent'
+                  ? 'bg-sky-600/20 text-[#0b2a5b] dark:text-[#F3F5FA] border border-sky-600/30 dark:border-sky-400/40 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-[#A9B2C8] hover:text-[#0b2a5b] dark:hover:text-[#F3F5FA] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
               }`}
               type="button"
             >
@@ -215,11 +220,11 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 <stop offset="95%" stopColor={config.color} stopOpacity={0.04} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
-            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#A9B2C8' }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--card-sub-border, rgba(255,255,255,0.08))" />
+            <XAxis dataKey="time" tick={{ fontSize: 11, fill: 'var(--text-secondary, #566075)' }} axisLine={false} tickLine={false} />
             <YAxis
               domain={config.domain as any}
-              tick={{ fontSize: 11, fill: '#A9B2C8' }}
+              tick={{ fontSize: 11, fill: 'var(--text-secondary, #566075)' }}
               axisLine={false}
               tickLine={false}
               unit={config.unit === 'mm' ? ' mm' : ` ${config.unit}`}
@@ -241,7 +246,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
                 type="monotone"
                 dataKey="low"
                 stroke="none"
-                fill="rgba(8, 13, 32, 0.75)"
+                fill="var(--glass-bg, rgba(8, 13, 32, 0.75))"
                 fillOpacity={1}
                 tooltipType="none"
               />
@@ -252,15 +257,15 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               stroke={config.color}
               strokeWidth={3}
               fill={`url(#grad-${variable})`}
-              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#F3F5FA' }}
-              activeDot={{ r: 6, fill: config.color, stroke: '#F3F5FA', strokeWidth: 2 }}
+              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: 'var(--surface, #ffffff)' }}
+              activeDot={{ r: 6, fill: config.color, stroke: 'var(--surface, #ffffff)', strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-white/10">
-        <div className="flex items-center gap-5 text-xs text-[#A9B2C8]">
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-black/10 dark:border-white/10">
+        <div className="flex items-center gap-5 text-xs" style={{ color: 'var(--text-secondary, #566075)' }}>
           <div className="flex items-center gap-2">
             <div className="w-3.5 h-1 rounded-full" style={{ background: config.color }} />
             <span>Optimal Blended Curve</span>
@@ -272,7 +277,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             </div>
           )}
         </div>
-        <div className="text-xs text-[#747F9C] font-medium">
+        <div className="text-xs font-medium" style={{ color: 'var(--text-muted, #747F9C)' }}>
           Lead Range: 0h – 72h
         </div>
       </div>

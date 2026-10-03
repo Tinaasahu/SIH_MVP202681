@@ -88,28 +88,48 @@ function ConfidenceRing({
     >
       <div className="flex flex-col items-center justify-center cursor-help">
         <svg width="84" height="84" viewBox="0 0 84 84">
-          <circle cx="42" cy="42" r={radius} fill="none" strokeWidth="5.5" stroke="rgba(255,255,255,0.08)" />
           <circle
             cx="42" cy="42" r={radius}
             fill="none" strokeWidth="5.5"
-            stroke="#34d399"
+            stroke="currentColor"
+            className="text-slate-200 dark:text-white/10"
+            style={{ stroke: 'var(--card-sub-border, rgba(255,255,255,0.08))' }}
+          />
+          <circle
+            cx="42" cy="42" r={radius}
+            fill="none" strokeWidth="5.5"
+            stroke="#10b981"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             transform="rotate(-90 42 42)"
             style={{
               transition: 'stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)',
-              filter: 'drop-shadow(0 0 3px rgba(52, 211, 153, 0.45))'
+              filter: 'drop-shadow(0 0 3px rgba(16, 185, 129, 0.45))'
             }}
           />
-          <text x="42" y="42" textAnchor="middle" dominantBaseline="central" fill="#F3F5FA" fontSize="18" fontWeight="800">
+          <text
+            x="42" y="42"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="currentColor"
+            fontSize="18"
+            fontWeight="800"
+            style={{ fill: 'var(--text-primary, #14213d)' }}
+          >
             {value}%
           </text>
         </svg>
-        <span className="text-[11px] font-semibold text-[#F3F5FA] mt-1.5">
+        <span
+          className="text-[11px] font-semibold mt-1.5"
+          style={{ color: 'var(--text-primary, #14213d)' }}
+        >
           {label ? `${label} Confidence` : 'Blend Reliability'}
         </span>
-        <span className="text-[10px] text-[#A9B2C8]">
+        <span
+          className="text-[10px]"
+          style={{ color: 'var(--text-secondary, #566075)' }}
+        >
           {dominantModel ? `Dominant: ${dominantModel}` : 'High Agreement'}
         </span>
       </div>
@@ -205,12 +225,12 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
       <div
         className="rounded-2xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300"
         style={{
-          background: 'rgba(8, 14, 35, 0.52)',
-          backdropFilter: 'blur(24px) saturate(115%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(115%)',
-          border: '1px solid rgba(220, 225, 255, 0.12)',
-          boxShadow: '0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
-          borderRadius: '20px',
+          background: 'var(--glass-bg, rgba(8, 14, 35, 0.52))',
+          backdropFilter: 'var(--glass-backdrop, blur(24px) saturate(115%))',
+          WebkitBackdropFilter: 'var(--glass-backdrop, blur(24px) saturate(115%))',
+          border: 'var(--glass-border, 1px solid rgba(220, 225, 255, 0.12))',
+          boxShadow: 'var(--glass-shadow, 0 16px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06))',
+          borderRadius: 'var(--card-radius, 20px)',
         }}
       >
         <div className="relative">
@@ -260,12 +280,12 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
                 key={m.label}
                 className="rounded-2xl p-5 transition-all hover:translate-y-[-2px] hover:shadow-lg"
                 style={{
-                  background: 'rgba(15, 21, 45, 0.48)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(220, 225, 255, 0.10)',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-                  borderRadius: '18px',
+                  background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.48))',
+                  backdropFilter: 'var(--glass-backdrop, blur(20px))',
+                  WebkitBackdropFilter: 'var(--glass-backdrop, blur(20px))',
+                  border: 'var(--card-sub-border, 1px solid rgba(220, 225, 255, 0.10))',
+                  boxShadow: 'var(--card-sub-shadow, 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05))',
+                  borderRadius: 'var(--card-radius, 18px)',
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
@@ -293,12 +313,12 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
             <div
               className="rounded-2xl p-5 flex flex-col items-center justify-center transition-all hover:translate-y-[-2px] hover:shadow-lg"
               style={{
-                background: 'rgba(15, 21, 45, 0.48)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(220, 225, 255, 0.10)',
-                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-                borderRadius: '18px',
+                background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.48))',
+                backdropFilter: 'var(--glass-backdrop, blur(20px))',
+                WebkitBackdropFilter: 'var(--glass-backdrop, blur(20px))',
+                border: 'var(--card-sub-border, 1px solid rgba(220, 225, 255, 0.10))',
+                boxShadow: 'var(--card-sub-shadow, 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05))',
+                borderRadius: 'var(--card-radius, 18px)',
               }}
             >
               <ConfidenceRing

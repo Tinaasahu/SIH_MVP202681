@@ -255,8 +255,12 @@ export async function fetchWithReconnect<T = any>(
           coldStartExhaustedLogged = false;
           setBackendStatus(false, false, '', 'connected');
           const rawText = await res.text();
-          const cleanText = rawText.replace(/:\s*NaN\b/g, ': null').replace(/:\s*Infinity\b/g, ': null');
-          const data = JSON.parse(cleanText);
+          // Sanitize Python NaN/Infinity values to null for strict JSON compliance
+          const sanitizedText = rawText
+            .replace(/:\s*NaN\b/g, ': null')
+            .replace(/:\s*Infinity\b/g, ': null')
+            .replace(/:\s*-Infinity\b/g, ': null');
+          const data = JSON.parse(sanitizedText);
           return data as T;
         }
 
