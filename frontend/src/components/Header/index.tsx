@@ -32,21 +32,30 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
 
   useEffect(() => {
     let mounted = true;
-    getMetadata()
-      .then((data) => {
-        if (mounted && data?.last_updated) {
-          setLastUpdated(data.last_updated);
-        } else if (mounted) {
-          setLastUpdatedError(true);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setLastUpdatedError(true);
-        }
-      });
+
+    const fetchMeta = () => {
+      getMetadata()
+        .then((data) => {
+          if (mounted && data?.last_updated) {
+            setLastUpdated(data.last_updated);
+            setLastUpdatedError(false);
+          } else if (mounted) {
+            setLastUpdatedError(true);
+          }
+        })
+        .catch(() => {
+          if (mounted) {
+            setLastUpdatedError(true);
+          }
+        });
+    };
+
+    fetchMeta();
+    const interval = setInterval(fetchMeta, 60000);
+
     return () => {
       mounted = false;
+      clearInterval(interval);
     };
   }, []);
 
