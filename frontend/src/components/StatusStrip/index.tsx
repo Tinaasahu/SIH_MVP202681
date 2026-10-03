@@ -5,14 +5,18 @@ import { Activity, Clock, Database, Layers, MapPin, RefreshCw } from 'lucide-rea
 import { getMetadata, MetadataRecord } from '@/lib/api';
 
 function formatStatusStripDate(isoString?: string): string {
-  if (!isoString) return '29 Sep 2026 • 00:30 IST';
   try {
-    let clean = isoString.trim();
-    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
-      clean += 'Z';
+    let d: Date;
+    if (isoString) {
+      let clean = isoString.trim();
+      if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+        clean += 'Z';
+      }
+      d = new Date(clean);
+      if (isNaN(d.getTime())) d = new Date();
+    } else {
+      d = new Date();
     }
-    const d = new Date(clean);
-    if (isNaN(d.getTime())) return '29 Sep 2026 • 00:30 IST';
 
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -34,7 +38,7 @@ function formatStatusStripDate(isoString?: string): string {
     }
     return `${day} ${month} ${year} • ${hour}:${minute} IST`;
   } catch {
-    return '29 Sep 2026 • 00:30 IST';
+    return 'Live • Auto-Updating';
   }
 }
 

@@ -414,17 +414,19 @@ export type { ConfidenceRecord };
  * "26 Sep 2026 • 11:45 PM"
  */
 export function formatLastUpdated(isoString?: string | null): string {
-  if (!isoString) {
-    return '29 Sep 2026 • 12:30 AM';
-  }
   try {
-    let clean = isoString.trim();
-    // If backend timestamp has no timezone offset or Z, it originates from Render UTC -> append Z
-    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
-      clean += 'Z';
+    let d: Date;
+    if (isoString) {
+      let clean = isoString.trim();
+      // If backend timestamp has no timezone offset or Z, it originates from Render UTC -> append Z
+      if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+        clean += 'Z';
+      }
+      d = new Date(clean);
+      if (isNaN(d.getTime())) d = new Date();
+    } else {
+      d = new Date();
     }
-    const d = new Date(clean);
-    if (isNaN(d.getTime())) return isoString;
 
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -447,7 +449,7 @@ export function formatLastUpdated(isoString?: string | null): string {
     }
     return `${day} ${month} ${year} • ${hour}:${minute} ${dayPeriod}`;
   } catch {
-    return isoString;
+    return 'Live • Auto-Updating';
   }
 }
 
@@ -542,32 +544,17 @@ export function clearForecastCache(): void {
  * 3. Never cancelled while Render wakes up.
  */
 export async function getForecast(city?: string, lead_days?: number): Promise<ForecastRecord[]> {
-  const now = Date.now();
-  if (cachedForecastRecords && now - lastForecastFetchTime < FORECAST_CACHE_TTL_MS) {
-    return filterForecastRecords(cachedForecastRecords, city, lead_days);
-  }
-
-  if (!activeForecastPromise) {
-    activeForecastPromise = (async () => {
-      try {
-        const raw = await fetchFromApi<any>('/forecast', []);
-        const records: ForecastRecord[] = Array.isArray(raw)
-          ? raw
-          : (raw?.records || raw?.data || raw?.forecast || []);
-        if (records && records.length > 0) {
-          cachedForecastRecords = records;
-          lastForecastFetchTime = Date.now();
-        }
-        return records || [];
-      } finally {
-        activeForecastPromise = null;
-      }
-    })();
-  }
+  const params = new URLSearchParams();
+  if (city) params.append('city', city);
+  if (lead_days !== undefined && lead_days !== null) params.append('lead_days', String(lead_days));
+  const query = params.toString() ? `?${params.toString()}` : '';
 
   try {
-    const allRecords = await activeForecastPromise;
-    return filterForecastRecords(allRecords, city, lead_days);
+    const raw = await fetchFromApi<any>(`/forecast${query}`, []);
+    const records: ForecastRecord[] = Array.isArray(raw)
+      ? raw
+      : (raw?.records || raw?.data || raw?.forecast || []);
+    return records || [];
   } catch {
     return [];
   }
@@ -1470,14 +1457,14 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
 
   let tierLevel: 'Green' | 'Yellow' | 'Orange' | 'Red' = 'Green';
   let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
-  let actionTier = 'Stage 1 (Green) — Routine Monitoring';
+  let actionTier = 'Hazard Level 1 (Green) — Routine Monitoring';
   let confidenceBadge: string | null = null;
   let actionDirective = 'Routine Synoptic Surveillance, Standard Sensor Telemetry';
 
   if (hazardRaw >= 75) {
     tierLevel = 'Red';
     priority = 'Critical';
-    actionTier = 'Stage 4 (Red) — Critical Emergency';
+    actionTier = 'Hazard Level 4 (Red) — Critical Emergency';
     if (confScore >= 70) {
       confidenceBadge = 'High Confidence — Immediate Action';
       actionDirective = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions';
@@ -1488,13 +1475,13 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
   } else if (hazardRaw >= 56) {
     tierLevel = 'Orange';
     priority = 'High';
-    actionTier = 'Stage 3 (Orange) — High Alert';
+    actionTier = 'Hazard Level 3 (Orange) — High Alert';
     confidenceBadge = null;
     actionDirective = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps';
   } else if (hazardRaw >= 31) {
     tierLevel = 'Yellow';
     priority = 'Moderate';
-    actionTier = 'Stage 2 (Yellow) — Moderate Watch';
+    actionTier = 'Hazard Level 2 (Yellow) — Moderate Watch';
     confidenceBadge = null;
     actionDirective = 'Heightened Watch, Localized Municipal Drainage Clearing';
   }
@@ -1572,14 +1559,14 @@ export async function getAllRpiData(): Promise<RpiData[]> {
 
     let tierLevel: 'Green' | 'Yellow' | 'Orange' | 'Red' = 'Green';
     let priority: 'Low' | 'Moderate' | 'High' | 'Critical' = 'Low';
-    let actionTier = 'Stage 1 (Green) — Routine Monitoring';
+    let actionTier = 'Hazard Level 1 (Green) — Routine Monitoring';
     let confidenceBadge: string | null = null;
     let actionDirective = 'Routine Synoptic Surveillance, Standard Sensor Telemetry';
 
     if (hazardRaw >= 75) {
       tierLevel = 'Red';
       priority = 'Critical';
-      actionTier = 'Stage 4 (Red) — Critical Emergency';
+      actionTier = 'Hazard Level 4 (Red) — Critical Emergency';
       if (conf >= 70) {
         confidenceBadge = 'High Confidence — Immediate Action';
         actionDirective = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions';
@@ -1590,13 +1577,13 @@ export async function getAllRpiData(): Promise<RpiData[]> {
     } else if (hazardRaw >= 56) {
       tierLevel = 'Orange';
       priority = 'High';
-      actionTier = 'Stage 3 (Orange) — High Alert';
+      actionTier = 'Hazard Level 3 (Orange) — High Alert';
       confidenceBadge = null;
       actionDirective = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps';
     } else if (hazardRaw >= 31) {
       tierLevel = 'Yellow';
       priority = 'Moderate';
-      actionTier = 'Stage 2 (Yellow) — Moderate Watch';
+      actionTier = 'Hazard Level 2 (Yellow) — Moderate Watch';
       confidenceBadge = null;
       actionDirective = 'Heightened Watch, Localized Municipal Drainage Clearing';
     }

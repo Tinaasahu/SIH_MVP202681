@@ -11,9 +11,9 @@ import { MapLayer, CityForecast } from '@/types';
 const RealLeafletMap = dynamic(() => import('./RealLeafletMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[520px] rounded-2xl bg-slate-100/60 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
-      <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-      <span className="text-xs font-medium tracking-wide">Starting AI weather engine… This may take up to 60 seconds.</span>
+    <div className="w-full h-[520px] rounded-2xl bg-white/[0.04] backdrop-blur-md flex flex-col items-center justify-center text-[#A9B2C8] gap-3 border border-white/10">
+      <div className="w-10 h-10 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
+      <span className="text-xs font-medium tracking-wide text-[#F3F5FA]">Loading Interactive Weather Map…</span>
     </div>
   ),
 });

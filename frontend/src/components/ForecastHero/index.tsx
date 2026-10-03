@@ -9,12 +9,16 @@ import { getForecastMetrics, MOCK_FORECAST, getMetadata, formatLastUpdated } fro
 import type { ForecastMetrics } from '@/types';
 
 function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef(0);
+  const [display, setDisplay] = useState(value);
+  const ref = useRef(value);
 
   useEffect(() => {
     const start = ref.current;
     const end = value;
+    if (start === end) {
+      setDisplay(end);
+      return;
+    }
     const duration = 800;
     const startTime = performance.now();
 
@@ -25,7 +29,10 @@ function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: num
       const current = start + (end - start) * ease;
       setDisplay(parseFloat(current.toFixed(decimals)));
       if (t < 1) requestAnimationFrame(tick);
-      else ref.current = end;
+      else {
+        ref.current = end;
+        setDisplay(end);
+      }
     };
     requestAnimationFrame(tick);
   }, [value, decimals]);

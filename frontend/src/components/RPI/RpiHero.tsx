@@ -96,7 +96,7 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
               style={{ boxShadow: `0 0 16px ${palette.glow}` }}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
-              <span>{palette.label}</span>
+              <span>{rpiData.actionTier || palette.label}</span>
             </motion.div>
 
             {/* Step 3: Confidence Badge ONLY shown when Tier == Red */}

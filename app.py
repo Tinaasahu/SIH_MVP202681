@@ -773,7 +773,7 @@ def get_rpi():
         if hazard_raw >= 75.0:
             tier_level = 'Red'
             priority = 'Critical'
-            action_tier = 'Stage 4 (Red) — Critical Emergency'
+            action_tier = 'Hazard Level 4 (Red) — Critical Emergency'
             if conf_score >= 70.0:
                 confidence_badge = 'High Confidence — Immediate Action'
                 action_directive = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions'
@@ -783,19 +783,19 @@ def get_rpi():
         elif hazard_raw >= 56.0:
             tier_level = 'Orange'
             priority = 'High'
-            action_tier = 'Stage 3 (Orange) — High Alert'
+            action_tier = 'Hazard Level 3 (Orange) — High Alert'
             confidence_badge = None
             action_directive = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps'
         elif hazard_raw >= 31.0:
             tier_level = 'Yellow'
             priority = 'Moderate'
-            action_tier = 'Stage 2 (Yellow) — Moderate Watch'
+            action_tier = 'Hazard Level 2 (Yellow) — Moderate Watch'
             confidence_badge = None
             action_directive = 'Heightened Watch, Localized Municipal Drainage Clearing'
         else:
             tier_level = 'Green'
             priority = 'Low'
-            action_tier = 'Stage 1 (Green) — Routine Monitoring'
+            action_tier = 'Hazard Level 1 (Green) — Routine Monitoring'
             confidence_badge = None
             action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
 
@@ -1161,7 +1161,7 @@ def get_rpi_map():
         if hazard_raw >= 75.0:
             tier_level = 'Red'
             priority = 'Critical'
-            action_tier = 'Stage 4 (Red) — Critical Emergency'
+            action_tier = 'Hazard Level 4 (Red) — Critical Emergency'
             if conf_score >= 70.0:
                 confidence_badge = 'High Confidence — Immediate Action'
                 action_directive = 'Mandatory Evacuation Directive, Pre-position NDRF Battalions'
@@ -1171,19 +1171,19 @@ def get_rpi_map():
         elif hazard_raw >= 56.0:
             tier_level = 'Orange'
             priority = 'High'
-            action_tier = 'Stage 3 (Orange) — High Alert'
+            action_tier = 'Hazard Level 3 (Orange) — High Alert'
             confidence_badge = None
             action_directive = 'Urgent Action Mandated, Mobilize Field Teams & Dewatering Sumps'
         elif hazard_raw >= 31.0:
             tier_level = 'Yellow'
             priority = 'Moderate'
-            action_tier = 'Stage 2 (Yellow) — Moderate Watch'
+            action_tier = 'Hazard Level 2 (Yellow) — Moderate Watch'
             confidence_badge = None
             action_directive = 'Heightened Watch, Localized Municipal Drainage Clearing'
         else:
             tier_level = 'Green'
             priority = 'Low'
-            action_tier = 'Stage 1 (Green) — Routine Monitoring'
+            action_tier = 'Hazard Level 1 (Green) — Routine Monitoring'
             confidence_badge = None
             action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
 

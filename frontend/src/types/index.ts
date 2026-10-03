@@ -147,7 +147,7 @@ export const SEVERITY_PALETTE: Record<
     textBadge: 'text-emerald-700',
     borderBadge: 'border-emerald-500/30',
     glow: 'rgba(16, 185, 129, 0.25)',
-    label: 'STAGE 1 (GREEN) · ROUTINE',
+    label: 'HAZARD LEVEL 1 (GREEN) · ROUTINE',
     sublabel: 'Routine Surveillance · All Parameters Normal',
   },
   Yellow: {
@@ -157,7 +157,7 @@ export const SEVERITY_PALETTE: Record<
     textBadge: 'text-amber-700',
     borderBadge: 'border-amber-500/30',
     glow: 'rgba(245, 158, 11, 0.25)',
-    label: 'STAGE 2 (YELLOW) · MODERATE',
+    label: 'HAZARD LEVEL 2 (YELLOW) · MODERATE',
     sublabel: 'Heightened Watch · Localized Mitigation Standby',
   },
   Orange: {
@@ -167,7 +167,7 @@ export const SEVERITY_PALETTE: Record<
     textBadge: 'text-orange-700',
     borderBadge: 'border-orange-500/30',
     glow: 'rgba(249, 115, 22, 0.30)',
-    label: 'STAGE 3 (ORANGE) · HIGH ALERT',
+    label: 'HAZARD LEVEL 3 (ORANGE) · HIGH ALERT',
     sublabel: 'Urgent Action Mandated · Field Units Mobilized',
   },
   Red: {
@@ -177,7 +177,7 @@ export const SEVERITY_PALETTE: Record<
     textBadge: 'text-red-700',
     borderBadge: 'border-red-500/40',
     glow: 'rgba(239, 68, 68, 0.35)',
-    label: 'STAGE 4 (RED) · CRITICAL EMERGENCY',
+    label: 'HAZARD LEVEL 4 (RED) · CRITICAL EMERGENCY',
     sublabel: 'Tier-1 Emergency · SDRF / NDRF Pre-Positioning Active',
   },
 };

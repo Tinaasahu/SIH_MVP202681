@@ -14,10 +14,6 @@
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
-  background-image: url('/backgrounds/night.png');
-  background-size: cover;
-  background-position: center bottom;
-  background-repeat: no-repeat;
   transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), background 1.5s ease;
   will-change: opacity, background;
 }

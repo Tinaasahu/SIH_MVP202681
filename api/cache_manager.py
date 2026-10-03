@@ -184,21 +184,24 @@ def fetch_open_meteo_forecasts(cities_df):
     except Exception as e:
         print(f"[CacheManager] Batch Open-Meteo fetch notice: {e}. Trying individual requests...")
 
-    # Fallback to city-by-city if batch query fails
+    # Fallback to parallel city requests using ThreadPoolExecutor
     if not success or not records:
         records = []
-        for idx, row in cities_df.iterrows():
-            city = row["city"]
-            lat = row["latitude"]
-            lon = row["longitude"]
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _fetch_city(row):
+            c_city = row["city"]
+            c_lat = row["latitude"]
+            c_lon = row["longitude"]
             c_params = {
-                "latitude": lat,
-                "longitude": lon,
+                "latitude": c_lat,
+                "longitude": c_lon,
                 "forecast_days": 3,
                 "hourly": "temperature_2m,precipitation,wind_speed_10m",
                 "models": ",".join(MODELS_API),
                 "timezone": "Asia/Kolkata",
             }
+            c_records = []
             try:
                 c_res = requests.get(OPEN_METEO_URL, params=c_params, headers=headers, timeout=15.0)
                 if c_res.status_code == 200:
@@ -209,8 +212,8 @@ def fetch_open_meteo_forecasts(cities_df):
                         precips = hourly.get(f"precipitation_{model}", hourly.get("precipitation", []))
                         winds = hourly.get(f"wind_speed_10m_{model}", hourly.get("wind_speed_10m", []))
                         for i in range(len(times)):
-                            records.append({
-                                "city": city,
+                            c_records.append({
+                                "city": c_city,
                                 "model": model,
                                 "datetime": times[i][:16],
                                 "temperature": temps[i] if i < len(temps) else None,
@@ -218,7 +221,16 @@ def fetch_open_meteo_forecasts(cities_df):
                                 "wind_speed": winds[i] if i < len(winds) else None,
                             })
             except Exception as e:
-                print(f"[CacheManager] Error fetching city {city}: {e}")
+                print(f"[CacheManager] Error fetching city {c_city}: {e}")
+            return c_records
+
+        rows = [row for _, row in cities_df.iterrows()]
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_city = {executor.submit(_fetch_city, r): r["city"] for r in rows}
+            for future in as_completed(future_to_city):
+                city_res = future.result()
+                if city_res:
+                    records.extend(city_res)
 
     df_raw = pd.DataFrame(records)
     if df_raw.empty:

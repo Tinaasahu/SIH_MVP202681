@@ -21,6 +21,9 @@ import sys
 import sqlite3
 import pandas as pd
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 
 DB_PATH = "database/weather.db"
 
