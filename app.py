@@ -145,6 +145,7 @@ def index():
         "endpoints": {
             "health": "/api/health",
             "performance": "/api/performance",
+            "contingency": "/api/contingency",
             "forecast": "/api/forecast",
             "model_forecasts": "/api/model_forecasts",
             "metadata": "/api/metadata",
@@ -590,6 +591,37 @@ def get_performance():
     if method:
         method_lower = method.strip().lower()
         records = [r for r in records if str(r.get('method', '')).lower() == method_lower]
+
+    return jsonify(records)
+
+
+@app.route('/api/contingency', methods=['GET'])
+@app.route('/contingency', methods=['GET'])
+def get_contingency():
+    """
+    Returns records from outputs/contingency_metrics.csv.
+    Optional query parameters:
+      - method: filter by method ('ecmwf', 'weighted_blend', 'hybrid_rf')
+      - threshold: filter by threshold name or mm ('Light (>=0.1mm)', '0.1', etc.)
+    """
+    csv_path = os.path.join(OUTPUTS_DIR, "contingency_metrics.csv")
+    records = load_csv_records(csv_path)
+    if records is None:
+        return jsonify({"error": "contingency_metrics.csv not found"}), 404
+
+    method = request.args.get('method')
+    threshold = request.args.get('threshold')
+
+    if method:
+        method_lower = method.strip().lower()
+        records = [r for r in records if str(r.get('method', '')).lower() == method_lower]
+    if threshold:
+        thresh_lower = threshold.strip().lower()
+        records = [
+            r for r in records
+            if thresh_lower in str(r.get('threshold_name', '')).lower()
+            or str(r.get('threshold_mm', '')).lower() == thresh_lower
+        ]
 
     return jsonify(records)
 
@@ -1248,6 +1280,7 @@ def not_found(e):
             "cities": "/api/cities",
             "confidence": "/api/confidence",
             "performance": "/api/performance",
+            "contingency": "/api/contingency",
             "rpi": "/api/rpi",
             "rpi_map": "/api/rpi/map"
         }

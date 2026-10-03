@@ -231,3 +231,17 @@ export interface PerformanceSummaryRecord {
   rmse: number;
   mae: number;
 }
+
+export interface ContingencyMetricRecord {
+  method: string;
+  threshold_name: string;
+  threshold_mm: number;
+  hits: number;
+  misses: number;
+  false_alarms: number;
+  correct_negatives: number;
+  pod: number | null;
+  far: number | null;
+  csi: number | null;
+}
+

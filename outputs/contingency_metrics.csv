@@ -1,0 +1,10 @@
+method,threshold_name,threshold_mm,hits,misses,false_alarms,correct_negatives,pod,far,csi
+ecmwf,Light (>=0.1mm),0.1,17934,4893,10725,28008,0.7856,0.3742,0.5345
+ecmwf,Moderate (>=15.6mm),15.6,0,9,6,61545,0.0,1.0,0.0
+ecmwf,Heavy (>=64.5mm),64.5,0,0,0,61560,,,
+weighted_blend,Light (>=0.1mm),0.1,14967,7860,9009,29724,0.6557,0.3758,0.4701
+weighted_blend,Moderate (>=15.6mm),15.6,0,9,2,61549,0.0,1.0,0.0
+weighted_blend,Heavy (>=64.5mm),64.5,0,0,0,61560,,,
+hybrid_rf,Light (>=0.1mm),0.1,20720,2107,19810,18923,0.9077,0.4888,0.486
+hybrid_rf,Moderate (>=15.6mm),15.6,0,9,0,61551,0.0,,0.0
+hybrid_rf,Heavy (>=64.5mm),64.5,0,0,0,61560,,,

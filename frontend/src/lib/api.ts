@@ -27,6 +27,7 @@ import type {
   RpiData,
   ResourceAction,
   PerformanceSummaryRecord,
+  ContingencyMetricRecord,
 } from '@/types';
 
 import {
@@ -407,7 +408,7 @@ export interface MetadataRecord {
   model_count?: number;
 }
 
-export type { ConfidenceRecord };
+export type { ConfidenceRecord, ContingencyMetricRecord };
 
 /**
  * Formats an ISO datetime string into:
@@ -484,6 +485,18 @@ export async function getPerformance(variable?: string, lead_days?: number, meth
   if (method) params.append('method', method);
   const query = params.toString() ? `?${params.toString()}` : '';
   return fetchFromApi<PerformanceSummaryRecord[]>(`/performance${query}`, []);
+}
+
+/**
+ * GET /api/contingency
+ * Returns contingency_metrics.csv records (POD, FAR, CSI).
+ */
+export async function getContingencyMetrics(method?: string, threshold?: string): Promise<ContingencyMetricRecord[]> {
+  const params = new URLSearchParams();
+  if (method) params.append('method', method);
+  if (threshold) params.append('threshold', threshold);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchFromApi<ContingencyMetricRecord[]>(`/contingency${query}`, []);
 }
 
 // Active in-flight singleton and memory cache for forecast records
