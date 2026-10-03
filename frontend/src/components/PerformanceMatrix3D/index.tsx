@@ -357,10 +357,22 @@ function HeatmapMatrix2D({
   const minRmse = Math.min(...matrix.cells.filter((c) => c.rmse > 0).map((c) => c.rmse));
 
   return (
-    <div className="w-full overflow-x-auto rounded-2xl bg-[#0B1120] border border-white/10 p-4">
+    <div
+      className="w-full overflow-x-auto rounded-2xl border p-4 transition-colors"
+      style={{
+        background: 'var(--card-sub-bg, #0B1120)',
+        borderColor: 'var(--card-sub-border, rgba(255, 255, 255, 0.1))',
+      }}
+    >
       <table className="w-full text-xs text-left">
         <thead>
-          <tr className="border-b border-white/10 text-slate-300 bg-white/[0.04]">
+          <tr
+            className="border-b transition-colors font-semibold"
+            style={{
+              borderColor: 'var(--card-sub-border, rgba(255, 255, 255, 0.1))',
+              color: 'var(--text-secondary, #566075)',
+            }}
+          >
             <th className="py-2.5 px-3">Model</th>
             {LEAD_TIMES.map((lt) => (
               <th key={lt} className="py-2.5 px-3 text-center">
@@ -370,7 +382,7 @@ function HeatmapMatrix2D({
             <th className="py-2.5 px-3 text-right">Avg Skill</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody className="divide-y divide-black/5 dark:divide-white/5">
           {MODELS.map((model) => {
             const isHybrid = model === 'Hybrid (Final)';
             const cells = matrix.cells.filter((c) => c.model === model);
@@ -381,16 +393,17 @@ function HeatmapMatrix2D({
             return (
               <tr
                 key={model}
-                className={isHybrid ? 'bg-sky-500/10 font-semibold text-white' : 'text-slate-300 hover:bg-white/[0.02]'}
+                className={isHybrid ? 'bg-sky-500/10 font-semibold' : 'hover:bg-black/[0.02] dark:hover:bg-white/[0.02]'}
+                style={{ color: 'var(--text-primary, #14213d)' }}
               >
                 <td className="py-3 px-3 flex items-center gap-2">
                   <span
                     className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ background: MODEL_COLORS[model] }}
                   />
-                  <span>{model}</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary, #14213d)' }}>{model}</span>
                   {isHybrid && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/30 text-sky-200 font-bold uppercase ml-1 border border-sky-400/40">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-700 dark:text-sky-200 font-bold uppercase ml-1 border border-sky-400/40">
                       Best Overall
                     </span>
                   )}
@@ -398,34 +411,45 @@ function HeatmapMatrix2D({
                 {LEAD_TIMES.map((lt) => {
                   const cell = cells.find((c) => c.leadTime === lt);
                   const isBest = bestModels[lt] === model;
-                  const ratio = cell && maxRmse > minRmse ? (cell.rmse - minRmse) / (maxRmse - minRmse) : 0;
-                  // Color scale: low RMSE (best) = cyan/emerald, high = amber/slate
-                  const bgAlpha = Math.max(0.1, 0.4 - ratio * 0.3);
 
                   return (
                     <td key={lt} className="py-3 px-3 text-center">
                       {cell ? (
                         <div
-                          className="inline-flex flex-col items-center px-3 py-1.5 rounded-xl border"
+                          className="inline-flex flex-col items-center px-3 py-1.5 rounded-xl border transition-all"
                           style={{
-                            background: isBest ? 'rgba(56, 189, 248, 0.18)' : `rgba(255, 255, 255, ${bgAlpha * 0.2})`,
-                            borderColor: isBest ? 'rgba(56, 189, 248, 0.5)' : 'rgba(255, 255, 255, 0.08)',
+                            background: isBest
+                              ? 'rgba(56, 189, 248, 0.18)'
+                              : 'var(--badge-cell-bg, rgba(255, 255, 255, 0.05))',
+                            borderColor: isBest
+                              ? 'rgba(56, 189, 248, 0.5)'
+                              : 'var(--card-sub-border, rgba(255, 255, 255, 0.08))',
                           }}
                         >
-                          <span className={`font-mono font-bold ${isBest ? 'text-sky-300' : 'text-slate-200'}`}>
+                          <span
+                            className="font-mono font-bold"
+                            style={{
+                              color: isBest
+                                ? '#0284c7'
+                                : 'var(--text-primary, #14213d)',
+                            }}
+                          >
                             {cell.rmse.toFixed(4)} {matrix.unit}
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span
+                            className="text-[10px] font-medium"
+                            style={{ color: 'var(--text-secondary, #566075)' }}
+                          >
                             MAE: {cell.mae.toFixed(4)}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <span style={{ color: 'var(--text-secondary, #566075)' }}>—</span>
                       )}
                     </td>
                   );
                 })}
-                <td className="py-3 px-3 text-right font-bold text-emerald-400">
+                <td className="py-3 px-3 text-right font-bold text-emerald-700 dark:text-emerald-400">
                   {avgSkill.toFixed(1)}%
                 </td>
               </tr>
@@ -524,12 +548,15 @@ export function PerformanceMatrix3D() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <div className="w-8 h-8 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
             <Box size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold tracking-widest text-slate-100 uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span
+                className="text-xs font-bold tracking-widest uppercase"
+                style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+              >
                 3D PERFORMANCE MATRIX
               </span>
               <Tooltip
@@ -539,10 +566,10 @@ export function PerformanceMatrix3D() {
                   </div>
                 }
               >
-                <Info size={13} className="text-slate-400 cursor-help inline" />
+                <Info size={13} className="text-[#747F9C] hover:text-[#A9B2C8] cursor-help inline" />
               </Tooltip>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px]" style={{ color: 'var(--text-secondary, #566075)' }}>
               Evaluated on 61,560 holdout test split rows across 24h, 48h, and 72h lead periods
             </p>
           </div>
@@ -675,22 +702,22 @@ export function PerformanceMatrix3D() {
             MODELS.map((m) => (
               <div key={m} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full shadow-xs" style={{ background: MODEL_COLORS[m] }} />
-                <span className="text-xs text-slate-300">{m}</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary, #14213d)' }}>{m}</span>
               </div>
             ))
           ) : (
             <>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="text-xs text-slate-300">High Skill ({'>'}70%)</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary, #14213d)' }}>High Skill ({'>'}70%)</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span className="text-xs text-slate-300">Medium (40–70%)</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary, #14213d)' }}>Medium (40–70%)</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                <span className="text-xs text-slate-300">Low ({'<'}40%)</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary, #14213d)' }}>Low ({'<'}40%)</span>
               </div>
             </>
           )}
@@ -698,15 +725,15 @@ export function PerformanceMatrix3D() {
 
         {/* Best model at each lead time */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lowest RMSE At:</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary, #566075)' }}>Lowest RMSE At:</span>
           {LEAD_TIMES.map((lt) => (
             <span
               key={lt}
-              className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border flex items-center gap-1"
+              className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1"
               style={{
                 background: `${MODEL_COLORS[bestModels[lt]] || '#38bdf8'}18`,
-                borderColor: `${MODEL_COLORS[bestModels[lt]] || '#38bdf8'}40`,
-                color: MODEL_COLORS[bestModels[lt]] || '#38bdf8',
+                borderColor: `${MODEL_COLORS[bestModels[lt]] || '#38bdf8'}50`,
+                color: MODEL_COLORS[bestModels[lt]] || '#0284c7',
               }}
             >
               <CheckCircle2 size={10} />
@@ -719,16 +746,20 @@ export function PerformanceMatrix3D() {
       {/* Insight footer */}
       {matrix && (
         <div
-          className="mt-3.5 rounded-xl px-3.5 py-2.5 bg-sky-950/40 border border-sky-500/30 flex items-start gap-2"
+          className="mt-3.5 rounded-xl px-3.5 py-2.5 flex items-start gap-2"
+          style={{
+            background: 'var(--info-box-bg, rgba(8, 47, 73, 0.4))',
+            border: '1px solid var(--info-box-border, rgba(14, 165, 233, 0.3))',
+          }}
         >
-          <CheckCircle2 size={15} className="text-sky-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-sky-200 leading-relaxed">
-            <strong className="text-white">Verification Takeaway:</strong> Hybrid AI–RF achieves the lowest RMSE error across all 3 lead times for {matrix.variable.toLowerCase()} (
-            <span className="text-sky-300 font-bold">
+          <CheckCircle2 size={15} className="text-sky-600 dark:text-sky-400 mt-0.5 shrink-0" />
+          <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text-primary, #14213d)' }}>
+            <strong>Verification Takeaway:</strong> Hybrid AI–RF achieves the lowest RMSE error across all 3 lead times for {matrix.variable.toLowerCase()} (
+            <span className="font-bold text-sky-700 dark:text-sky-300">
               {matrix.cells.find((c) => c.model === 'Hybrid (Final)' && c.leadIndex === 0)?.rmse.toFixed(4)} {matrix.unit}
             </span>{' '}
             at 24h vs{' '}
-            <span className="text-slate-300">
+            <span style={{ color: 'var(--text-secondary, #566075)' }}>
               {matrix.cells.find((c) => c.model === 'ECMWF IFS' && c.leadIndex === 0)?.rmse.toFixed(4)} {matrix.unit}
             </span>{' '}
             for ECMWF IFS), proving systematic bias reduction over physics-only NWP models.

@@ -107,6 +107,34 @@
   color: #566075 !important;
 }
 
+:root[data-theme-mode="simple"] [class*="text-slate-100"],
+:root[data-theme-mode="simple"] [class*="text-slate-200"],
+:root[data-theme-mode="simple"] [class*="text-slate-300"] {
+  color: #14213d !important;
+}
+
+:root[data-theme-mode="simple"] table td {
+  color: #14213d !important;
+}
+
+:root[data-theme-mode="simple"] table th {
+  color: #475569 !important;
+}
+
+:root[data-theme-mode="simple"] table th[class*="text-sky"],
+:root[data-theme-mode="simple"] table td[class*="text-sky"] {
+  color: #0284c7 !important;
+}
+
+:root[data-theme-mode="simple"] table th[class*="text-blue"],
+:root[data-theme-mode="simple"] table td[class*="text-blue"] {
+  color: #2563eb !important;
+}
+
+:root[data-theme-mode="simple"] table td[class*="text-emerald"] {
+  color: #15803d !important;
+}
+
 /* SVG Text & Element Normalization in Light Government Theme */
 :root[data-theme-mode="simple"] svg text {
   fill: #14213d !important;
@@ -158,6 +186,46 @@
   border-color: #b8d5fa !important;
   color: #0b2a5b !important;
   box-shadow: none !important;
+}
+
+/* Callout and container normalizations in Light Government Theme */
+:root[data-theme-mode="simple"] [class*="bg-[#0B1120]"] {
+  background-color: #ffffff !important;
+  border-color: #d5dae3 !important;
+}
+
+:root[data-theme-mode="simple"] [class*="bg-sky-950"],
+:root[data-theme-mode="simple"] [class*="bg-sky-900"] {
+  background-color: #f0f7ff !important;
+  border-color: #bae0fd !important;
+  color: #0c4a6e !important;
+}
+
+:root[data-theme-mode="simple"] [class*="bg-amber-950"],
+:root[data-theme-mode="simple"] [class*="bg-amber-900"] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+:root[data-theme-mode="simple"] [class*="text-sky-100"],
+:root[data-theme-mode="simple"] [class*="text-sky-200"] {
+  color: #0369a1 !important;
+}
+
+:root[data-theme-mode="simple"] [class*="text-amber-100"],
+:root[data-theme-mode="simple"] [class*="text-amber-200"] {
+  color: #92400e !important;
+}
+
+:root[data-theme-mode="simple"] [class*="border-white/10"],
+:root[data-theme-mode="simple"] [class*="border-white/5"] {
+  border-color: #e2e8f0 !important;
+}
+
+:root[data-theme-mode="simple"] [class*="bg-white/[0.04]"],
+:root[data-theme-mode="simple"] [class*="bg-white/[0.02]"] {
+  background-color: #f8fafc !important;
 }
 
 /* Force Custom Cursor in Atmospheric Mode; Allow Standard Native Pointer in Simple Minimalist Mode */
