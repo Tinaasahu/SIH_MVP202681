@@ -182,7 +182,7 @@ export function StatusStrip() {
                 {formattedDate ? (
                   formattedDate
                 ) : isError ? (
-                  '2 Oct 2026 • 2:51 PM'
+                  formatStatusStripDate()
                 ) : (
                   <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}

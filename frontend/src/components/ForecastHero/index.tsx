@@ -317,7 +317,7 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
               {lastUpdatedDisplay ? (
                 <span>Last Updated: {lastUpdatedDisplay}</span>
               ) : lastUpdatedError ? (
-                <span>Last updated: 2 Oct 2026 • 2:51 PM</span>
+                <span>Last Updated: {formatLastUpdated()}</span>
               ) : (
                 <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
               )}

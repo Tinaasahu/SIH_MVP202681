@@ -41,7 +41,7 @@ export function DataHealthPanel() {
     };
   }, []);
 
-  const lastUpdatedDisplay = lastUpdated ? formatLastUpdated(lastUpdated) : '2 Oct 2026 • 2:51 PM';
+  const lastUpdatedDisplay = formatLastUpdated(lastUpdated);
 
   return (
     <GlassCard padding="md" variant="default">
