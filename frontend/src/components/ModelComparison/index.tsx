@@ -87,26 +87,31 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+              <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
                 <BarChart3 size={14} />
               </div>
-              <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span
+                className="text-xs font-bold tracking-widest uppercase"
+                style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+              >
                 MODEL BLEND
               </span>
             </div>
-            <p className="text-xs text-[#A9B2C8] mt-1">24h {config.label} ({config.unit}) Consensus &amp; Variance</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #566075)' }}>
+              24h {config.label} ({config.unit}) Consensus &amp; Variance
+            </p>
           </div>
 
           {/* Separated Pill Buttons with Breathing Room */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.06] border border-white/10 shadow-sm">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/10 dark:border-white/10 shadow-sm">
             {(Object.keys(VARIABLE_CONFIG) as Variable[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setVariable(v)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   variable === v
-                    ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                    : 'text-[#A9B2C8] hover:text-[#F3F5FA] hover:bg-white/[0.08]'
+                    ? 'bg-sky-600/20 text-[#0b2a5b] dark:text-[#F3F5FA] border border-sky-600/30 dark:border-sky-400/35 shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-[#A9B2C8] hover:text-[#0b2a5b] dark:hover:text-[#F3F5FA] hover:bg-black/5 dark:hover:bg-white/[0.08]'
                 }`}
                 type="button"
               >
@@ -120,17 +125,17 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
         <div className="w-full h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
-              <XAxis dataKey="model" tick={{ fontSize: 10, fill: '#A9B2C8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#A9B2C8' }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--card-sub-border, rgba(255,255,255,0.08))" />
+              <XAxis dataKey="model" tick={{ fontSize: 10, fill: 'var(--text-secondary, #566075)' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--text-secondary, #566075)' }} axisLine={false} tickLine={false} />
               <Tooltip
                 cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                 contentStyle={{
-                  background: 'rgba(8, 13, 32, 0.92)',
-                  border: '1px solid rgba(220, 225, 255, 0.16)',
+                  background: 'var(--glass-bg, rgba(8, 13, 32, 0.92))',
+                  border: 'var(--glass-border, 1px solid rgba(220, 225, 255, 0.16))',
                   borderRadius: 12,
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
-                  color: '#F3F5FA',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
+                  color: 'var(--text-primary, #14213d)',
                   fontSize: 12,
                 }}
                 formatter={(v: unknown) => [`${v} ${config.unit}`, config.label]}
@@ -139,8 +144,8 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
                 {chartData.map((d, i) => (
                   <Cell
                     key={i}
-                    fill={d.isBlended ? '#38bdf8' : 'rgba(169, 178, 200, 0.35)'}
-                    style={d.isBlended ? { filter: 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.45))' } : undefined}
+                    fill={d.isBlended ? '#0284c7' : 'rgba(169, 178, 200, 0.45)'}
+                    style={d.isBlended ? { filter: 'drop-shadow(0 0 6px rgba(2, 132, 199, 0.45))' } : undefined}
                   />
                 ))}
               </Bar>
@@ -148,28 +153,33 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
           </ResponsiveContainer>
         </div>
 
-        {/* Model Data Table - Compact Glass Rows */}
+        {/* Model Data Table - Compact Rows */}
         <div className="mt-4 space-y-2">
           {chartData.map((d, i) => (
             <div
               key={i}
               className={`flex items-center justify-between py-2 px-3 rounded-xl transition-all ${
                 d.isBlended
-                  ? 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_16px_rgba(56,189,248,0.18)]'
-                  : 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]'
+                  ? 'bg-sky-500/15 border border-sky-400/40 shadow-xs'
+                  : 'bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] border border-black/10 dark:border-white/[0.08]'
               }`}
             >
               <div className="flex items-center gap-2">
                 {d.isBlended && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/25 text-sky-300 border border-sky-400/35">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/25 text-sky-800 dark:text-sky-300 border border-sky-400/35">
                     Optimized Blend
                   </span>
                 )}
-                <span className={`text-xs ${d.isBlended ? 'font-bold text-[#F3F5FA]' : 'text-[#A9B2C8]'}`}>{d.model}</span>
+                <span
+                  className={`text-xs ${d.isBlended ? 'font-bold' : 'font-medium'}`}
+                  style={{ color: d.isBlended ? 'var(--navy2, #0284c7)' : 'var(--text-primary, #14213d)' }}
+                >
+                  {d.model}
+                </span>
               </div>
               <span
                 className="text-xs font-bold"
-                style={{ color: d.isBlended ? '#38bdf8' : '#F3F5FA' }}
+                style={{ color: d.isBlended ? '#0284c7' : 'var(--text-primary, #14213d)' }}
               >
                 {d.value} {config.unit}
               </span>
@@ -178,7 +188,10 @@ export function ModelComparison({ selectedCity = 'Kanpur' }: ModelComparisonProp
         </div>
       </div>
 
-      <div className="border-t border-white/[0.08] mt-3 pt-2 text-[11px] text-[#747F9C] text-center font-medium">
+      <div
+        className="border-t border-black/10 dark:border-white/[0.08] mt-3 pt-2 text-[11px] text-center font-medium"
+        style={{ color: 'var(--text-muted, #747F9C)' }}
+      >
         Blended output consensus reduces single-model outlier bias
       </div>
     </GlassCard>

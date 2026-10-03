@@ -1,18 +1,27 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-export function CursorEffect() {
+interface CursorEffectProps {
+  enabled?: boolean;
+}
+
+export function CursorEffect({ enabled = true }: CursorEffectProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
   const lightningRingRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Disable on reduced motion preference or touch devices
+    // Disable on reduced motion preference, touch devices, or when simple minimalist UI is active
     if (
+      !enabled ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      window.matchMedia('(pointer: coarse)').matches
+      window.matchMedia('(pointer: coarse)').matches ||
+      document.documentElement.getAttribute('data-theme-mode') === 'simple'
     ) {
+      if (containerRef.current) {
+        containerRef.current.style.display = 'none';
+      }
       return;
     }
 

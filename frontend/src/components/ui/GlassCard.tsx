@@ -62,12 +62,12 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
         ref={ref}
         className={cn('glass-card text-[#F3F5FA]', paddings[padding], className)}
         style={{
-          background: vStyle.background,
-          backdropFilter: 'blur(22px) saturate(115%)',
-          WebkitBackdropFilter: 'blur(22px) saturate(115%)',
-          border: vStyle.border,
-          boxShadow: vStyle.boxShadow,
-          borderRadius: '20px',
+          background: 'var(--glass-bg, ' + vStyle.background + ')',
+          backdropFilter: 'var(--glass-backdrop, blur(22px) saturate(115%))',
+          WebkitBackdropFilter: 'var(--glass-backdrop, blur(22px) saturate(115%))',
+          border: 'var(--glass-border, ' + vStyle.border + ')',
+          boxShadow: 'var(--glass-shadow, ' + vStyle.boxShadow + ')',
+          borderRadius: 'var(--card-radius, 20px)',
           transition: hover ? 'all 0.28s cubic-bezier(0.16,1,0.3,1)' : undefined,
           ...style,
         }}

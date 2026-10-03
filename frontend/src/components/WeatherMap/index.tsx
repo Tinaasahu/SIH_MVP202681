@@ -47,33 +47,38 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
         style={{ borderBottom: '1px solid rgba(220, 225, 255, 0.08)' }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <div className="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
             <MapPin size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span
+                className="text-xs font-bold tracking-widest uppercase"
+                style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+              >
                 LIVE WEATHER MAP
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-400/30">
                 45 Indian Stations
               </span>
             </div>
-            <p className="text-[11px] text-[#A9B2C8] mt-0.5">Real CartoDB Geographic Grid · Smooth Interactive Zoom</p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary, #566075)' }}>
+              Real CartoDB Geographic Grid · Smooth Interactive Zoom
+            </p>
           </div>
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5">
           {/* Lead time selector with proper spacing */}
-          <div className="flex items-center rounded-xl p-1 bg-white/[0.06] border border-white/10 shadow-sm">
+          <div className="flex items-center rounded-xl p-1 bg-black/[0.04] dark:bg-white/[0.06] border border-black/10 dark:border-white/10 shadow-sm">
             {LEAD_TIMES.map((t) => (
               <button
                 key={t}
                 onClick={() => setLeadTime(t)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   leadTime === t
-                    ? 'bg-sky-500/25 text-[#F3F5FA] border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                    : 'text-[#A9B2C8] hover:text-[#F3F5FA]'
+                    ? 'bg-sky-600/20 text-[#0b2a5b] dark:text-[#F3F5FA] border border-sky-600/30 dark:border-sky-400/35 shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-[#A9B2C8] hover:text-[#0b2a5b] dark:hover:text-[#F3F5FA]'
                 }`}
                 type="button"
               >
@@ -86,22 +91,24 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
           <div className="relative">
             <button
               onClick={() => setLayerMenuOpen(!layerMenuOpen)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#F3F5FA] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 shadow-sm transition-all"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-black/10 dark:border-white/10 shadow-sm transition-all"
+              style={{ color: 'var(--text-primary, #14213d)' }}
               type="button"
             >
-              <Layers size={14} className="text-sky-400" />
+              <Layers size={14} className="text-sky-600 dark:text-sky-400" />
               <span>{LAYERS.find((l) => l.id === layer)?.label}</span>
-              <ChevronDown size={13} className={`text-[#A9B2C8] transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={13} className={`transition-transform ${layerMenuOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary, #566075)' }} />
             </button>
 
             {layerMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-2xl border border-[rgba(220,225,255,0.16)] min-w-[170px]"
+                className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-30 py-1.5 shadow-2xl min-w-[170px]"
                 style={{
-                  background: 'rgba(8, 13, 32, 0.94)',
+                  background: 'var(--glass-bg, rgba(8, 13, 32, 0.94))',
                   backdropFilter: 'blur(26px)',
                   WebkitBackdropFilter: 'blur(26px)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
+                  border: 'var(--glass-border, 1px solid rgba(220,225,255,0.16))',
+                  boxShadow: 'var(--glass-shadow, 0 20px 40px rgba(0,0,0,0.7))',
                 }}
               >
                 {LAYERS.map((l) => (
@@ -113,9 +120,12 @@ export function WeatherMap({ selectedCity, onSelectCity }: WeatherMapProps) {
                     }}
                     className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
                       layer === l.id
-                        ? 'bg-sky-500/25 text-sky-300 font-bold'
-                        : 'text-[#A9B2C8] hover:bg-white/[0.08] hover:text-[#F3F5FA]'
+                        ? 'bg-sky-500/25 text-sky-800 dark:text-sky-300 font-bold'
+                        : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
                     }`}
+                    style={{
+                      color: layer === l.id ? undefined : 'var(--text-primary, #14213d)'
+                    }}
                     type="button"
                   >
                     {l.label}

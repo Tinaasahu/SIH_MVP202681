@@ -47,14 +47,19 @@ export function DataHealthPanel() {
     <GlassCard padding="md" variant="default">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Activity size={14} />
           </div>
           <div>
-            <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span
+              className="text-xs font-bold tracking-widest uppercase"
+              style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+            >
               DATA &amp; MODEL STATUS
             </span>
-            <p className="text-[11px] text-[#A9B2C8] mt-0.5">ERA5 Reanalysis reference feed active</p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary, #566075)' }}>
+              ERA5 Reanalysis reference feed active
+            </p>
           </div>
         </div>
 
@@ -62,13 +67,13 @@ export function DataHealthPanel() {
           className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
           style={{
             background: 'rgba(16, 185, 129, 0.16)',
-            color: '#34d399',
+            color: '#059669',
             border: '1px solid rgba(52, 211, 153, 0.35)',
             boxShadow: '0 0 12px rgba(16, 185, 129, 0.18)',
           }}
         >
           <span
-            className="w-2 h-2 rounded-full bg-emerald-400 status-pulse"
+            className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 status-pulse"
           />
           Nominal Ingest
         </div>
@@ -80,14 +85,14 @@ export function DataHealthPanel() {
           return (
             <div
               key={source.id}
-              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
+              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] border border-black/10 dark:border-white/[0.08]"
             >
-              <CheckCircle size={15} className="text-emerald-400 shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(52, 211, 153, 0.4))' }} />
+              <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(52, 211, 153, 0.4))' }} />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-[#F3F5FA] truncate">{source.name}</div>
+                <div className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary, #14213d)' }}>{source.name}</div>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-xs text-[#A9B2C8] font-medium">{lastUpdatedDisplay}</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--text-secondary, #566075)' }}>{lastUpdatedDisplay}</span>
               </div>
             </div>
           );
@@ -97,7 +102,10 @@ export function DataHealthPanel() {
       {/* Bottom Cycle Container */}
       <div
         className="mt-4 rounded-xl p-3 grid grid-cols-3 gap-2 text-center"
-        style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+        style={{
+          background: 'var(--card-sub-bg, rgba(255, 255, 255, 0.03))',
+          border: 'var(--card-sub-border, 1px solid rgba(255, 255, 255, 0.08))'
+        }}
       >
         {[
           { label: 'Last Refresh', value: lastUpdatedDisplay },
@@ -105,8 +113,8 @@ export function DataHealthPanel() {
           { label: 'Next Cycle', value: 'Every 6 hours' },
         ].map(t => (
           <div key={t.label} className="p-1">
-            <div className="text-[10px] text-[#747F9C] mb-0.5">{t.label}</div>
-            <div className="text-xs font-bold text-[#F3F5FA]">{t.value}</div>
+            <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-muted, #747F9C)' }}>{t.label}</div>
+            <div className="text-xs font-bold" style={{ color: 'var(--text-primary, #14213d)' }}>{t.value}</div>
           </div>
         ))}
       </div>

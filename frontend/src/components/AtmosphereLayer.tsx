@@ -141,16 +141,35 @@ const THEME_LABELS: Record<AtmosphereTheme, { label: string; icon: string; dotCo
   snow: { label: 'Snow', icon: '❄️', dotColor: '#67e8f9', category: 'Weather' },
 };
 
+export interface AtmosphereLayerProps {
+  condition?: string;
+  rainfall?: number;
+  temperature?: number;
+  wind?: number;
+  alert_type?: string;
+  themeMode?: AtmosphereTheme | null;
+  onThemeChange?: (theme: AtmosphereTheme | null) => void;
+}
+
 export function AtmosphereLayer({
   condition,
   rainfall = 0,
   temperature = 28,
   wind = 12,
   alert_type,
+  themeMode,
+  onThemeChange,
 }: AtmosphereLayerProps) {
-  const [manualTheme, setManualTheme] = useState<AtmosphereTheme | null>(null);
+  const [manualTheme, setManualTheme] = useState<AtmosphereTheme | null>(themeMode !== undefined ? themeMode : null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentHour, setCurrentHour] = useState<number>(getISTHour());
+
+  // Keep internal manualTheme synced with prop if passed
+  useEffect(() => {
+    if (themeMode !== undefined) {
+      setManualTheme(themeMode);
+    }
+  }, [themeMode]);
 
   useEffect(() => {
     // Automatically checks IST hour every 10 seconds for seamless real-time transitions
@@ -167,6 +186,27 @@ export function AtmosphereLayer({
 
   const activeTheme = manualTheme || autoTheme;
   const currentMeta = THEME_LABELS[activeTheme];
+
+  // Sync data-theme-mode attribute on document root
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (activeTheme === 'simple') {
+        document.documentElement.setAttribute('data-theme-mode', 'simple');
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme-mode');
+        document.documentElement.removeAttribute('data-theme');
+      }
+    }
+  }, [activeTheme]);
+
+  const handleSelectTheme = (t: AtmosphereTheme | null) => {
+    setManualTheme(t);
+    setMenuOpen(false);
+    if (onThemeChange) {
+      onThemeChange(t);
+    }
+  };
 
   return (
     <>
@@ -516,10 +556,7 @@ export function AtmosphereLayer({
             {/* Auto Live Option */}
             <button
               type="button"
-              onClick={() => {
-                setManualTheme(null);
-                setMenuOpen(false);
-              }}
+              onClick={() => handleSelectTheme(null)}
               className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors mb-1.5 ${
                 manualTheme === null
                   ? 'bg-sky-500/25 text-sky-300 font-bold border border-sky-400/30'
@@ -543,10 +580,7 @@ export function AtmosphereLayer({
               <button
                 key={t}
                 type="button"
-                onClick={() => {
-                  setManualTheme(t);
-                  setMenuOpen(false);
-                }}
+                onClick={() => handleSelectTheme(t)}
                 className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
                   manualTheme === t
                     ? 'bg-amber-500/25 text-amber-200 font-bold border border-amber-400/30'
@@ -569,10 +603,7 @@ export function AtmosphereLayer({
               <button
                 key={t}
                 type="button"
-                onClick={() => {
-                  setManualTheme(t);
-                  setMenuOpen(false);
-                }}
+                onClick={() => handleSelectTheme(t)}
                 className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
                   manualTheme === t
                     ? 'bg-rose-500/25 text-rose-200 font-bold border border-rose-400/30'
@@ -591,10 +622,7 @@ export function AtmosphereLayer({
             <div className="border-t border-white/10 mt-1 pt-1">
               <button
                 type="button"
-                onClick={() => {
-                  setManualTheme('simple');
-                  setMenuOpen(false);
-                }}
+                onClick={() => handleSelectTheme('simple')}
                 className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
                   manualTheme === 'simple'
                     ? 'bg-slate-500/25 text-slate-200 font-bold border border-slate-400/30'

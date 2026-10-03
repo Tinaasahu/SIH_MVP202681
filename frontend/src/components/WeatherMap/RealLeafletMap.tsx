@@ -13,6 +13,8 @@ interface RealLeafletMapProps {
   leadTime: string;
   selectedCity?: string | null;
   onSelectCity?: (city: CityForecast) => void;
+  defaultTile?: TileType;
+  themeMode?: string | null;
 }
 
 type TileType = 'satellite' | 'terrain' | 'positron' | 'osm';
@@ -49,14 +51,19 @@ export default function RealLeafletMap({
   leadTime,
   selectedCity,
   onSelectCity,
+  defaultTile,
+  themeMode,
 }: RealLeafletMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   
-  // Default to satellite if Mapbox token is present, otherwise standard osm
-  const [activeTile, setActiveTile] = useState<TileType>(MAPBOX_ACCESS_TOKEN ? 'satellite' : 'osm');
+  const isSimpleTheme = themeMode === 'simple';
+  // In simple theme, default to standard clean OpenStreetMap/Geographic tiles
+  const initialTile: TileType = defaultTile || (isSimpleTheme ? 'osm' : (MAPBOX_ACCESS_TOKEN ? 'satellite' : 'osm'));
+  const [activeTile, setActiveTile] = useState<TileType>(initialTile);
+  const isDarkBg = activeTile === 'satellite' && !isSimpleTheme;
   const [activeHoverCity, setActiveHoverCity] = useState<CityForecast | null>(null);
   const [cities, setCities] = useState<CityForecast[]>(MOCK_CITIES);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,7 +156,12 @@ export default function RealLeafletMap({
     Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
 
-    const isDarkBg = activeTile === 'satellite';
+    const isDarkBg = activeTile === 'satellite' && !isSimpleTheme;
+    const popupBg = isDarkBg ? '#0e1b44' : '#ffffff';
+    const popupText = isDarkBg ? '#F5F7FF' : '#14213d';
+    const popupSubText = isDarkBg ? '#AAB7D4' : '#566075';
+    const popupBoxBg = isDarkBg ? 'rgba(14,27,68,0.6)' : '#f6f7f9';
+    const popupBorder = isDarkBg ? 'rgba(255,255,255,0.12)' : '#d5dae3';
 
     cities.forEach((city) => {
       const { text, color } = getCityMetric(city, layer);
@@ -175,7 +187,7 @@ export default function RealLeafletMap({
                 ? 'bg-blue-600 text-white border-white ring-2 ring-blue-300 z-30 scale-105'
                 : isDarkBg
                 ? 'bg-slate-900/90 text-white border-white/20'
-                : 'bg-white/95 text-slate-800 border-slate-200/80'
+                : 'bg-white/95 text-slate-800 border-slate-300'
             }">
               <span>${city.city}</span>
               <span class="ml-1 opacity-80 text-[9px] font-medium" style="color: ${isSelected ? '#ffffff' : color};">${text}</span>
@@ -190,23 +202,23 @@ export default function RealLeafletMap({
 
       // Station detail popup
       const popupContent = `
-        <div style="font-family: inherit; min-width: 170px; padding: 4px; color: #F5F7FF;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 4px;">
-            <span style="font-weight: 800; font-size: 13px; color: #F5F7FF; text-transform: uppercase;">${city.city}</span>
-            <span style="font-size: 10px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); padding: 2px 6px; border-radius: 9999px;">${city.state}</span>
+        <div style="font-family: inherit; min-width: 170px; padding: 6px; color: ${popupText}; background: ${popupBg}; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid ${popupBorder}; padding-bottom: 4px;">
+            <span style="font-weight: 800; font-size: 13px; color: ${popupText}; text-transform: uppercase;">${city.city}</span>
+            <span style="font-size: 10px; font-weight: 700; color: ${isDarkBg ? '#38bdf8' : '#0b2a5b'}; background: ${isDarkBg ? 'rgba(56,189,248,0.15)' : '#e6f0fa'}; border: 1px solid ${isDarkBg ? 'rgba(56,189,248,0.3)' : '#b8d5fa'}; padding: 2px 6px; border-radius: 9999px;">${city.state}</span>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; font-size: 11px;">
-            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Rainfall</span><strong style="color: #38bdf8; font-size: 12px;">${city.rainfall} mm</strong></div>
-            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Temp</span><strong style="color: #f59e0b; font-size: 12px;">${city.temperature}°C</strong></div>
-            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Wind</span><strong style="color: #c084fc; font-size: 12px;">${city.wind} km/h</strong></div>
-            <div style="background: rgba(14,27,68,0.6); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><span style="color: #AAB7D4; font-size: 9.5px; display: block;">Reliability</span><strong style="color: #34d399; font-size: 12px;">${city.confidence}% ${city.confidenceLabel ? '(' + city.confidenceLabel + ')' : ''}</strong></div>
+            <div style="background: ${popupBoxBg}; padding: 4px 6px; border-radius: 6px; border: 1px solid ${popupBorder};"><span style="color: ${popupSubText}; font-size: 9.5px; display: block;">Rainfall</span><strong style="color: ${isDarkBg ? '#38bdf8' : '#0284c7'}; font-size: 12px;">${city.rainfall} mm</strong></div>
+            <div style="background: ${popupBoxBg}; padding: 4px 6px; border-radius: 6px; border: 1px solid ${popupBorder};"><span style="color: ${popupSubText}; font-size: 9.5px; display: block;">Temp</span><strong style="color: ${isDarkBg ? '#f59e0b' : '#b45309'}; font-size: 12px;">${city.temperature}°C</strong></div>
+            <div style="background: ${popupBoxBg}; padding: 4px 6px; border-radius: 6px; border: 1px solid ${popupBorder};"><span style="color: ${popupSubText}; font-size: 9.5px; display: block;">Wind</span><strong style="color: ${isDarkBg ? '#c084fc' : '#7e22ce'}; font-size: 12px;">${city.wind} km/h</strong></div>
+            <div style="background: ${popupBoxBg}; padding: 4px 6px; border-radius: 6px; border: 1px solid ${popupBorder};"><span style="color: ${popupSubText}; font-size: 9.5px; display: block;">Reliability</span><strong style="color: ${isDarkBg ? '#34d399' : '#15803d'}; font-size: 12px;">${city.confidence}%</strong></div>
           </div>
-          <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: #AAB7D4; display: flex; justify-content: space-between;">
+          <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid ${popupBorder}; font-size: 10px; color: ${popupSubText}; display: flex; justify-content: space-between;">
             <span>Dominant Model:</span>
-            <strong style="color: #38bdf8;">${city.dominantModel}</strong>
+            <strong style="color: ${isDarkBg ? '#38bdf8' : '#0b2a5b'};">${city.dominantModel}</strong>
           </div>
           ${city.explanation ? `
-          <div style="margin-top: 4px; font-size: 9.5px; color: #AAB7D4; font-style: italic; background: rgba(14,27,68,0.5); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.3;">
+          <div style="margin-top: 4px; font-size: 9.5px; color: ${popupSubText}; font-style: italic; background: ${popupBoxBg}; padding: 4px 6px; border-radius: 6px; border: 1px solid ${popupBorder}; line-height: 1.3;">
             &quot;${city.explanation}&quot;
           </div>` : ''}
         </div>
@@ -277,28 +289,38 @@ export default function RealLeafletMap({
       {/* Floating Map Controls Bar */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2.5">
         {/* Zoom & Reset Controls */}
-        <div className="flex flex-col bg-[rgba(8,13,32,0.88)] backdrop-blur-xl rounded-xl p-1 shadow-2xl border border-[rgba(220,225,255,0.14)]">
+        <div className={`flex flex-col rounded-xl p-1 shadow-md border ${
+          isDarkBg
+            ? 'bg-[rgba(8,13,32,0.88)] backdrop-blur-xl border-[rgba(220,225,255,0.14)] text-[#F3F5FA]'
+            : 'bg-white/95 border-slate-300 text-slate-800'
+        }`}>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-white/10 rounded-lg text-[#F3F5FA] transition-colors"
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkBg ? 'hover:bg-white/10 text-[#F3F5FA]' : 'hover:bg-slate-100 text-slate-700'
+            }`}
             title="Zoom In"
             type="button"
           >
             <ZoomIn size={16} />
           </button>
-          <div className="h-px bg-white/10 my-0.5" />
+          <div className={`h-px my-0.5 ${isDarkBg ? 'bg-white/10' : 'bg-slate-200'}`} />
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-white/10 rounded-lg text-[#F3F5FA] transition-colors"
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkBg ? 'hover:bg-white/10 text-[#F3F5FA]' : 'hover:bg-slate-100 text-slate-700'
+            }`}
             title="Zoom Out"
             type="button"
           >
             <ZoomOut size={16} />
           </button>
-          <div className="h-px bg-white/10 my-0.5" />
+          <div className={`h-px my-0.5 ${isDarkBg ? 'bg-white/10' : 'bg-slate-200'}`} />
           <button
             onClick={handleReset}
-            className="p-2 hover:bg-sky-500/20 text-[#A9B2C8] hover:text-sky-300 rounded-lg transition-colors"
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkBg ? 'hover:bg-sky-500/20 text-[#A9B2C8] hover:text-sky-300' : 'hover:bg-blue-50 text-slate-600 hover:text-blue-700'
+            }`}
             title="Reset to All-India View"
             type="button"
           >
@@ -307,16 +329,26 @@ export default function RealLeafletMap({
         </div>
 
         {/* Mapbox & Cartographic Tile Mode Switcher */}
-        <div className="bg-[rgba(8,13,32,0.88)] backdrop-blur-xl rounded-xl p-1.5 shadow-2xl border border-[rgba(220,225,255,0.14)] flex flex-col gap-1 min-w-[130px]">
-          <span className="text-[10px] font-bold text-[#747F9C] px-2 py-0.5 uppercase tracking-wider">
+        <div className={`rounded-xl p-1.5 shadow-md border flex flex-col gap-1 min-w-[130px] ${
+          isDarkBg
+            ? 'bg-[rgba(8,13,32,0.88)] backdrop-blur-xl border-[rgba(220,225,255,0.14)] text-[#F3F5FA]'
+            : 'bg-white/95 border-slate-300 text-slate-800'
+        }`}>
+          <span className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider ${
+            isDarkBg ? 'text-[#747F9C]' : 'text-slate-500'
+          }`}>
             Imagery
           </span>
           <button
             onClick={() => setActiveTile('satellite')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'satellite'
-                ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
-                : 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                ? isDarkBg
+                  ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
+                  : 'bg-blue-50 text-blue-900 border border-blue-300 shadow-xs'
+                : isDarkBg
+                ? 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
             }`}
             type="button"
           >
@@ -328,8 +360,12 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('terrain')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'terrain'
-                ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
-                : 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                ? isDarkBg
+                  ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
+                  : 'bg-blue-50 text-blue-900 border border-blue-300 shadow-xs'
+                : isDarkBg
+                ? 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
             }`}
             type="button"
           >
@@ -341,8 +377,12 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('positron')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'positron'
-                ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
-                : 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                ? isDarkBg
+                  ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
+                  : 'bg-blue-50 text-blue-900 border border-blue-300 shadow-xs'
+                : isDarkBg
+                ? 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
             }`}
             type="button"
           >
@@ -354,8 +394,12 @@ export default function RealLeafletMap({
             onClick={() => setActiveTile('osm')}
             className={`flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-left ${
               activeTile === 'osm'
-                ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
-                : 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                ? isDarkBg
+                  ? 'bg-sky-500/30 text-[#F3F5FA] border border-sky-400/40 shadow-xs'
+                  : 'bg-blue-50 text-blue-900 border border-blue-300 shadow-xs'
+                : isDarkBg
+                ? 'text-[#A9B2C8] hover:bg-white/5 hover:text-[#F3F5FA] border border-transparent'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
             }`}
             type="button"
           >
@@ -372,48 +416,61 @@ export default function RealLeafletMap({
 
         return (
           <div
-            className="absolute bottom-4 left-4 z-10 p-4 rounded-2xl shadow-2xl border border-[rgba(220,225,255,0.16)] max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200"
-            style={{
-              background: 'rgba(8, 13, 32, 0.90)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-            }}
+            className={`absolute bottom-4 left-4 z-10 p-4 rounded-xl shadow-xl border max-w-[260px] animate-in fade-in-50 slide-in-from-bottom-2 duration-200 ${
+              isDarkBg
+                ? 'bg-[rgba(8,13,32,0.90)] backdrop-blur-2xl border-[rgba(220,225,255,0.16)] text-[#F3F5FA]'
+                : 'bg-white/95 border-slate-300 text-slate-800'
+            }`}
           >
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-sm font-extrabold uppercase tracking-wide text-[#F3F5FA]">
+              <span className={`text-sm font-extrabold uppercase tracking-wide ${isDarkBg ? 'text-[#F3F5FA]' : 'text-[#0b2a5b]'}`}>
                 {activeCardCity.city}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold border border-sky-400/30">
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                isDarkBg ? 'bg-sky-500/20 text-sky-300 border-sky-400/30' : 'bg-blue-50 text-[#143a7b] border-blue-200'
+              }`}>
                 {activeCardCity.state}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-[rgba(15,21,45,0.60)] p-2 rounded-xl border border-white/[0.08]">
-                <span className="text-[#A9B2C8] block text-[10px] font-medium">Rainfall</span>
-                <span className="font-extrabold text-sky-400 text-sm">{activeCardCity.rainfall} mm</span>
+              <div className={`p-2 rounded-lg border ${
+                isDarkBg ? 'bg-[rgba(15,21,45,0.60)] border-white/[0.08]' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`block text-[10px] font-medium ${isDarkBg ? 'text-[#A9B2C8]' : 'text-slate-500'}`}>Rainfall</span>
+                <span className={`font-extrabold text-sm ${isDarkBg ? 'text-sky-400' : 'text-blue-600'}`}>{activeCardCity.rainfall} mm</span>
               </div>
-              <div className="bg-[rgba(15,21,45,0.60)] p-2 rounded-xl border border-white/[0.08]">
-                <span className="text-[#A9B2C8] block text-[10px] font-medium">Temperature</span>
-                <span className="font-extrabold text-amber-400 text-sm">{activeCardCity.temperature}°C</span>
+              <div className={`p-2 rounded-lg border ${
+                isDarkBg ? 'bg-[rgba(15,21,45,0.60)] border-white/[0.08]' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`block text-[10px] font-medium ${isDarkBg ? 'text-[#A9B2C8]' : 'text-slate-500'}`}>Temperature</span>
+                <span className={`font-extrabold text-sm ${isDarkBg ? 'text-amber-400' : 'text-amber-600'}`}>{activeCardCity.temperature}°C</span>
               </div>
-              <div className="bg-[rgba(15,21,45,0.60)] p-2 rounded-xl border border-white/[0.08]">
-                <span className="text-[#A9B2C8] block text-[10px] font-medium">Wind Speed</span>
-                <span className="font-extrabold text-purple-400 text-sm">{activeCardCity.wind} km/h</span>
+              <div className={`p-2 rounded-lg border ${
+                isDarkBg ? 'bg-[rgba(15,21,45,0.60)] border-white/[0.08]' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`block text-[10px] font-medium ${isDarkBg ? 'text-[#A9B2C8]' : 'text-slate-500'}`}>Wind Speed</span>
+                <span className={`font-extrabold text-sm ${isDarkBg ? 'text-purple-400' : 'text-purple-600'}`}>{activeCardCity.wind} km/h</span>
               </div>
-              <div className="bg-[rgba(15,21,45,0.60)] p-2 rounded-xl border border-white/[0.08]">
-                <span className="text-[#A9B2C8] block text-[10px] font-medium">Confidence</span>
-                <span className="font-extrabold text-emerald-400 text-sm">{activeCardCity.confidence}%</span>
+              <div className={`p-2 rounded-lg border ${
+                isDarkBg ? 'bg-[rgba(15,21,45,0.60)] border-white/[0.08]' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className={`block text-[10px] font-medium ${isDarkBg ? 'text-[#A9B2C8]' : 'text-slate-500'}`}>Confidence</span>
+                <span className={`font-extrabold text-sm ${isDarkBg ? 'text-emerald-400' : 'text-emerald-600'}`}>{activeCardCity.confidence}%</span>
               </div>
             </div>
-            <div className="mt-2.5 pt-2 border-t border-white/[0.08] text-[11px] text-[#A9B2C8] flex items-center justify-between">
+            <div className={`mt-2.5 pt-2 border-t text-[11px] flex items-center justify-between ${
+              isDarkBg ? 'border-white/[0.08] text-[#A9B2C8]' : 'border-slate-200 text-slate-600'
+            }`}>
               <span>Dominant Model:</span>
-              <span className="font-bold text-sky-400">{activeCardCity.dominantModel}</span>
+              <span className={`font-bold ${isDarkBg ? 'text-sky-400' : 'text-[#143a7b]'}`}>{activeCardCity.dominantModel}</span>
             </div>
             {activeCardCity.confidenceLabel && (
-              <div className="mt-1 text-[10px] text-[#A9B2C8] flex items-center justify-between">
+              <div className={`mt-1 text-[10px] flex items-center justify-between ${
+                isDarkBg ? 'text-[#A9B2C8]' : 'text-slate-500'
+              }`}>
                 <span>Rating:</span>
-                <span className="font-semibold text-emerald-400">{activeCardCity.confidenceLabel}</span>
+                <span className={`font-semibold ${isDarkBg ? 'text-emerald-400' : 'text-emerald-600'}`}>{activeCardCity.confidenceLabel}</span>
               </div>
             )}
             {activeCardCity.explanation && (
@@ -428,21 +485,21 @@ export default function RealLeafletMap({
       {/* Model Dominance Overlay */}
       {layer === 'model_dominance' && (
         <div
-          className="absolute top-4 left-4 z-10 rounded-2xl p-3.5 shadow-2xl border border-[rgba(220,225,255,0.16)] max-w-[220px]"
-          style={{
-            background: 'rgba(8, 13, 32, 0.90)',
-            backdropFilter: 'blur(20px)',
-          }}
+          className={`absolute top-4 left-4 z-10 rounded-xl p-3.5 shadow-md border max-w-[220px] ${
+            isDarkBg
+              ? 'bg-[rgba(8,13,32,0.90)] backdrop-blur-xl border-[rgba(220,225,255,0.16)] text-[#F3F5FA]'
+              : 'bg-white/95 border-slate-300 text-slate-800'
+          }`}
         >
-          <div className="text-[11px] font-bold text-[#F3F5FA] mb-2 flex items-center gap-1.5">
-            <Sparkles size={13} className="text-sky-400" />
+          <div className={`text-[11px] font-bold mb-2 flex items-center gap-1.5 ${isDarkBg ? 'text-[#F3F5FA]' : 'text-[#0b2a5b]'}`}>
+            <Sparkles size={13} className={isDarkBg ? 'text-sky-400' : 'text-blue-600'} />
             REGIONAL DOMINANCE
           </div>
-          <div className="space-y-1.5 text-[11px] text-[#A9B2C8]">
+          <div className="space-y-1.5 text-[11px]">
             {MOCK_REGION_DOMINANCE.slice(0, 4).map((r) => (
               <div key={r.region} className="flex justify-between items-center">
-                <span className="text-[#747F9C]">{r.region}:</span>
-                <span className="font-bold text-[#F3F5FA]">{r.dominantModel}</span>
+                <span className={isDarkBg ? 'text-[#747F9C]' : 'text-slate-500'}>{r.region}:</span>
+                <span className={`font-bold ${isDarkBg ? 'text-[#F3F5FA]' : 'text-slate-900'}`}>{r.dominantModel}</span>
               </div>
             ))}
           </div>

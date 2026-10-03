@@ -51,23 +51,29 @@ export function StatusStrip() {
 
   useEffect(() => {
     let mounted = true;
-    getMetadata()
-      .then((data) => {
-        if (mounted && data) {
-          setMetadata(data);
-          setIsWakingUp(false);
-          setIsError(false);
-        } else if (mounted) {
-          setIsError(true);
-        }
-      })
-      .catch((err) => {
-        if (mounted) {
-          setIsError(true);
-          setIsWakingUp(false);
-          setStatusMessage(err?.message || 'Server is waking up. Please try again.');
-        }
-      });
+
+    const fetchMeta = () => {
+      getMetadata()
+        .then((data) => {
+          if (mounted && data) {
+            setMetadata(data);
+            setIsWakingUp(false);
+            setIsError(false);
+          } else if (mounted) {
+            setIsError(true);
+          }
+        })
+        .catch((err) => {
+          if (mounted) {
+            setIsError(true);
+            setIsWakingUp(false);
+            setStatusMessage(err?.message || 'Server is waking up. Please try again.');
+          }
+        });
+    };
+
+    fetchMeta();
+    const interval = setInterval(fetchMeta, 60000);
 
     const handleStatus = (e: Event) => {
       const customEvent = e as CustomEvent<{ wakingUp?: boolean; error?: boolean; message?: string }>;
@@ -84,6 +90,7 @@ export function StatusStrip() {
 
     return () => {
       mounted = false;
+      clearInterval(interval);
       window.removeEventListener('backend-status', handleStatus);
     };
   }, []);

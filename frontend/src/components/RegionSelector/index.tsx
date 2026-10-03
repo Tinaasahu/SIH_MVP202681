@@ -106,19 +106,22 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
     <GlassCard padding="md" variant="default">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
+          <div className="w-6 h-6 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
             <MapPin size={14} />
           </div>
-          <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+          <span
+            className="text-xs font-bold tracking-widest uppercase"
+            style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+          >
             REGION SELECTOR
           </span>
           {isFallback && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/30">
               Demo data (backend unavailable)
             </span>
           )}
         </div>
-        <span className="text-[10px] text-sky-300 font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/35 shadow-[0_0_12px_rgba(56,189,248,0.25)] flex items-center gap-1">
+        <span className="text-[10px] text-sky-700 dark:text-sky-300 font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/35 shadow-xs flex items-center gap-1">
           <Navigation size={10} /> Auto-Zoom
         </span>
       </div>
@@ -148,16 +151,19 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
 
       <div
         className="mt-4 rounded-xl px-3.5 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(220, 225, 255, 0.10)' }}
+        style={{
+          background: 'var(--card-sub-bg, rgba(255, 255, 255, 0.04))',
+          border: 'var(--card-sub-border, 1px solid rgba(220, 225, 255, 0.10))'
+        }}
       >
         <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-sky-400" />
-          <span className="text-xs text-[#F3F5FA]">
-            <span className="font-bold text-sky-300">{district === 'All Districts' ? state : district}</span>
-            <span className="text-[#A9B2C8]"> · {state}</span>
+          <MapPin size={13} className="text-sky-600 dark:text-sky-400" />
+          <span className="text-xs" style={{ color: 'var(--text-primary, #14213d)' }}>
+            <span className="font-bold text-sky-700 dark:text-sky-300">{district === 'All Districts' ? state : district}</span>
+            <span style={{ color: 'var(--text-secondary, #566075)' }}> · {state}</span>
           </span>
         </div>
-        <span className="text-[10px] text-[#747F9C] font-medium">Synced with Map</span>
+        <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted, #747F9C)' }}>Synced with Map</span>
       </div>
     </GlassCard>
   );

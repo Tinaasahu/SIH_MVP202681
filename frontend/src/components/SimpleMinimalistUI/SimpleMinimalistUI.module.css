@@ -1,0 +1,875 @@
+/* ==========================================================================
+   NabhDrishti - Government UI Concept (Simple Minimalist Light Theme)
+   Smart India Hackathon 2026 (PS: 26081)
+   Ministry of Earth Sciences (MoES) / NCMRWF
+   ========================================================================== */
+
+.container {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #14213d;
+  --muted: #566075;
+  --line: #d5dae3;
+  --navy: #0b2a5b;
+  --navy2: #143a7b;
+  --saf: #e8791d;
+  --grn: #1b7a3d;
+  --warn: #b42318;
+  --okbg: #e6f4ea;
+
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  transition: font-size 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  z-index: 10;
+}
+
+/* Dark / High-Contrast Theme Variation */
+.container[data-theme="dark"] {
+  --bg: #0e1424;
+  --surface: #161e33;
+  --ink: #e8ecf5;
+  --muted: #a3adc4;
+  --line: #2a3554;
+  --navy: #0a1d40;
+  --navy2: #1d4c9a;
+  --okbg: #12301f;
+}
+
+/* Skip Link for Accessibility */
+.skip {
+  position: absolute;
+  left: -999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.skip:focus {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  width: auto;
+  height: auto;
+  background: #ffffff;
+  color: #000000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 2px solid var(--saf);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 1. Tricolor Saffron-White-Green Top Ribbon */
+.tri {
+  height: 5px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--saf) 33.3%, #ffffff 33.3% 66.6%, var(--grn) 66.6%);
+}
+
+/* 2. Top Government Utility Bar */
+.util {
+  background: var(--navy);
+  color: #ffffff;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.utilInner {
+  max-width: 1280px;
+  margin: auto;
+  padding: 6px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.utilLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.utilControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.utilBtn {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.utilBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.utilBtnActive {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+  font-weight: 700;
+}
+
+/* 3. Main Brand Header */
+.mainHeader {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  max-width: 1280px;
+  margin: auto;
+  padding: 14px 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.emb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--navy2);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy2);
+  flex: none;
+  text-align: center;
+  line-height: 1.1;
+  background: rgba(20, 58, 123, 0.04);
+}
+
+.logoSep {
+  width: 1px;
+  height: 38px;
+  background: var(--line);
+  flex: none;
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.logoImg {
+  height: 48px;
+  width: auto;
+  max-width: 90px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+  transition: transform 0.2s ease;
+}
+
+.logoWrap:hover .logoImg {
+  transform: scale(1.04);
+}
+
+.brandInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brandTitle {
+  margin: 0;
+  font: 700 26px/1.1 "Noto Serif Devanagari", "Noto Sans", serif;
+  color: var(--navy2);
+  letter-spacing: -0.01em;
+}
+
+.container[data-theme="dark"] .brandTitle {
+  color: #9bbcff;
+}
+
+.brandSub {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 4. Primary Government Navigation Bar */
+.nav {
+  background: var(--navy2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.navList {
+  max-width: 1280px;
+  margin: auto;
+  padding: 0 8px;
+  list-style: none;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navList::-webkit-scrollbar {
+  display: none;
+}
+
+.navLink {
+  display: block;
+  padding: 11px 15px;
+  color: #ffffff;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 14px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s ease;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.navLink[aria-current="page"] {
+  border-color: var(--saf);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 5. Main Content Area */
+.mainContent {
+  max-width: 1280px;
+  margin: auto;
+  padding: 16px;
+}
+
+.crumb {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+/* 6. Alert Strip */
+.alert {
+  border-left: 6px solid var(--grn);
+  background: var(--okbg);
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  border-top: 1px solid rgba(27, 122, 61, 0.15);
+  border-right: 1px solid rgba(27, 122, 61, 0.15);
+  border-bottom: 1px solid rgba(27, 122, 61, 0.15);
+}
+
+.alert[data-severity="warning"] {
+  border-left-color: var(--saf);
+  background: #fff8f0;
+  border-color: rgba(232, 121, 29, 0.2);
+}
+
+.alert[data-severity="danger"] {
+  border-left-color: var(--warn);
+  background: #fdf2f2;
+  border-color: rgba(180, 35, 24, 0.2);
+}
+
+.alertText b {
+  font-size: 15px;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.alertSub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.alertBtn {
+  background: var(--navy2);
+  color: #ffffff;
+  border: 1px solid var(--navy2);
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.alertBtn:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+/* 7. Grids & Cards */
+.grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.gridTwo {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 820px) {
+  .gridTwo {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.gridThree {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+  .gridThree {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.cardTitle {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy2);
+}
+
+.container[data-theme="dark"] .cardTitle {
+  color: #9bbcff;
+}
+
+.sub {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 8. Form Selects */
+.sel {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .sel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.select:focus {
+  border-color: var(--saf);
+  outline: 2px solid rgba(232, 121, 29, 0.2);
+}
+
+/* 9. Key Stat Metrics */
+.stat {
+  padding: 16px;
+}
+
+.statValue {
+  font: 700 34px/1.1 "Noto Sans", sans-serif;
+  color: var(--navy2);
+  margin-top: 2px;
+}
+
+.container[data-theme="dark"] .statValue {
+  color: #9bbcff;
+}
+
+.statUnit {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.statRange {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* 10. Forecast Reliability Text */
+.conf {
+  margin-top: 12px;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--surface);
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.confLink {
+  color: var(--navy2);
+  text-decoration: underline;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font: inherit;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.confLink:hover {
+  color: var(--saf);
+}
+
+/* 11. Tabs */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 5px 12px;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  background: rgba(20, 58, 123, 0.05);
+}
+
+.tabBtnActive {
+  background: var(--navy2);
+  color: #ffffff;
+  border-color: var(--navy2);
+  font-weight: 600;
+}
+
+.tabBtnActive:hover {
+  background: var(--navy);
+  color: #ffffff;
+}
+
+/* 12. Model Contribution Progress Bars */
+.bar {
+  display: grid;
+  grid-template-columns: 120px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  margin: 10px 0;
+  color: var(--ink);
+}
+
+.barName {
+  font-weight: 500;
+}
+
+.barTrack {
+  background: var(--line);
+  border-radius: 2px;
+  display: block;
+  height: 12px;
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--navy2);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.barPct {
+  font-weight: 700;
+  text-align: right;
+  color: var(--navy2);
+}
+
+.container[data-theme="dark"] .barPct {
+  color: #9bbcff;
+}
+
+/* 13. Data Status Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ok {
+  color: var(--grn);
+  font-weight: 600;
+}
+
+/* 14. Chart Legend */
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legendSolid {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  background: var(--navy2);
+  border-radius: 1px;
+}
+
+.legendShaded {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  background: var(--navy2);
+  opacity: 0.25;
+  border-radius: 2px;
+}
+
+/* 15. Disclaimer Note */
+.note {
+  max-width: 1280px;
+  margin: 16px auto 0;
+  padding: 0 16px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* 16. Government Footer */
+.footer {
+  background: var(--navy);
+  color: #dfe6f5;
+  margin-top: 28px;
+  font-size: 13px;
+  border-top: 3px solid var(--saf);
+}
+
+.footerInner {
+  max-width: 1280px;
+  margin: auto;
+  padding: 24px 16px 20px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 820px) {
+  .footerInner {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
+.footerCol h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.footerCol p {
+  margin: 0;
+  line-height: 1.5;
+  color: #c7d2e9;
+}
+
+.footerCol ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerCol a {
+  color: #c7d2e9;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footerCol a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footerBottom {
+  max-width: 1280px;
+  margin: auto;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #a3adc4;
+}
+
+/* Map SVG Styling */
+.mapSvg {
+  width: 100%;
+  height: auto;
+  max-height: 290px;
+  display: block;
+}
+
+.chartSvg {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  display: block;
+}
+
+/* Interactive Real Leaflet Map Integration */
+.mapCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.layerTabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.layerBtn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.layerBtn:hover {
+  border-color: var(--navy2);
+}
+
+.layerBtnActive {
+  background: var(--navy2);
+  color: #ffffff;
+  border-color: var(--navy2);
+  font-weight: 600;
+}
+
+.realMapWrapper {
+  width: 100%;
+  height: 380px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  margin: 10px 0;
+  position: relative;
+}
+
+.realMapWrapperLarge {
+  width: 100%;
+  height: 480px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  margin: 12px 0;
+  position: relative;
+}
+
+/* Feature Pages Styling */
+.badgeOk {
+  display: inline-block;
+  color: #1b7a3d;
+  background: #e6f4ea;
+  border: 1px solid #c3e6cb;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.badgeWarn {
+  display: inline-block;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.badgeDanger {
+  display: inline-block;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.badgeBlue {
+  display: inline-block;
+  color: #143a7b;
+  background: #e6f0fa;
+  border: 1px solid #b8d5fa;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.tableHighlight {
+  background: #f0f5ff;
+  font-weight: 600;
+}
+
+.gridFour {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+}
+
+@media (min-width: 600px) {
+  .gridFour {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .gridFour {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.gridTwoEqual {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 820px) {
+  .gridTwoEqual {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fullCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+.fullCard h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  color: var(--navy2);
+}
+
+.fullCard h3 {
+  margin: 12px 0 6px;
+  font-size: 14px;
+  color: var(--navy2);
+}

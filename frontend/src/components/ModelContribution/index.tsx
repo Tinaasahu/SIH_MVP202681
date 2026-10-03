@@ -52,11 +52,14 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-widest text-[#F3F5FA] uppercase" style={{ letterSpacing: '0.12em' }}>
+            <span
+              className="text-xs font-bold tracking-widest uppercase"
+              style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
+            >
               MODEL CONTRIBUTION
             </span>
             {isFallback && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/30">
                 Demo data (backend unavailable)
               </span>
             )}
@@ -75,9 +78,9 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
               <Info size={13} className="text-[#747F9C] cursor-help hover:text-[#A9B2C8]" />
             </Tooltip>
           </div>
-          <p className="text-xs text-[#A9B2C8] mt-0.5">Adaptive blending weights</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary, #566075)' }}>Adaptive blending weights</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30">
+        <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30">
           <TrendingUp size={13} />
           Dynamic
         </div>
@@ -113,10 +116,10 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: w.color, boxShadow: `0 0 6px ${w.color}` }}
                 />
-                <span className="text-sm font-medium text-[#F3F5FA]">{w.name}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--text-primary, #14213d)' }}>{w.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-[#747F9C]">
+                <span className="text-xs" style={{ color: 'var(--text-muted, #747F9C)' }}>
                   {w.rmse !== null && w.rmse !== undefined ? `RMSE ${w.rmse}` : 'RMSE —'}
                 </span>
                 <span className="text-sm font-bold" style={{ color: w.color }}>{w.weight}%</span>
@@ -124,7 +127,7 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
             </div>
             <div
               className="h-1.5 rounded-full overflow-hidden"
-              style={{ background: 'rgba(255, 255, 255, 0.08)' }}
+              style={{ background: 'var(--card-sub-border, rgba(255, 255, 255, 0.08))' }}
             >
               <div
                 className="h-full rounded-full"
@@ -143,10 +146,13 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
       {/* NCMRWF note */}
       <div
         className="mt-5 rounded-xl px-3.5 py-3"
-        style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(220, 225, 255, 0.10)' }}
+        style={{
+          background: 'var(--card-sub-bg, rgba(255, 255, 255, 0.04))',
+          border: 'var(--card-sub-border, 1px solid rgba(220, 225, 255, 0.10))'
+        }}
       >
-        <p className="text-xs text-[#A9B2C8]">
-          <span className="font-bold text-sky-300">Hybrid (Final)</span> applies Random Forest residual correction on top of the 4 NWP consensus weights for localized precision.
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary, #566075)' }}>
+          <span className="font-bold text-sky-700 dark:text-sky-300">Hybrid (Final)</span> applies Random Forest residual correction on top of the 4 NWP consensus weights for localized precision.
         </p>
       </div>
     </GlassCard>
