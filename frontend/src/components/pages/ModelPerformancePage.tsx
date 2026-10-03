@@ -1,11 +1,24 @@
 'use client';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { ModelSkillPanel } from '@/components/ModelSkill';
-import { PerformanceMatrix3D } from '@/components/PerformanceMatrix3D';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { BarChart3, CloudRain, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getSkillMetricsData, getContingencyMetrics, DEFAULT_CONTINGENCY_METRICS } from '@/lib/api';
 import type { SkillMetric, ContingencyMetricRecord } from '@/types';
+
+const PerformanceMatrix3D = dynamic(
+  () => import('@/components/PerformanceMatrix3D').then((m) => m.PerformanceMatrix3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[520px] rounded-2xl bg-white/[0.04] backdrop-blur-md flex flex-col items-center justify-center text-[#A9B2C8] gap-3 border border-white/10">
+        <div className="w-10 h-10 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
+        <span className="text-xs font-medium tracking-wide text-[#F3F5FA]">Initializing 3D Performance Matrix…</span>
+      </div>
+    ),
+  }
+);
 
 export function ModelPerformancePage() {
   const [metrics, setMetrics] = useState<SkillMetric[]>([]);
