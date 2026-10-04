@@ -36,18 +36,27 @@ INTERIM_DIR = OUTPUTS_DIR / "interim"
 CITIES_CSV = DATA_DIR / "cities.csv"
 FORECAST_CURR_CSV = DATA_DIR / "forecast_current.csv"
 CLEAN_FC_CSV = INTERIM_DIR / "forecast_current_clean.csv"
-WEIGHTS_CSV = OUTPUTS_DIR / "model_weights_lead.csv"
+WEIGHTS_CSV = OUTPUTS_DIR / "model_weights_6model.csv"
 BLENDED_CSV = OUTPUTS_DIR / "blended_forecast.csv"
 HYBRID_CSV = OUTPUTS_DIR / "hybrid_forecast.csv"
 METADATA_JSON = OUTPUTS_DIR / "metadata.json"
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
-MODELS_API = ["ecmwf_ifs025", "gfs_seamless", "icon_seamless", "gem_seamless"]
+MODELS_API = [
+    "ecmwf_ifs025",
+    "gfs_seamless",
+    "icon_seamless",
+    "gem_seamless",
+    "ukmo_seamless",
+    "jma_seamless",
+]
 MODEL_MAP = {
     "ecmwf_ifs025": "ecmwf",
     "gfs_seamless": "gfs",
     "icon_seamless": "icon",
     "gem_seamless": "gem",
+    "ukmo_seamless": "ukmo",
+    "jma_seamless": "jma",
 }
 VARIABLES = ["temperature", "rainfall", "wind_speed"]
 
@@ -277,6 +286,13 @@ def run_preprocessing(df_raw):
                 f"Preprocessing error: Missing data in column '{col}' after (city, model) ffill/bfill for: {culprits}"
             )
 
+    # Precipitation artifact guard (e.g. JMA slight negative floating values)
+    neg_rain_mask = df["rainfall"] < 0
+    if neg_rain_mask.any():
+        if (df.loc[neg_rain_mask, "rainfall"] <= -0.5).any():
+            raise RuntimeError("Preprocessing error: Rainfall <= -0.5 in fresh forecast.")
+        df["rainfall"] = np.maximum(0.0, df["rainfall"])
+
     INTERIM_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(CLEAN_FC_CSV, index=False, date_format="%Y-%m-%d %H:%M:%S")
     print(f"[CacheManager] Saved cleaned forecast to {CLEAN_FC_CSV}")
@@ -315,7 +331,7 @@ def run_adaptive_weighting():
 
     # 3. Pivot weights and compute weighted blend
     df_blended = df_wide.copy()
-    models_short = ["ecmwf", "gfs", "icon", "gem"]
+    models_short = ["ecmwf", "gfs", "icon", "gem", "ukmo", "jma"]
 
     for var in VARIABLES:
         w_pivot = df_weights[df_weights["variable"] == var].pivot(
@@ -348,9 +364,9 @@ def run_adaptive_weighting():
     df_out.to_csv(BLENDED_CSV, index=False)
     print(f"[CacheManager] Successfully generated {BLENDED_CSV} ({len(df_out)} rows)")
 
-    # Generate hybrid_forecast.csv using trained Random Forest models from ai/predict.py
-    print("[CacheManager] Generating hybrid_forecast.csv with Random Forest residual corrections...")
-    from ai.predict import build_current_features, predict_hybrid, FEATURE_COLS
+    # Generate hybrid_forecast.csv using trained Random Forest models from ai/predict_6model.py
+    print("[CacheManager] Generating hybrid_forecast.csv with Random Forest residual corrections (6-model)...")
+    from ai.predict_6model import build_current_features, predict_hybrid, FEATURE_COLS
 
     orig_cwd = os.getcwd()
     try:
@@ -478,10 +494,10 @@ def regenerate_forecast():
     """
     Complete regeneration pipeline:
     1. Fetch fresh Open-Meteo forecasts for all 45 cities.
-    2. Fetch all four models (ECMWF, GFS, ICON, GEM).
+    2. Fetch all six models (ECMWF, GFS, ICON, GEM, UKMO, JMA).
     3. Run existing preprocessing.
-    4. Run existing adaptive weighting.
-    5. Generate new blended_forecast.csv.
+    4. Run existing adaptive weighting (6-model).
+    5. Generate new blended_forecast.csv and hybrid_forecast.csv.
     6. Save metadata.json for caching.
     """
     with _refresh_lock:
@@ -491,7 +507,10 @@ def regenerate_forecast():
             return load_metadata() or {
                 "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
                 "cities": 45,
-                "models": 4
+                "models": 6,
+                "city_count": 45,
+                "model_count": 6,
+                "model_names": ["ECMWF", "GFS", "ICON", "GEM", "UKMO", "JMA"]
             }
 
         print("[CacheManager] Starting forecast regeneration pipeline...")
@@ -515,7 +534,8 @@ def regenerate_forecast():
             "cities": city_count,
             "models": model_count,
             "city_count": city_count,
-            "model_count": model_count
+            "model_count": model_count,
+            "model_names": ["ECMWF", "GFS", "ICON", "GEM", "UKMO", "JMA"]
         }
         save_metadata(metadata)
         print(f"[CacheManager] Auto-refresh complete at {timestamp}!")
@@ -538,9 +558,10 @@ def ensure_fresh_forecast(force=False):
             meta = {
                 "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
                 "cities": 45,
-                "models": 4,
+                "models": 6,
                 "city_count": 45,
-                "model_count": 4
+                "model_count": 6,
+                "model_names": ["ECMWF", "GFS", "ICON", "GEM", "UKMO", "JMA"]
             }
             save_metadata(meta)
         return meta

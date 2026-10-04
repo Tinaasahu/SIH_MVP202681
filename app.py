@@ -245,9 +245,10 @@ def get_metadata():
         meta = {
             "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
             "cities": 45,
-            "models": 4,
+            "models": 6,
             "city_count": 45,
-            "model_count": 4
+            "model_count": 6,
+            "model_names": ["ECMWF", "GFS", "ICON", "GEM", "UKMO", "JMA"]
         }
     return jsonify(meta)
 
@@ -269,7 +270,7 @@ def admin_refresh():
             "status": "refreshed",
             "last_updated": meta.get("last_updated") if meta else None,
             "cities": meta.get("cities") if meta else 45,
-            "models": meta.get("models") if meta else 4
+            "models": meta.get("models") if meta else 6
         }), 200
     except Exception as e:
         return jsonify({"error": f"Forecast refresh failed: {str(e)}"}), 500
@@ -497,10 +498,12 @@ def get_weights():
       - variable: filter by variable ('temperature', 'rainfall', 'wind_speed')
       - lead_days: filter by lead_days (1, 2, 3)
     """
-    csv_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
+    csv_path = os.path.join(OUTPUTS_DIR, "model_weights_6model.csv")
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
     records = load_csv_records(csv_path)
     if records is None:
-        return jsonify({"error": "model_weights_lead.csv not found"}), 404
+        return jsonify({"error": "model_weights_6model.csv not found"}), 404
 
     city = request.args.get('city')
     variable = request.args.get('variable')
@@ -729,14 +732,16 @@ def get_rpi():
     forecast_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
     confidence_path = os.path.join(OUTPUTS_DIR, "confidence_scores.csv")
     cities_path = os.path.join(DATA_DIR, "cities.csv")
-    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
+    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_6model.csv")
+    if not os.path.exists(weights_path):
+        weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []
     city_records = load_csv_records(cities_path) or []
     weights_records = load_csv_records(weights_path) or []
 
-    # Calculate real model weights per city from model_weights_lead.csv
+    # Calculate real model weights per city from model_weights_6model.csv
     city_weights_raw = {}
     for wr in weights_records:
         w_city = str(wr.get('city', '')).strip().lower()
@@ -844,7 +849,7 @@ def get_rpi():
             confidence_badge = None
             action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
 
-        # Real model weights from outputs/model_weights_lead.csv
+        # Real model weights from outputs/model_weights_6model.csv
         real_w = city_model_weights.get(c_key)
         if real_w and len(real_w) >= 4:
             weights = real_w
@@ -854,7 +859,7 @@ def get_rpi():
             dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
             if dom_model == 'AI':
                 dom_model = 'ECMWF'
-            weights = {'ecmwf': 30.5, 'icon': 28.0, 'gfs': 21.5, 'gem': 20.0}
+            weights = {'ecmwf': 22.0, 'icon': 18.0, 'gfs': 16.0, 'gem': 15.0, 'ukmo': 15.0, 'jma': 14.0}
 
         # Real-time quantitative resource estimations based on synoptic thresholds
         # Real-time quantitative resource estimations based on synoptic thresholds for all 3 disaster domains
@@ -1120,7 +1125,9 @@ def get_rpi_map():
     forecast_path = os.path.join(OUTPUTS_DIR, "hybrid_forecast.csv")
     confidence_path = os.path.join(OUTPUTS_DIR, "confidence_scores.csv")
     cities_path = os.path.join(DATA_DIR, "cities.csv")
-    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
+    weights_path = os.path.join(OUTPUTS_DIR, "model_weights_6model.csv")
+    if not os.path.exists(weights_path):
+        weights_path = os.path.join(OUTPUTS_DIR, "model_weights_lead.csv")
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []

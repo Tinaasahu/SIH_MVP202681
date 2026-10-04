@@ -115,13 +115,13 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
           </div>
           <p className="text-sm text-slate-600 leading-relaxed">
             {conf?.explanation ||
-              "Hybrid (Final) applies Random Forest residual correction on top of dynamically weighted NWP forecasts (ECMWF, GFS, ICON, GEM) based on lead-time historical skill."}
+              "Hybrid (Final) applies Random Forest residual correction on top of dynamically weighted NWP forecasts (ECMWF, GFS, ICON, GEM, UKMO, JMA) based on lead-time historical skill."}
           </p>
         </div>
 
         {/* Disclaimer */}
         <p className="text-xs text-slate-400 leading-relaxed">
-          This forecast is based on dynamic blending of 4 NWP models with Random Forest AI residual correction. It is intended for decision-support and should not replace official NCMRWF operational guidance.
+          This forecast is based on dynamic blending of 6 NWP models with Random Forest AI residual correction. It is intended for decision-support and should not replace official NCMRWF operational guidance.
         </p>
       </div>
     </Modal>

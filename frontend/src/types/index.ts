@@ -219,6 +219,8 @@ export interface RpiData {
     icon: number;
     gfs: number;
     gem: number;
+    ukmo?: number;
+    jma?: number;
   };
   recommendations: ResourceAction[];
   updatedAt: string;

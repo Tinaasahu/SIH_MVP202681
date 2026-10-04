@@ -23,6 +23,8 @@ MODEL_MAP = {
     'gfs_seamless': 'gfs',
     'icon_seamless': 'icon',
     'gem_seamless': 'gem',
+    'ukmo_seamless': 'ukmo',
+    'jma_seamless': 'jma',
 }
 
 # Lead day scoring lookup: Day 1 -> 100, Day 2 -> 80, Day 3 -> 60, Day 4 -> 50, Day 5 -> 40, Day 6 -> 30
@@ -98,25 +100,29 @@ def std_to_agreement(std_dev: float | np.ndarray) -> float | np.ndarray:
 
 def compute_agreement_scores(
     hybrid_forecast_path: str,
-    forecast_current_path: str = 'data/forecast_current.csv'
+    forecast_current_path: str = 'data/forecast_current_6model.csv'
 ) -> pd.DataFrame:
     """
     Step 2: Agreement Score
     For every city and datetime:
-      Collects predictions from ECMWF, GFS, ICON, GEM.
+      Collects predictions from ECMWF, GFS, ICON, GEM, UKMO, JMA.
       Calculates standard deviation of temperature, rainfall, and wind speed.
       Converts agreement into 0-100 using continuous interpolation.
       Computes composite agreement score across the variables.
     Returns DataFrame with [city, datetime, agreement_score].
     """
-    # 1. Load multi-model forecasts (ECMWF, GFS, ICON, GEM)
-    if os.path.exists(forecast_current_path):
-        df_models = pd.read_csv(forecast_current_path)
-        if 'model' in df_models.columns:
-            df_models['model'] = df_models['model'].replace(MODEL_MAP)
-        df_models['datetime'] = pd.to_datetime(df_models['datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
-    else:
-        raise FileNotFoundError(f"Multi-model forecast file not found: {forecast_current_path}")
+    # 1. Load multi-model forecasts (ECMWF, GFS, ICON, GEM, UKMO, JMA)
+    if not os.path.exists(forecast_current_path):
+        fallback_path = 'data/forecast_current.csv'
+        if os.path.exists(fallback_path):
+            forecast_current_path = fallback_path
+        else:
+            raise FileNotFoundError(f"Multi-model forecast file not found: {forecast_current_path}")
+
+    df_models = pd.read_csv(forecast_current_path)
+    if 'model' in df_models.columns:
+        df_models['model'] = df_models['model'].replace(MODEL_MAP)
+    df_models['datetime'] = pd.to_datetime(df_models['datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
 
     # Standardize column naming for wind
     wind_col = 'wind_speed' if 'wind_speed' in df_models.columns else 'wind'
@@ -261,9 +267,15 @@ def generate_confidence_dataset(
       8. Exports outputs/confidence_scores.csv
     """
     hybrid_path = os.path.join(output_dir, 'hybrid_forecast.csv')
-    weights_path = os.path.join(output_dir, 'model_weights_lead.csv')
-    skill_path = os.path.join(output_dir, 'skill_scores_lead.csv')
-    current_path = os.path.join(data_dir, 'forecast_current.csv')
+    weights_path = os.path.join(output_dir, 'model_weights_6model.csv')
+    if not os.path.exists(weights_path):
+        weights_path = os.path.join(output_dir, 'model_weights_lead.csv')
+    skill_path = os.path.join(output_dir, 'skill_scores_6model.csv')
+    if not os.path.exists(skill_path):
+        skill_path = os.path.join(output_dir, 'skill_scores_lead.csv')
+    current_path = os.path.join(data_dir, 'forecast_current_6model.csv')
+    if not os.path.exists(current_path):
+        current_path = os.path.join(data_dir, 'forecast_current.csv')
 
     # Read base target hybrid forecast
     df_hybrid = pd.read_csv(hybrid_path)

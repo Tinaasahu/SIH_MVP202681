@@ -15,6 +15,8 @@ const DATA_SOURCES_CONFIG = [
   { id: 'gfs', name: 'GFS Seamless', status: 'healthy' as const },
   { id: 'icon', name: 'ICON Seamless', status: 'healthy' as const },
   { id: 'gem', name: 'GEM Seamless', status: 'healthy' as const },
+  { id: 'ukmo', name: 'UKMO Seamless', status: 'healthy' as const },
+  { id: 'jma', name: 'JMA Seamless', status: 'healthy' as const },
   { id: 'era5', name: 'ERA5 Reanalysis (Reference)', status: 'reference' as const },
 ];
 

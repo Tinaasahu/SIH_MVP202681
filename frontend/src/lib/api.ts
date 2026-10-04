@@ -838,6 +838,8 @@ export async function getModelWeightsData(city: string = 'Kanpur', variable: str
       gfs: { name: 'GFS Seamless', color: '#6366f1' },
       icon: { name: 'ICON Seamless', color: '#10b981' },
       gem: { name: 'GEM Seamless', color: '#8b5cf6' },
+      ukmo: { name: 'UKMO Seamless', color: '#06b6d4' },
+      jma: { name: 'JMA Seamless', color: '#ec4899' },
     };
 
     const totalWeight = weights.reduce((sum, w) => sum + (w.weight || 0), 0) || 1;
@@ -890,6 +892,8 @@ export async function getModelComparisonData(city: string = 'Kanpur'): Promise<M
     const gfs = getModelRow('gfs');
     const icon = getModelRow('icon');
     const gem = getModelRow('gem');
+    const ukmo = getModelRow('ukmo');
+    const jma = getModelRow('jma');
     const hybrid = getModelRow('hybrid');
 
     const result: ModelComparison[] = [];
@@ -904,6 +908,12 @@ export async function getModelComparisonData(city: string = 'Kanpur'): Promise<M
     }
     if (gem) {
       result.push({ model: 'GEM Seamless', rainfall: Math.round((gem.rainfall ?? 0) * 10) / 10, temperature: Math.round((gem.temperature ?? 0) * 10) / 10, wind: Math.round((gem.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (ukmo) {
+      result.push({ model: 'UKMO Seamless', rainfall: Math.round((ukmo.rainfall ?? 0) * 10) / 10, temperature: Math.round((ukmo.temperature ?? 0) * 10) / 10, wind: Math.round((ukmo.wind_speed ?? 0) * 10) / 10 });
+    }
+    if (jma) {
+      result.push({ model: 'JMA Seamless', rainfall: Math.round((jma.rainfall ?? 0) * 10) / 10, temperature: Math.round((jma.temperature ?? 0) * 10) / 10, wind: Math.round((jma.wind_speed ?? 0) * 10) / 10 });
     }
     if (hybrid) {
       result.push({ model: 'Hybrid (Final)', rainfall: Math.round((hybrid.rainfall ?? 0) * 10) / 10, temperature: Math.round((hybrid.temperature ?? 0) * 10) / 10, wind: Math.round((hybrid.wind_speed ?? 0) * 10) / 10, isBlended: true });
@@ -1537,18 +1547,22 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
 
   let domModel = confRecords && confRecords.length > 0 ? confRecords[0].dominant_model : matchCity.dominantModel || 'ECMWF';
   if (domModel === 'AI') domModel = 'ECMWF';
-  if (!['ECMWF', 'ICON', 'GFS', 'GEM'].includes(domModel)) {
+  if (!['ECMWF', 'ICON', 'GFS', 'GEM', 'UKMO', 'JMA'].includes(domModel)) {
     domModel = rain > 45 ? 'ECMWF' : temp > 35 ? 'ICON' : 'GFS';
   }
 
   const weights =
     domModel === 'ECMWF'
-      ? { ecmwf: 45, icon: 25, gfs: 18, gem: 12 }
+      ? { ecmwf: 35, icon: 18, gfs: 15, gem: 12, ukmo: 10, jma: 10 }
       : domModel === 'ICON'
-      ? { ecmwf: 25, icon: 45, gfs: 18, gem: 12 }
+      ? { ecmwf: 18, icon: 35, gfs: 15, gem: 12, ukmo: 10, jma: 10 }
       : domModel === 'GFS'
-      ? { ecmwf: 20, icon: 22, gfs: 46, gem: 12 }
-      : { ecmwf: 22, icon: 20, gfs: 18, gem: 40 };
+      ? { ecmwf: 15, icon: 15, gfs: 35, gem: 15, ukmo: 10, jma: 10 }
+      : domModel === 'GEM'
+      ? { ecmwf: 15, icon: 15, gfs: 15, gem: 35, ukmo: 10, jma: 10 }
+      : domModel === 'UKMO'
+      ? { ecmwf: 15, icon: 15, gfs: 12, gem: 10, ukmo: 36, jma: 12 }
+      : { ecmwf: 15, icon: 15, gfs: 12, gem: 10, ukmo: 12, jma: 36 };
 
   const recs = generateResourceRecommendations(matchCity.city, rain, temp, wind);
 
@@ -1641,15 +1655,22 @@ export async function getAllRpiData(): Promise<RpiData[]> {
     if (domModel === 'AI' || domModel === 'Ensemble') {
       domModel = rain > 50 ? 'ECMWF' : temp > 34 ? 'ICON' : 'GFS';
     }
+    if (!['ECMWF', 'ICON', 'GFS', 'GEM', 'UKMO', 'JMA'].includes(domModel)) {
+      domModel = rain > 45 ? 'ECMWF' : temp > 35 ? 'ICON' : 'GFS';
+    }
 
     const weights =
       domModel === 'ECMWF'
-        ? { ecmwf: 45, icon: 25, gfs: 18, gem: 12 }
+        ? { ecmwf: 35, icon: 18, gfs: 15, gem: 12, ukmo: 10, jma: 10 }
         : domModel === 'ICON'
-        ? { ecmwf: 25, icon: 45, gfs: 18, gem: 12 }
+        ? { ecmwf: 18, icon: 35, gfs: 15, gem: 12, ukmo: 10, jma: 10 }
         : domModel === 'GFS'
-        ? { ecmwf: 20, icon: 22, gfs: 46, gem: 12 }
-        : { ecmwf: 22, icon: 20, gfs: 18, gem: 40 };
+        ? { ecmwf: 15, icon: 15, gfs: 35, gem: 15, ukmo: 10, jma: 10 }
+        : domModel === 'GEM'
+        ? { ecmwf: 15, icon: 15, gfs: 15, gem: 35, ukmo: 10, jma: 10 }
+        : domModel === 'UKMO'
+        ? { ecmwf: 15, icon: 15, gfs: 12, gem: 10, ukmo: 36, jma: 12 }
+        : { ecmwf: 15, icon: 15, gfs: 12, gem: 10, ukmo: 12, jma: 36 };
 
     return {
       city: c.city,

@@ -152,7 +152,7 @@ export function ModelContribution({ selectedCity = 'Kanpur' }: ModelContribution
         }}
       >
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary, #566075)' }}>
-          <span className="font-bold text-sky-700 dark:text-sky-300">Hybrid (Final)</span> applies Random Forest residual correction on top of the 4 NWP consensus weights for localized precision.
+          <span className="font-bold text-sky-700 dark:text-sky-300">Hybrid (Final)</span> applies Random Forest residual correction on top of the 6 NWP consensus weights for localized precision.
         </p>
       </div>
     </GlassCard>

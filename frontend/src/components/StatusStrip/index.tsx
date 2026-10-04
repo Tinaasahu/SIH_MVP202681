@@ -120,7 +120,7 @@ export function StatusStrip() {
 
   const formattedDate = metadata?.last_updated ? formatStatusStripDate(metadata.last_updated) : null;
   const cityCount = metadata ? (metadata.cities || metadata.city_count || 45) : null;
-  const modelCount = metadata ? (metadata.models || metadata.model_count || 4) : null;
+  const modelCount = metadata ? (metadata.models || metadata.model_count || 6) : null;
 
   return (
     <div
@@ -231,10 +231,10 @@ export function StatusStrip() {
               <div className="font-bold text-[#F3F5FA]">
                 {modelCount !== null ? (
                   <>
-                    {modelCount} <span className="font-medium text-[#A9B2C8]">(ECMWF, GFS, ICON, GEM)</span>
+                    {modelCount} <span className="font-medium text-[#A9B2C8]">(ECMWF, GFS, ICON, GEM, UKMO, JMA)</span>
                   </>
                 ) : isError ? (
-                  '4 (ECMWF, GFS, ICON, GEM)'
+                  '6 (ECMWF, GFS, ICON, GEM, UKMO, JMA)'
                 ) : (
                   <span className="inline-block w-14 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading models count" />
                 )}
