@@ -543,6 +543,10 @@ export function PerformanceMatrix3D() {
     return bests;
   }, [matrix]);
 
+  const isRainfall = matrix?.variable?.toLowerCase() === 'rainfall';
+  const hybrid24hRmse = matrix?.cells.find((c) => c.model === 'Hybrid (Final)' && c.leadIndex === 0)?.rmse.toFixed(3);
+  const ecmwf24hRmse = matrix?.cells.find((c) => c.model === 'ECMWF IFS' && c.leadIndex === 0)?.rmse.toFixed(3);
+
   return (
     <GlassCard padding="md" variant="blue">
       {/* Header */}
@@ -754,15 +758,22 @@ export function PerformanceMatrix3D() {
         >
           <CheckCircle2 size={15} className="text-sky-600 dark:text-sky-400 mt-0.5 shrink-0" />
           <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text-primary, #14213d)' }}>
-            <strong>Verification Takeaway:</strong> Hybrid AI–RF achieves the lowest RMSE error across all 3 lead times for {matrix.variable.toLowerCase()} (
+            <strong>Verification Takeaway:</strong> Hybrid AI–RF achieves the lowest RMSE across all lead times for {matrix.variable.toLowerCase()} (
             <span className="font-bold text-sky-700 dark:text-sky-300">
-              {matrix.cells.find((c) => c.model === 'Hybrid (Final)' && c.leadIndex === 0)?.rmse.toFixed(4)} {matrix.unit}
+              {hybrid24hRmse} {matrix.unit}
             </span>{' '}
             at 24h vs{' '}
             <span style={{ color: 'var(--text-secondary, #566075)' }}>
-              {matrix.cells.find((c) => c.model === 'ECMWF IFS' && c.leadIndex === 0)?.rmse.toFixed(4)} {matrix.unit}
+              {ecmwf24hRmse} {matrix.unit}
             </span>{' '}
-            for ECMWF IFS), proving systematic bias reduction over physics-only NWP models.
+            for ECMWF)
+            {isRainfall ? (
+              <>
+                {' '}and the highest event detection rate (POD 90.8% vs 78.6%), making it the most sensitive system for catching real rain events. However, a higher false-alarm rate (FAR 48.9% vs 37.4%) gives ECMWF alone a higher threat score (CSI 0.5345 vs 0.4860) when false alarms are penalized equally. In a disaster-management context, the higher recall of Hybrid AI–RF is prioritized to prevent missed floods, but this trade-off is made transparent rather than hidden.
+              </>
+            ) : (
+              <>, proving systematic bias reduction over physics-only NWP models.</>
+            )}
           </p>
         </div>
       )}

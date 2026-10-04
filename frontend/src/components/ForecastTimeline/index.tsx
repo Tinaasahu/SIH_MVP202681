@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, ReferenceLine
@@ -7,8 +7,7 @@ import {
 import { GlassCard } from '@/components/ui/GlassCard';
 import { getTimelineData, MOCK_TIMELINE } from '@/lib/api';
 import type { TimelinePoint, Variable } from '@/types';
-import { Calendar, TrendingUp } from 'lucide-react';
-import { useEffect } from 'react';
+import { Calendar } from 'lucide-react';
 
 const VARIABLE_CONFIG: Record<Variable, {
   label: string;
@@ -17,17 +16,8 @@ const VARIABLE_CONFIG: Record<Variable, {
   key: string;
   uncertaintyHigh?: string;
   uncertaintyLow?: string;
-  domain?: [number | string | ((val: number) => number), number | string | ((val: number) => number)];
+  domain: [number | string | ((val: number) => number), number | string | ((val: number) => number)];
 }> = {
-  rainfall: {
-    label: 'Rainfall',
-    unit: 'mm',
-    color: '#0284c7',
-    key: 'rainfall',
-    uncertaintyHigh: 'rainfallUncertaintyHigh',
-    uncertaintyLow: 'rainfallUncertaintyLow',
-    domain: [0, 'auto'],
-  },
   temperature: {
     label: 'Temperature',
     unit: '°C',
@@ -35,7 +25,26 @@ const VARIABLE_CONFIG: Record<Variable, {
     key: 'temperature',
     uncertaintyHigh: 'temperatureUncertaintyHigh',
     uncertaintyLow: 'temperatureUncertaintyLow',
-    domain: [(min: number) => Math.max(0, Math.floor(min - 3)), (max: number) => Math.ceil(max + 3)],
+    domain: [
+      (min: number) => (isFinite(min) ? Math.max(0, Math.floor(min - 2)) : 15),
+      (max: number) => (isFinite(max) ? Math.ceil(max + 2) : 40),
+    ],
+  },
+  rainfall: {
+    label: 'Rainfall',
+    unit: 'mm',
+    color: '#0284c7',
+    key: 'rainfall',
+    uncertaintyHigh: 'rainfallUncertaintyHigh',
+    uncertaintyLow: 'rainfallUncertaintyLow',
+    domain: [
+      0,
+      (max: number) => {
+        if (!isFinite(max) || max <= 0) return 5;
+        if (max <= 2) return 5;
+        return Math.ceil(max * 1.25);
+      },
+    ],
   },
   wind: {
     label: 'Wind Speed',
@@ -44,7 +53,13 @@ const VARIABLE_CONFIG: Record<Variable, {
     key: 'wind',
     uncertaintyHigh: 'windUncertaintyHigh',
     uncertaintyLow: 'windUncertaintyLow',
-    domain: [0, 'auto'],
+    domain: [
+      0,
+      (max: number) => {
+        if (!isFinite(max) || max <= 0) return 20;
+        return Math.max(20, Math.ceil(max * 1.25));
+      },
+    ],
   },
 };
 
@@ -56,7 +71,7 @@ const CustomTooltip = ({
   variable,
 }: {
   active?: boolean;
-  payload?: Array<{ value: number; name: string }>;
+  payload?: Array<{ value: any; name?: string; dataKey?: any }>;
   label?: string;
   dataList?: TimelinePoint[];
   variable?: Variable;
@@ -64,8 +79,15 @@ const CustomTooltip = ({
   if (!active || !payload?.length) return null;
   const list = dataList || MOCK_TIMELINE;
   const data = list.find(t => t.time === label);
-  const cfg = variable ? VARIABLE_CONFIG[variable] : VARIABLE_CONFIG.rainfall;
-  const val = data ? (data[cfg.key as keyof typeof data] as number) : payload[0].value;
+  const cfg = variable ? VARIABLE_CONFIG[variable] : VARIABLE_CONFIG.temperature;
+
+  let val: number;
+  if (data && typeof data[cfg.key as keyof typeof data] === 'number') {
+    val = data[cfg.key as keyof typeof data] as number;
+  } else {
+    const valItem = payload.find(p => p.dataKey === 'value')?.value ?? payload[0].value;
+    val = Array.isArray(valItem) ? valItem[0] : (typeof valItem === 'number' ? valItem : 0);
+  }
 
   let high: number | undefined;
   let low: number | undefined;
@@ -91,13 +113,13 @@ const CustomTooltip = ({
       </div>
       <div className="flex items-baseline gap-1.5">
         <span className="text-xl font-bold text-[#F3F5FA]">
-          {typeof val === 'number' ? val.toFixed(1) : val}
+          {typeof val === 'number' ? (val < 1 && val > 0 ? val.toFixed(2) : val.toFixed(1)) : val}
         </span>
         <span className="text-xs font-semibold text-[#A9B2C8]">{cfg.unit}</span>
       </div>
       {hasSpread ? (
         <div className="text-[10px] text-[#A9B2C8] font-medium mt-1">
-          Uncertainty: {low?.toFixed(1)} – {high?.toFixed(1)} {cfg.unit}
+          Spread: {low?.toFixed(1)} – {high?.toFixed(1)} {cfg.unit}
         </div>
       ) : (
         <div className="text-[10px] text-[#747F9C] font-medium mt-1">
@@ -118,7 +140,7 @@ interface ForecastTimelineProps {
 }
 
 export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelineProps) {
-  const [variable, setVariable] = useState<Variable>('rainfall');
+  const [variable, setVariable] = useState<Variable>('temperature');
   const [timeline, setTimeline] = useState<TimelinePoint[]>(MOCK_TIMELINE);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -154,14 +176,25 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
 
   const config = VARIABLE_CONFIG[variable];
 
-  const chartData = timeline.map(t => ({
-    time: t.time,
-    label: t.label,
-    value: t[config.key as keyof typeof t] as number,
-    high: config.uncertaintyHigh ? t[config.uncertaintyHigh as keyof typeof t] as number : undefined,
-    low: config.uncertaintyLow ? t[config.uncertaintyLow as keyof typeof t] as number : undefined,
-    confidence: t.confidence,
-  }));
+  const chartData = timeline.map(t => {
+    const val = t[config.key as keyof typeof t] as number;
+    const high = config.uncertaintyHigh ? (t[config.uncertaintyHigh as keyof typeof t] as number) : undefined;
+    const low = config.uncertaintyLow ? (t[config.uncertaintyLow as keyof typeof t] as number) : undefined;
+    const hasSpread = high !== undefined && low !== undefined && high > low;
+
+    return {
+      time: t.time,
+      label: t.label,
+      value: val,
+      high,
+      low,
+      uncertaintyRange: hasSpread ? [low, high] : undefined,
+      hasSpread,
+      confidence: t.confidence,
+    };
+  });
+
+  const anySpread = chartData.some(d => d.hasSpread);
 
   return (
     <GlassCard padding="md" variant="default">
@@ -177,6 +210,9 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             >
               FORECAST TIMELINE
             </span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
+              {selectedCity || 'Kanpur'}
+            </span>
             {isFallback && (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40">
                 Demo data (backend unavailable)
@@ -184,7 +220,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             )}
           </div>
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #566075)' }}>
-            72-Hour Continuous Outlook with Adaptive AI Uncertainty Bands
+            Multi-Lead Outlook with Adaptive AI Uncertainty Bands
           </p>
         </div>
 
@@ -209,15 +245,11 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
 
       <div className="w-full h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 16, bottom: 0, left: -10 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 16, bottom: 0, left: 4 }}>
             <defs>
               <linearGradient id={`grad-${variable}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={config.color} stopOpacity={0.35} />
-                <stop offset="95%" stopColor={config.color} stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="uncertainty-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={config.color} stopOpacity={0.2} />
-                <stop offset="95%" stopColor={config.color} stopOpacity={0.04} />
+                <stop offset="0%" stopColor={config.color} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={config.color} stopOpacity={0.0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--card-sub-border, rgba(255,255,255,0.08))" />
@@ -227,38 +259,30 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
               tick={{ fontSize: 11, fill: 'var(--text-secondary, #566075)' }}
               axisLine={false}
               tickLine={false}
-              unit={config.unit === 'mm' ? ' mm' : ` ${config.unit}`}
+              unit={` ${config.unit}`}
+              width={42}
             />
             <ReTooltip content={<CustomTooltip dataList={timeline} variable={variable} />} />
             <ReferenceLine x="NOW" stroke={config.color} strokeDasharray="3 3" opacity={0.7} />
-            {config.uncertaintyHigh && (
+            {config.uncertaintyHigh && anySpread && (
               <Area
                 type="monotone"
-                dataKey="high"
+                dataKey="uncertaintyRange"
                 stroke="none"
-                fill="url(#uncertainty-grad)"
-                fillOpacity={1}
+                fill={config.color}
+                fillOpacity={0.16}
                 tooltipType="none"
-              />
-            )}
-            {config.uncertaintyLow && (
-              <Area
-                type="monotone"
-                dataKey="low"
-                stroke="none"
-                fill="var(--glass-bg, rgba(8, 13, 32, 0.75))"
-                fillOpacity={1}
-                tooltipType="none"
+                isAnimationActive={false}
               />
             )}
             <Area
               type="monotone"
               dataKey="value"
               stroke={config.color}
-              strokeWidth={3}
+              strokeWidth={2.5}
               fill={`url(#grad-${variable})`}
-              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: 'var(--surface, #ffffff)' }}
-              activeDot={{ r: 6, fill: config.color, stroke: 'var(--surface, #ffffff)', strokeWidth: 2 }}
+              dot={{ r: 4, fill: config.color, strokeWidth: 2, stroke: '#ffffff' }}
+              activeDot={{ r: 6, fill: config.color, stroke: '#ffffff', strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -270,7 +294,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
             <div className="w-3.5 h-1 rounded-full" style={{ background: config.color }} />
             <span>Optimal Blended Curve</span>
           </div>
-          {config.uncertaintyHigh && (
+          {config.uncertaintyHigh && anySpread && (
             <div className="flex items-center gap-2">
               <div className="w-3.5 h-2.5 rounded opacity-50" style={{ background: config.color }} />
               <span>Multi-Model Uncertainty Spread</span>
@@ -278,7 +302,7 @@ export function ForecastTimeline({ selectedCity = 'Kanpur' }: ForecastTimelinePr
           )}
         </div>
         <div className="text-xs font-medium" style={{ color: 'var(--text-muted, #747F9C)' }}>
-          Lead Range: 0h – 72h
+          Lead Range: 0h – {timeline[timeline.length - 1]?.time?.replace('+', '') || '48h'}
         </div>
       </div>
     </GlassCard>

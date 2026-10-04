@@ -729,9 +729,18 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       currentIdx = 0;
     }
 
-    // Sample across key forward steps relative to currentIdx: NOW (0h), +6h, +12h, +24h, +48h, +72h
-    const offsets = [0, 6, 12, 24, 48, 71];
-    const timeLabels = ['NOW', '+6h', '+12h', '+24h', '+48h', '+72h'];
+    // Dynamically calculate offsets based on available remaining forecast window
+    const availableRemaining = Math.max(0, records.length - 1 - currentIdx);
+    const offsets = availableRemaining >= 71
+      ? [0, 6, 12, 24, 48, 71]
+      : availableRemaining >= 48
+      ? [0, 6, 12, 24, 36, 48]
+      : [0, Math.floor(availableRemaining * 0.2), Math.floor(availableRemaining * 0.4), Math.floor(availableRemaining * 0.6), Math.floor(availableRemaining * 0.8), availableRemaining];
+
+    const timeLabels = offsets.map((off, idx) => {
+      if (idx === 0) return 'NOW';
+      return `+${off}h`;
+    });
     const stepIndices = offsets.map(off => Math.min(records.length - 1, currentIdx + off));
 
     // Map confidence records by lead_day
@@ -745,7 +754,11 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
     return stepIndices.map((idx, i) => {
       const rec = records[idx] || records[records.length - 1];
       const timeStr = rec.datetime ? rec.datetime.split(' ')[1]?.slice(0, 5) || '00:00' : '00:00';
-      const rain = Math.round((rec.rainfall ?? 0) * 10) / 10;
+      const rawRain = rec.rainfall ?? 0;
+      // Preserve 2 decimal precision for trace rainfall (< 1mm) so subtle variations are visible
+      const rain = rawRain > 0 && rawRain < 1.0
+        ? Math.round(rawRain * 100) / 100
+        : Math.round(rawRain * 10) / 10;
       const temp = Math.round((rec.temperature ?? 30) * 10) / 10;
       const wind = Math.round((rec.wind_speed ?? 15) * 10) / 10;
 
@@ -760,7 +773,6 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       const actualConfidence = Math.max(50, Math.round(baseConf - (leadDay - 1) * 3));
 
       // Dynamic uncertainty bands calculated from model residual spread
-      // RAINFALL: Proportional to actual precipitation. If dry (<= 0.5 mm trace), uncertainty collapses to 0.
       const rainSpread = Math.abs((rec.rainfall ?? 0) - (rec.blend_rainfall ?? 0));
       let rainHigh = rain;
       let rainLow = rain;
@@ -768,6 +780,10 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
         const rainUncertainty = Math.round((rain * (0.2 + 0.08 * leadDay) + Math.min(rainSpread * 0.5, 3)) * 10) / 10;
         rainHigh = Math.round((rain + rainUncertainty) * 10) / 10;
         rainLow = Math.max(0, Math.round((rain - rainUncertainty * 0.7) * 10) / 10);
+      } else if (rain >= 0.2) {
+        const traceSpread = Math.round((0.1 + rainSpread * 0.3) * 10) / 10;
+        rainHigh = Math.round((rain + traceSpread) * 10) / 10;
+        rainLow = Math.max(0, Math.round((rain - traceSpread * 0.5) * 10) / 10);
       }
 
       // TEMPERATURE: Physical bounds ±(0.8 + 0.3 * leadDay + spread)
