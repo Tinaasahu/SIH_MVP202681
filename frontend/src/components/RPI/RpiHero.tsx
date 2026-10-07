@@ -37,25 +37,31 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
   return (
     <GlassCard padding="lg" variant="blue" className="relative overflow-hidden">
       {/* Top Government EOC Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-slate-200/70">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b"
+        style={{ borderColor: 'var(--glass-border, rgba(220, 225, 255, 0.14))' }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-600 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-400 shadow-xs">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold tracking-widest text-slate-800 uppercase" style={{ letterSpacing: '0.12em' }}>
+              <span
+                className="text-xs font-bold tracking-widest uppercase"
+                style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #F3F5FA)' }}
+              >
                 GOVERNMENT EMERGENCY OPERATIONS CENTER (EOC)
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-400/30">
                 MoES / NDMA Module
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+            <div className="flex items-center gap-2 text-xs mt-0.5" style={{ color: 'var(--text-muted, #747F9C)' }}>
               <span>National Disaster Decision Support Framework</span>
               <span>·</span>
               <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-slate-400" />
+                <Calendar className="w-3 h-3 text-sky-400" />
                 Live 24h Synoptic Horizon
               </span>
             </div>
@@ -63,8 +69,15 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
         </div>
 
         {/* EOC Readiness Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-700">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderColor: 'var(--glass-border, rgba(220, 225, 255, 0.14))',
+            color: 'var(--text-primary, #F3F5FA)',
+          }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span>Automated Risk Scoring Active</span>
         </div>
       </div>
@@ -74,14 +87,25 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
         {/* Left Side: Station Identity & RPI Summary (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              TARGET synoptic OBSERVATION STATION
+            <span
+              className="text-[11px] font-bold uppercase tracking-wider block mb-1"
+              style={{ color: 'var(--text-muted, #747F9C)' }}
+            >
+              TARGET SYNOPTIC OBSERVATION STATION
             </span>
             <div className="flex items-baseline gap-2.5">
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              <h1
+                className="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-sm"
+                style={{ color: 'var(--text-primary, #F3F5FA)' }}
+              >
                 {rpiData.city}
               </h1>
-              <span className="text-sm font-semibold text-slate-500">· {rpiData.state}</span>
+              <span
+                className="text-sm font-semibold"
+                style={{ color: 'var(--text-secondary, #A9B2C8)' }}
+              >
+                · {rpiData.state}
+              </span>
             </div>
           </div>
 
@@ -104,8 +128,8 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border shadow-xs ${
                   rpiData.confidence >= 70
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -116,28 +140,52 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
             )}
           </div>
 
-          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+          <p
+            className="text-xs leading-relaxed font-medium"
+            style={{ color: 'var(--text-secondary, #A9B2C8)' }}
+          >
             {palette.sublabel}. Physical hazard severity is independently decoupled from NWP consensus confidence to eliminate hazard dilution.
           </p>
 
           {/* Action Directive Banner */}
           {rpiData.actionDirective && (
-            <div className="px-3.5 py-2.5 rounded-xl bg-slate-900 text-white text-[11.5px] font-semibold flex items-center gap-2.5 shadow-sm border border-slate-800">
+            <div
+              className="px-3.5 py-2.5 rounded-xl text-[11.5px] font-semibold flex items-center gap-2.5 shadow-sm border"
+              style={{
+                background: 'rgba(5, 8, 23, 0.75)',
+                borderColor: 'var(--glass-border, rgba(220, 225, 255, 0.14))',
+                color: 'var(--text-primary, #F3F5FA)',
+              }}
+            >
               <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
               <div className="leading-snug">
                 <span className="text-slate-400 font-mono text-[9.5px] uppercase tracking-wider block">Operational Action Directive:</span>
-                <span className="text-slate-100 font-bold">{rpiData.actionDirective}</span>
+                <span style={{ color: 'var(--text-primary, #F3F5FA)' }} className="font-bold">{rpiData.actionDirective}</span>
               </div>
             </div>
           )}
 
           {/* RPI Formula Reference Banner */}
-          <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-snug">
-            <div className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-blue-600" />
+          <div
+            className="p-3 rounded-xl border text-[11px] leading-snug"
+            style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderColor: 'var(--glass-border, rgba(220, 225, 255, 0.14))',
+              color: 'var(--text-secondary, #A9B2C8)',
+            }}
+          >
+            <div className="font-bold text-[10.5px] uppercase tracking-wider mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+              <Activity className="w-3.5 h-3.5 text-sky-400" />
               <span>Decoupled Sendai / NDMA Operational Formula:</span>
             </div>
-            <code className="text-slate-800 font-mono text-[10px] block bg-white px-2 py-1 rounded border border-slate-200/60 font-semibold">
+            <code
+              className="font-mono text-[10px] block px-2 py-1 rounded border font-semibold"
+              style={{
+                background: 'rgba(0, 0, 0, 0.35)',
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                color: 'var(--text-primary, #F3F5FA)',
+              }}
+            >
               Hazard = 70% Max(Hazard) + 30% Mean(Hazards) · Confidence Gates Red Action
             </code>
           </div>
@@ -152,7 +200,9 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
                 cx="80"
                 cy="80"
                 r={radius}
-                stroke="#e2e8f0"
+                stroke="currentColor"
+                className="text-slate-200 dark:text-white/15"
+                style={{ stroke: 'rgba(255, 255, 255, 0.15)' }}
                 strokeWidth={strokeWidth}
                 fill="none"
               />
@@ -169,13 +219,16 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
                 transition={{ duration: 1.2, ease: 'easeOut' }}
-                style={{ filter: `drop-shadow(0 0 6px ${palette.strokeColor})` }}
+                style={{ filter: `drop-shadow(0 0 8px ${palette.strokeColor})` }}
               />
             </svg>
 
             {/* Inner Center Score Content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span
+                className="text-[10px] font-extrabold uppercase tracking-widest"
+                style={{ color: 'var(--text-secondary, #A9B2C8)' }}
+              >
                 RPI INDEX
               </span>
               <motion.span
@@ -183,38 +236,57 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                className="text-4xl font-black text-slate-900 leading-none my-0.5"
+                className="text-4xl sm:text-5xl font-black leading-none my-1 tracking-tight drop-shadow-md"
+                style={{
+                  color: 'var(--text-primary, #FFFFFF)',
+                  textShadow: '0 2px 14px rgba(0, 0, 0, 0.65)',
+                }}
               >
                 {rpiData.rpiScore}
               </motion.span>
-              <span className="text-[11px] font-bold text-slate-500">
+              <span
+                className="text-[11px] font-bold"
+                style={{ color: 'var(--text-muted, #747F9C)' }}
+              >
                 / 100
               </span>
             </div>
           </div>
-          <span className="text-xs font-semibold text-slate-600 mt-2">
+          <span
+            className="text-xs font-semibold mt-2"
+            style={{ color: 'var(--text-secondary, #A9B2C8)' }}
+          >
             Hazard Index: <strong style={{ color: palette.strokeColor }}>{palette.name.toUpperCase()} ({rpiData.priority})</strong>
           </span>
         </div>
 
         {/* Right Side: Key Synoptic Risk Factors & Decomposition (4 Cols) */}
         <div className="lg:col-span-4 space-y-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+          <span
+            className="text-[11px] font-bold uppercase tracking-wider block mb-1"
+            style={{ color: 'var(--text-muted, #747F9C)' }}
+          >
             HAZARD RISK DECOMPOSITION
           </span>
 
           {/* 1. Rainfall Metric */}
-          <div className="p-3 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+          <div
+            className="p-3 rounded-xl border shadow-xs"
+            style={{
+              background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.55))',
+              borderColor: 'var(--card-sub-border, rgba(220, 225, 255, 0.12))',
+            }}
+          >
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <CloudRain className="w-3.5 h-3.5 text-sky-600" />
+              <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                <CloudRain className="w-3.5 h-3.5 text-sky-400" />
                 Rainfall (35% wt)
               </span>
-              <span className="font-bold text-slate-900 font-mono">
-                {rpiData.rainfall} mm <span className="text-slate-400 font-normal">({rpiData.rainRisk}%)</span>
+              <span className="font-bold font-mono" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                {rpiData.rainfall} mm <span style={{ color: 'var(--text-muted, #747F9C)' }} className="font-normal">({rpiData.rainRisk}%)</span>
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rpiData.rainRisk}%` }}
@@ -225,17 +297,23 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
           </div>
 
           {/* 2. Temperature Metric */}
-          <div className="p-3 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+          <div
+            className="p-3 rounded-xl border shadow-xs"
+            style={{
+              background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.55))',
+              borderColor: 'var(--card-sub-border, rgba(220, 225, 255, 0.12))',
+            }}
+          >
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-orange-500" />
+              <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                <Thermometer className="w-3.5 h-3.5 text-orange-400" />
                 Temperature (25% wt)
               </span>
-              <span className="font-bold text-slate-900 font-mono">
-                {rpiData.temperature}°C <span className="text-slate-400 font-normal">({rpiData.heatRisk}%)</span>
+              <span className="font-bold font-mono" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                {rpiData.temperature}°C <span style={{ color: 'var(--text-muted, #747F9C)' }} className="font-normal">({rpiData.heatRisk}%)</span>
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rpiData.heatRisk}%` }}
@@ -246,17 +324,23 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
           </div>
 
           {/* 3. Wind Metric */}
-          <div className="p-3 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+          <div
+            className="p-3 rounded-xl border shadow-xs"
+            style={{
+              background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.55))',
+              borderColor: 'var(--card-sub-border, rgba(220, 225, 255, 0.12))',
+            }}
+          >
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <Wind className="w-3.5 h-3.5 text-purple-500" />
+              <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                <Wind className="w-3.5 h-3.5 text-purple-400" />
                 Wind Velocity (20% wt)
               </span>
-              <span className="font-bold text-slate-900 font-mono">
-                {rpiData.wind} km/h <span className="text-slate-400 font-normal">({rpiData.windRisk}%)</span>
+              <span className="font-bold font-mono" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                {rpiData.wind} km/h <span style={{ color: 'var(--text-muted, #747F9C)' }} className="font-normal">({rpiData.windRisk}%)</span>
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rpiData.windRisk}%` }}
@@ -267,17 +351,23 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
           </div>
 
           {/* 4. Confidence Metric */}
-          <div className="p-3 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+          <div
+            className="p-3 rounded-xl border shadow-xs"
+            style={{
+              background: 'var(--card-sub-bg, rgba(15, 21, 45, 0.55))',
+              borderColor: 'var(--card-sub-border, rgba(220, 225, 255, 0.12))',
+            }}
+          >
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 Confidence (20% wt)
               </span>
-              <span className="font-bold text-slate-900 font-mono">
-                {rpiData.confidence}% <span className="text-slate-400 font-normal">Reliability</span>
+              <span className="font-bold font-mono" style={{ color: 'var(--text-primary, #F3F5FA)' }}>
+                {rpiData.confidence}% <span style={{ color: 'var(--text-muted, #747F9C)' }} className="font-normal">Reliability</span>
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rpiData.confidence}%` }}
