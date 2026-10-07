@@ -18,6 +18,12 @@
   --success: #34d399;
   --warning: #f59e0b;
   --danger: #f87171;
+  --dropdown-bg: #0c142e;
+  --dropdown-border: rgba(220, 225, 255, 0.20);
+  --dropdown-text: #F3F5FA;
+  --dropdown-hover: rgba(255, 255, 255, 0.08);
+  --dropdown-selected-bg: rgba(56, 189, 248, 0.16);
+  --dropdown-selected-text: #38bdf8;
 }
 
 :root[data-theme-mode="simple"] {
@@ -37,6 +43,12 @@
   --text-muted: #747f9c;
   --accent-blue: #143a7b;
   --accent-cyan: #0284c7;
+  --dropdown-bg: #ffffff;
+  --dropdown-border: #d5dae3;
+  --dropdown-text: #14213d;
+  --dropdown-hover: #f1f5f9;
+  --dropdown-selected-bg: #e0f2fe;
+  --dropdown-selected-text: #0284c7;
 }
 
 :root[data-theme-mode="simple"],
