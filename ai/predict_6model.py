@@ -108,9 +108,9 @@ def build_current_features():
     data/cities_with_elevation.csv, and outputs/blended_forecast_6model.csv.
     """
     base_dir = Path(__file__).resolve().parent.parent
-    fc_path = base_dir / 'data' / 'forecast_current_6model.csv'
+    fc_path = base_dir / 'data' / 'forecast_current.csv'
     cities_elev_path = base_dir / 'data' / 'cities_with_elevation.csv'
-    blended_path = base_dir / 'outputs' / 'blended_forecast_6model.csv'
+    blended_path = base_dir / 'outputs' / 'blended_forecast.csv'
 
     # 1. Read & parse forecast_current_6model.csv
     print(f"Reading current 6-model forecast from {fc_path}...")
