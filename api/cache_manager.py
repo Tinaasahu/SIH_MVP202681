@@ -12,6 +12,7 @@ Rules:
 """
 
 import os
+import time
 import json
 import threading
 from datetime import datetime, date, timezone, timedelta
@@ -211,26 +212,39 @@ def fetch_open_meteo_forecasts(cities_df):
                 "timezone": "Asia/Kolkata",
             }
             c_records = []
-            try:
-                c_res = requests.get(OPEN_METEO_URL, params=c_params, headers=headers, timeout=15.0)
-                if c_res.status_code == 200:
-                    hourly = c_res.json().get("hourly", {})
-                    times = hourly.get("time", [])
-                    for model in MODELS_API:
-                        temps = hourly.get(f"temperature_2m_{model}", hourly.get("temperature_2m", []))
-                        precips = hourly.get(f"precipitation_{model}", hourly.get("precipitation", []))
-                        winds = hourly.get(f"wind_speed_10m_{model}", hourly.get("wind_speed_10m", []))
-                        for i in range(len(times)):
-                            c_records.append({
-                                "city": c_city,
-                                "model": model,
-                                "datetime": times[i][:16],
-                                "temperature": temps[i] if i < len(temps) else None,
-                                "rainfall": precips[i] if i < len(precips) else None,
-                                "wind_speed": winds[i] if i < len(winds) else None,
-                            })
-            except Exception as e:
-                print(f"[CacheManager] Error fetching city {c_city}: {e}")
+            backoff_delays = [2, 4, 8]
+            for attempt in range(4):
+                try:
+                    c_res = requests.get(OPEN_METEO_URL, params=c_params, headers=headers, timeout=15.0)
+                    if c_res.status_code == 200:
+                        hourly = c_res.json().get("hourly", {})
+                        times = hourly.get("time", [])
+                        for model in MODELS_API:
+                            temps = hourly.get(f"temperature_2m_{model}", hourly.get("temperature_2m", []))
+                            precips = hourly.get(f"precipitation_{model}", hourly.get("precipitation", []))
+                            winds = hourly.get(f"wind_speed_10m_{model}", hourly.get("wind_speed_10m", []))
+                            for i in range(len(times)):
+                                c_records.append({
+                                    "city": c_city,
+                                    "model": model,
+                                    "datetime": times[i][:16],
+                                    "temperature": temps[i] if i < len(temps) else None,
+                                    "rainfall": precips[i] if i < len(precips) else None,
+                                    "wind_speed": winds[i] if i < len(winds) else None,
+                                })
+                        break
+                    elif c_res.status_code == 429 or c_res.status_code >= 500:
+                        if attempt < len(backoff_delays):
+                            retry_after = c_res.headers.get("Retry-After")
+                            sleep_sec = min(int(retry_after), 30) if retry_after and retry_after.isdigit() else backoff_delays[attempt]
+                            time.sleep(sleep_sec)
+                    else:
+                        break
+                except Exception as e:
+                    if attempt < len(backoff_delays):
+                        time.sleep(backoff_delays[attempt])
+                    else:
+                        print(f"[CacheManager] Error fetching city {c_city}: {e}")
             return c_records
 
         rows = [row for _, row in cities_df.iterrows()]
