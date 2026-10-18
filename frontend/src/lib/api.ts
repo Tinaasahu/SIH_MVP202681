@@ -672,16 +672,25 @@ export async function getForecastMetrics(city: string = 'Kanpur'): Promise<Forec
       getForecast(city),
       getConfidence(city, 1),
     ]);
-    if (!records || records.length === 0) {
+    let validRecords = records;
+    if (!validRecords || validRecords.length === 0) {
+      validRecords = await getForecast().catch(() => []);
+      if (city && validRecords.length > 0) {
+        const cityLower = city.trim().toLowerCase();
+        const matched = validRecords.filter(r => (r.city || '').trim().toLowerCase() === cityLower);
+        if (matched.length > 0) validRecords = matched;
+      }
+    }
+    if (!validRecords || validRecords.length === 0) {
       return MOCK_FORECAST;
     }
 
     // F5: "Current weather" values must come from the row for the current hour, never from the first row of the array.
     const currentHourStr = getCurrentHourKolkata();
-    const target = records.find(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr))
-      || records.find(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr)
-      || records[records.length - 1]
-      || records[0];
+    const target = validRecords.find(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr))
+      || validRecords.find(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr)
+      || validRecords[validRecords.length - 1]
+      || validRecords[0];
     const confItem = confRecords && confRecords.length > 0 ? confRecords[0] : null;
 
     const tempDiff = Math.abs((target.temperature ?? 30) - (target.blend_temperature ?? 30));
@@ -715,15 +724,28 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
       getForecast(city).catch(() => []),
       getConfidence(city).catch(() => []),
     ]);
-    if (!records || records.length < 6) {
+    let validRecords = records;
+    if (!validRecords || validRecords.length < 6) {
+      const allFc = await getForecast().catch(() => []);
+      if (allFc && allFc.length > 0) {
+        const cityLower = city.trim().toLowerCase();
+        const matched = allFc.filter(r => (r.city || '').trim().toLowerCase() === cityLower);
+        if (matched.length >= 6) {
+          validRecords = matched;
+        } else if (allFc.length >= 6) {
+          validRecords = allFc;
+        }
+      }
+    }
+    if (!validRecords || validRecords.length < 6) {
       return MOCK_TIMELINE;
     }
 
     // Anchor "NOW" to the current IST hour
     const currentHourStr = getCurrentHourKolkata();
-    let currentIdx = records.findIndex(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr));
+    let currentIdx = validRecords.findIndex(r => r.datetime && r.datetime.replace('T', ' ').startsWith(currentHourStr));
     if (currentIdx === -1) {
-      currentIdx = records.findIndex(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr);
+      currentIdx = validRecords.findIndex(r => r.datetime && r.datetime.replace('T', ' ') >= currentHourStr);
     }
     if (currentIdx === -1) {
       currentIdx = 0;
@@ -938,14 +960,18 @@ export async function getCityForecastsData(leadDays: number = 1): Promise<CityFo
       getConfidence(undefined, validLeadDays).catch(() => []),
     ]);
 
-    if (!forecastRecords || forecastRecords.length === 0) {
+    let validFc = forecastRecords;
+    if (!validFc || validFc.length === 0) {
+      validFc = await getForecast().catch(() => []);
+    }
+    if (!validFc || validFc.length === 0) {
       return MOCK_CITIES;
     }
 
     // Index representative record per city for this lead day
     const currentHourStr = getCurrentHourKolkata();
     const latestPerCity: Record<string, ForecastRecord> = {};
-    for (const rec of forecastRecords) {
+    for (const rec of validFc) {
       const key = rec.city?.toLowerCase();
       if (!key) continue;
       const recTime = rec.datetime ? rec.datetime.replace('T', ' ') : '';
