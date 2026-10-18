@@ -334,14 +334,14 @@ def get_forecast():
             dt_val += ":00"
         if dt_val >= current_hour_str:
             filtered_time_records.append(r)
-    records = filtered_time_records
 
-    # If no rows remain, return [] with HTTP 200 and a "stale": true field
-    if not records:
-        resp = jsonify([])
-        resp.headers['stale'] = 'true'
-        resp.headers['X-Forecast-Stale'] = 'true'
-        return resp, 200
+    is_stale_data = False
+    if filtered_time_records:
+        records = filtered_time_records
+    else:
+        # Graceful fallback: If current time exceeds file window, keep latest records
+        # so frontend dashboards never crash or revert to mock demo data
+        is_stale_data = True
 
     city = request.args.get('city')
     lead_days = request.args.get('lead_days')
@@ -416,6 +416,10 @@ def get_model_forecasts():
 
     results = []
     valid_keys = set()
+    has_future_records = any(
+        (str(r.get('datetime', '')).replace('T', ' ') + (":00" if len(str(r.get('datetime', ''))) == 16 else "")) >= current_hour_str
+        for r in raw_records
+    )
 
     for r in raw_records:
         r_city = str(r.get('city', '')).strip()
@@ -425,7 +429,7 @@ def get_model_forecasts():
         dt_raw = str(r.get('datetime', '')).replace('T', ' ')
         if len(dt_raw) == 16:
             dt_raw += ":00"
-        if dt_raw < current_hour_str:
+        if has_future_records and dt_raw < current_hour_str:
             continue
 
         # lead_days = hours since the file's first datetime // 24 + 1
