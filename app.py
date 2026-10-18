@@ -1194,7 +1194,7 @@ def get_rpi():
             'dominantModel': dom_model,
             'modelWeights': weights,
             'recommendations': recommendations,
-            'updatedAt': '2026-09-26T18:30:00'
+            'updatedAt': get_now_ist().strftime('%Y-%m-%dT%H:%M:%S')
         })
 
     if target_city:
@@ -1368,7 +1368,7 @@ def get_rpi_map():
         "features": features,
         "metadata": {
             "totalStations": len(features),
-            "generatedAt": "2026-09-26T18:30:00Z",
+            "generatedAt": get_now_ist().strftime("%Y-%m-%dT%H:%M:%SZ"),
             "crs": "EPSG:4326"
         }
     })
