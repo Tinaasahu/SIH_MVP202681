@@ -91,10 +91,10 @@ export function buildApiUrl(endpoint: string): string {
   return `${rawBase}/api${cleanEndpoint}`;
 }
 
-export const RETRY_TIMEOUT_MS = 60000; // 60 seconds total retry duration
+export const RETRY_TIMEOUT_MS = 90000; // 90 seconds total retry duration
 export const RETRY_INTERVAL_MS = 8000; // Retry every 8 seconds
 
-export const STARTING_AI_WEATHER_ENGINE_MSG = "Starting AI weather engine… This may take up to 60 seconds.";
+export const STARTING_AI_WEATHER_ENGINE_MSG = "Starting AI weather engine… This may take up to 90 seconds.";
 export const SERVER_WAKING_UP_MSG = "Server is waking up. Please try again.";
 
 // Backward compatibility constants

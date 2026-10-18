@@ -10,7 +10,7 @@ import { getBackendStatus, BackendStatusType } from '@/lib/api';
  * - Positioned globally in the top dashboard area using fixed positioning to prevent layout shift.
  * - When connecting:
  *   🟠 Fetching Live Backend Data...
- *   Animated spinner + "Render server is waking up (may take up to 60 seconds)"
+ *   Animated spinner + "Render server is waking up (may take up to 90 seconds)"
  * - When connected:
  *   🟢 Live Backend Connected (shown for 2 seconds, then smoothly hidden)
  * - Uses CSS transitions and lightweight keyframes only.
@@ -145,7 +145,7 @@ export function BackendConnectingIndicator() {
               className="w-3.5 h-3.5 rounded-full border-2 border-amber-600 border-t-transparent animate-spin inline-block flex-shrink-0"
               aria-label="Loading spinner"
             />
-            <span>Render server is waking up (may take up to 60 seconds)</span>
+            <span>Render server is waking up (may take up to 90 seconds)</span>
           </div>
         </div>
       )}
