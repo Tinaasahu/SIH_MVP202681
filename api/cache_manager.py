@@ -483,7 +483,10 @@ def run_downstream_updates():
         if res_alerts.stderr:
             print(f"[CacheManager] ai/alerts.py stderr:\n{res_alerts.stderr}")
         if res_alerts.returncode != 0:
-            print(f"[CacheManager] Warning: ai/alerts.py exited with non-zero code {res_alerts.returncode}")
+            err_msg = res_alerts.stderr.strip() if res_alerts.stderr else res_alerts.stdout.strip()
+            raise RuntimeError(
+                f"[CacheManager] Downstream alerts failed (exit code {res_alerts.returncode}): {alerts_script}\n{err_msg}"
+            )
 
     # Run ai/confidence_engine.py
     conf_script = BASE_DIR / "ai" / "confidence_engine.py"
@@ -501,10 +504,13 @@ def run_downstream_updates():
         if res_conf.stderr:
             print(f"[CacheManager] ai/confidence_engine.py stderr:\n{res_conf.stderr}")
         if res_conf.returncode != 0:
-            print(f"[CacheManager] Warning: ai/confidence_engine.py exited with non-zero code {res_conf.returncode}")
+            err_msg = res_conf.stderr.strip() if res_conf.stderr else res_conf.stdout.strip()
+            raise RuntimeError(
+                f"[CacheManager] Downstream confidence engine failed (exit code {res_conf.returncode}): {conf_script}\n{err_msg}"
+            )
 
 
-def regenerate_forecast():
+def regenerate_forecast(force=False):
     """
     Complete regeneration pipeline:
     1. Fetch fresh Open-Meteo forecasts for all 45 cities.
@@ -515,8 +521,8 @@ def regenerate_forecast():
     6. Save metadata.json for caching.
     """
     with _refresh_lock:
-        # Check again inside lock
-        if is_cache_fresh():
+        # Check again inside lock unless forced
+        if not force and is_cache_fresh():
             print("[CacheManager] Cache is already fresh (verified inside lock).")
             return load_metadata() or {
                 "last_updated": get_now_ist().strftime("%Y-%m-%dT%H:%M:%S+05:30"),
@@ -564,7 +570,7 @@ def ensure_fresh_forecast(force=False):
     """
     if force or not is_cache_fresh():
         print("[CacheManager] Forecast data needs refresh -> regenerating...")
-        return regenerate_forecast()
+        return regenerate_forecast(force=force)
     else:
         print("[CacheManager] Existing forecast is fresh for today. Using cached forecast.")
         meta = load_metadata()
