@@ -89,8 +89,12 @@ def clean_forecast_dataframe(df, model_name):
     df["rainfall"] = np.maximum(0.0, df["rainfall"])
     df["wind_speed"] = np.maximum(0.0, df["wind_speed"])
 
-    # 7. Fill missing values using forward fill within each city
+    # 7. Fill missing values using forward fill within each city with explicit audit (M4)
     missing_count = int(df[numeric_cols].isna().sum().sum())
+    if missing_count > 0:
+        print(f"[Audit] clean_data: {missing_count} missing numeric values detected across {len(df)} rows.")
+        if missing_count > len(df) * len(numeric_cols) * 0.05: # >5% missing
+            raise RuntimeError(f"Excessive missing values in clean_data: {missing_count} missing entries.")
     for col in numeric_cols:
         df[col] = df.groupby("city")[col].ffill()
         # Fallback bfill and fillna for any initial NaN values at city boundaries

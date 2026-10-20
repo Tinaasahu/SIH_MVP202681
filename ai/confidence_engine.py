@@ -127,20 +127,35 @@ def compute_agreement_scores(
     # Standardize column naming for wind
     wind_col = 'wind_speed' if 'wind_speed' in df_models.columns else 'wind'
 
-    # Compute standard deviation across models for each (city, datetime)
+    # Compute model count and standard deviation across models for each (city, datetime) (H13)
+    model_counts = (
+        df_models.groupby(['city', 'datetime'])['model']
+        .nunique()
+        .reset_index(name='model_count')
+    )
     std_df = (
         df_models.groupby(['city', 'datetime'])[['temperature', 'rainfall', wind_col]]
         .std(ddof=1)
         .reset_index()
     )
+    std_df = pd.merge(std_df, model_counts, on=['city', 'datetime'], how='left')
 
-    # Convert standard deviations to agreement scores via continuous interpolation
-    agree_temp = std_to_agreement(std_df['temperature'].fillna(0).values)
-    agree_rain = std_to_agreement(std_df['rainfall'].fillna(0).values)
-    agree_wind = std_to_agreement(std_df[wind_col].fillna(0).values)
+    # Convert standard deviations to agreement scores via continuous interpolation.
+    # If std is NaN (insufficient comparison data, e.g. <2 models), assign 30.0 (low agreement/high uncertainty)
+    # rather than filling with 0 which would falsely inflate agreement to 100%.
+    temp_vals = std_df['temperature'].values
+    rain_vals = std_df['rainfall'].values
+    wind_vals = std_df[wind_col].values
 
-    # Composite agreement: mean of agreement across the three meteorological parameters
-    std_df['agreement_score'] = np.round((agree_temp + agree_rain + agree_wind) / 3.0, 2)
+    agree_temp = np.where(np.isnan(temp_vals), 30.0, std_to_agreement(temp_vals))
+    agree_rain = np.where(np.isnan(rain_vals), 30.0, std_to_agreement(rain_vals))
+    agree_wind = np.where(np.isnan(wind_vals), 30.0, std_to_agreement(wind_vals))
+
+    # Composite agreement: mean across variables; penalize if fewer than 2 models reported
+    composite_agreement = np.round((agree_temp + agree_rain + agree_wind) / 3.0, 2)
+    composite_agreement = np.where(std_df['model_count'].values < 2, 25.0, composite_agreement)
+
+    std_df['agreement_score'] = composite_agreement
     return std_df[['city', 'datetime', 'agreement_score']]
 
 

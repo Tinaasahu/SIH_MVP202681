@@ -64,10 +64,10 @@ export function WhyForecastModal({ open, onClose, selectedCity = 'Kanpur' }: Why
         {/* Context grid */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Dominant Model', value: conf?.dominant_model || 'ECMWF', highlight: true },
+            { label: 'Dominant Model', value: conf?.dominant_model || '—', highlight: true },
             { label: 'Lead time', value: '24 hours (Day 1)', highlight: false },
-            { label: 'Historical regional skill', value: conf ? `${Math.round(conf.skill_score)}% (${conf.skill_score >= 80 ? 'High' : 'Moderate'})` : 'High', highlight: false },
-            { label: 'Model agreement', value: conf ? `${Math.round(conf.agreement_score)}% (${conf.agreement_score >= 80 ? 'Strong' : 'Moderate'})` : 'Moderate', highlight: false },
+            { label: 'Historical regional skill', value: conf && conf.skill_score != null ? `${Math.round(conf.skill_score)}% (${conf.skill_score >= 80 ? 'High' : 'Moderate'})` : '—', highlight: false },
+            { label: 'Model agreement', value: conf && conf.agreement_score != null ? `${Math.round(conf.agreement_score)}% (${conf.agreement_score >= 80 ? 'Strong' : 'Moderate'})` : '—', highlight: false },
           ].map(item => (
             <div
               key={item.label}

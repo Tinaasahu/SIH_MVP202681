@@ -77,10 +77,11 @@ export default function RealLeafletMap({
     getCityForecastsData(leadDays)
       .then((data) => {
         if (mounted) {
-          if (data && data.length > 0) {
+          if (data && data.length > 0 && !data.some(c => c.isFallback)) {
             setCities(data);
             setIsFallback(false);
           } else {
+            if (data && data.length > 0) setCities(data);
             setIsFallback(true);
           }
           setIsLoading(false);
@@ -494,6 +495,7 @@ export default function RealLeafletMap({
           <div className={`text-[11px] font-bold mb-2 flex items-center gap-1.5 ${isDarkBg ? 'text-[#F3F5FA]' : 'text-[#0b2a5b]'}`}>
             <Sparkles size={13} className={isDarkBg ? 'text-sky-400' : 'text-blue-600'} />
             REGIONAL DOMINANCE
+            <span className="ml-auto text-[9px] font-normal px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">Baseline</span>
           </div>
           <div className="space-y-1.5 text-[11px]">
             {MOCK_REGION_DOMINANCE.slice(0, 4).map((r) => (

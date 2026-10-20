@@ -52,6 +52,8 @@ export function ModelPerformancePage() {
     };
   }, []);
 
+  const isFallback = contingency.some(c => c.isFallback) || metrics.some(m => m.isFallback);
+
   // Filter contingency by threshold
   const lightRainRecords = contingency.filter(
     (r) => r.threshold_name.includes('Light') || r.threshold_mm === 0.1

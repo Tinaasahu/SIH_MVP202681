@@ -13,6 +13,8 @@ const PIPELINE = [
   { label: 'GFS Seamless', color: '#6366f1' },
   { label: 'ICON Seamless', color: '#10b981' },
   { label: 'GEM Seamless', color: '#8b5cf6' },
+  { label: 'UKMO Seamless', color: '#06b6d4' },
+  { label: 'JMA Seamless', color: '#ec4899' },
   { label: 'Hybrid (Final)', color: '#3b82f6' },
 ];
 

@@ -146,7 +146,7 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
             <div className="w-full h-72 rounded-2xl bg-slate-100/70 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
               <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
               <span className="text-xs font-medium tracking-wide">
-                Starting AI weather engine… This may take up to 60 seconds.
+                Starting AI weather engine… This may take up to 90 seconds.
               </span>
             </div>
           ) : errorMessage && !rpiData ? (
@@ -166,7 +166,7 @@ export function RpiPage({ selectedCity = 'Kanpur', onSelectCity }: RpiPageProps)
             <div className="w-full h-72 rounded-2xl bg-slate-100/70 animate-pulse flex flex-col items-center justify-center text-slate-400 gap-3 border border-slate-200/60">
               <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
               <span className="text-xs font-medium tracking-wide">
-                Starting AI weather engine… This may take up to 60 seconds.
+                Starting AI weather engine… This may take up to 90 seconds.
               </span>
             </div>
           ) : (

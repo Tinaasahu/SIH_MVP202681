@@ -114,7 +114,7 @@ export function Header({ currentPage, onNavigate, isScenicMode = false, onToggle
                 {lastUpdatedDisplay ? (
                   <span className="font-semibold text-[#F3F5FA]">{lastUpdatedDisplay}</span>
                 ) : lastUpdatedError ? (
-                  <span className="font-semibold text-[#F3F5FA]">{formatLastUpdated()}</span>
+                  <span className="font-semibold text-amber-400">Unavailable</span>
                 ) : (
                   <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}

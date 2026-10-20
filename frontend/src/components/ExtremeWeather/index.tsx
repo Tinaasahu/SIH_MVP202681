@@ -20,10 +20,11 @@ const SEVERITY_STYLES: Record<ExtremeEvent['severity'], { badge: 'danger' | 'war
   watch: { badge: 'info', ring: 'rgba(56,189,248,0.35)', bg: 'rgba(56,189,248,0.12)' },
 };
 
-function ProbabilityArc({ value, color }: { value: number; color: string }) {
+function ProbabilityArc({ value, color }: { value?: number; color: string }) {
   const r = 26;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (value / 100) * circ;
+  const val = value != null ? Math.min(100, Math.max(0, value)) : 0;
+  const offset = value != null ? circ - (val / 100) * circ : circ;
   return (
     <div className="relative flex items-center justify-center shrink-0">
       <svg width="68" height="68" viewBox="0 0 68 68">
@@ -48,7 +49,7 @@ function ProbabilityArc({ value, color }: { value: number; color: string }) {
           fontWeight="800"
           style={{ fill: 'var(--text-primary, #14213d)' }}
         >
-          {value}%
+          {value != null ? `${val}%` : '—'}
         </text>
       </svg>
     </div>
@@ -72,11 +73,11 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
     getExtremeEventsData(city)
       .then((data) => {
         if (mounted) {
-          if (data && data.length > 0) {
+          if (data && data.length > 0 && !data.some(e => e.isFallback)) {
             setEvents(data);
             setIsFallback(false);
           } else {
-            setEvents(MOCK_EXTREME_EVENTS);
+            setEvents(data && data.length > 0 ? data : MOCK_EXTREME_EVENTS);
             setIsFallback(true);
           }
           setIsLoading(false);
@@ -96,8 +97,8 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
   }, [city]);
 
   // Max severe alert probability
-  const maxProbability = events.length > 0 ? Math.max(...events.map(e => e.probability)) : 5;
-  const isKanpurOrSafe = city.toLowerCase() === 'kanpur' || maxProbability <= 25;
+  const maxProbability = events.length > 0 ? Math.max(...events.map(e => e.probability ?? 0)) : 0;
+  const isSafe = maxProbability <= 25 || events.every(e => e.label === 'Safe Conditions');
   const safeProb = 5;
 
   return (
@@ -125,11 +126,16 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
                   className="text-xs font-bold tracking-widest uppercase"
                   style={{ letterSpacing: '0.12em', color: 'var(--text-primary, #14213d)' }}
                 >
-                  {isKanpurOrSafe && !showDetailList ? 'SAFE CONDITIONS' : 'EXTREME WEATHER GUIDANCE'}
+                  {isSafe && !showDetailList ? 'SAFE CONDITIONS' : 'EXTREME WEATHER GUIDANCE'}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-400/30">
                   watch
                 </span>
+                {isFallback && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                    Demo data (backend unavailable)
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -143,7 +149,7 @@ export function ExtremeWeatherPanel({ selectedCity = 'Kanpur' }: ExtremeWeatherP
         </div>
 
         {/* Central SAFE CONDITIONS Decision Display */}
-        {isKanpurOrSafe && !showDetailList ? (
+        {isSafe && !showDetailList ? (
           <div className="py-2 flex flex-col sm:flex-row items-center gap-5 my-1">
             {/* Circular Progress Indicator around 5% */}
             <div className="relative flex items-center justify-center shrink-0">

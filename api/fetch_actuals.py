@@ -175,10 +175,15 @@ def fetch_city_actuals(city, latitude, longitude, start_date, end_date):
                 "actual_wind": winds,
             })
 
-            # Replace None / NaN with sensible defaults so downstream code
-            # doesn't crash on missing reanalysis values.
+            # Numeric conversion with explicit audit trail (M4)
             df["actual_temperature"] = pd.to_numeric(df["actual_temperature"], errors="coerce")
-            df["actual_rainfall"] = pd.to_numeric(df["actual_rainfall"], errors="coerce").fillna(0.0)
+            raw_rain = pd.to_numeric(df["actual_rainfall"], errors="coerce")
+            missing_rain_count = int(raw_rain.isna().sum())
+            if missing_rain_count > 0:
+                print(f"[Audit] fetch_actuals: {missing_rain_count} missing rainfall records detected for {city}. Imputing 0.0.")
+                if missing_rain_count > len(df) * 0.10: # >10% missing
+                    raise RuntimeError(f"Excessive missing actual rainfall for {city}: {missing_rain_count}/{len(df)} rows missing.")
+            df["actual_rainfall"] = raw_rain.fillna(0.0)
             df["actual_wind"] = pd.to_numeric(df["actual_wind"], errors="coerce")
 
             return df

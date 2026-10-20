@@ -257,11 +257,11 @@ export function RegionSelector({ selectedCity, onSelectCity }: RegionSelectorPro
     getCityForecastsData()
       .then((data) => {
         if (mounted) {
-          if (data && data.length > 0 && data !== MOCK_CITIES) {
+          if (data && data.length > 0 && !data.some(c => c.isFallback)) {
             setCities(data);
             setIsFallback(false);
           } else {
-            setCities(MOCK_CITIES);
+            setCities(data && data.length > 0 ? data : MOCK_CITIES);
             setIsFallback(true);
           }
           setIsLoading(false);

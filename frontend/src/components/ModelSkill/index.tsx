@@ -14,6 +14,10 @@ const MODELS = [
   { key: 'blended', label: 'Weighted Blend', color: '#2563eb' },
   { key: 'nwpA', label: 'ECMWF IFS', color: '#6366f1' },
   { key: 'nwpB', label: 'GFS Seamless', color: '#8b5cf6' },
+  { key: 'icon', label: 'ICON Seamless', color: '#10b981' },
+  { key: 'gem', label: 'GEM Seamless', color: '#ec4899' },
+  { key: 'ukmo', label: 'UKMO Seamless', color: '#14b8a6' },
+  { key: 'jma', label: 'JMA Seamless', color: '#f59e0b' },
   { key: 'ensemble', label: 'Ensemble Mean', color: '#06b6d4' },
 ] as const;
 

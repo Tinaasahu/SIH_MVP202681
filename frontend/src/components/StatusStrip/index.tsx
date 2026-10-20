@@ -5,18 +5,15 @@ import { Activity, Clock, Database, Layers, MapPin, RefreshCw } from 'lucide-rea
 import { getMetadata, MetadataRecord } from '@/lib/api';
 
 function formatStatusStripDate(isoString?: string): string {
+  if (!isoString) return '—';
   try {
-    let d: Date;
-    if (isoString) {
-      let clean = isoString.trim();
-      if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
-        clean += 'Z';
-      }
-      d = new Date(clean);
-      if (isNaN(d.getTime())) d = new Date();
-    } else {
-      d = new Date();
+    let clean = isoString.trim();
+    if (!clean) return '—';
+    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+      clean += 'Z';
     }
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return '—';
 
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -167,7 +164,7 @@ export function StatusStrip() {
 
           <span className={`text-xs font-bold ${isWakingUp ? 'text-amber-300' : isError ? 'text-rose-300' : 'text-[#F3F5FA] hidden sm:inline'}`}>
             {isWakingUp
-              ? 'Starting AI weather engine… This may take up to 60 seconds.'
+              ? 'Starting AI weather engine… This may take up to 90 seconds.'
               : isError
               ? (statusMessage || 'Server is waking up. Please try again.')
               : 'Active · Auto-Updating'}
@@ -189,7 +186,7 @@ export function StatusStrip() {
                 {formattedDate ? (
                   formattedDate
                 ) : isError ? (
-                  formatStatusStripDate()
+                  '—'
                 ) : (
                   <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
                 )}

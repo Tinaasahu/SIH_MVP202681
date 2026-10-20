@@ -149,10 +149,15 @@ def fetch_current_forecast(cities_df):
                     })
 
     df = pd.DataFrame(records)
-    # Ensure no NaN
-    df["temperature"] = df.groupby(["city", "model"])["temperature"].ffill().bfill().fillna(28.0)
-    df["rainfall"] = df.groupby(["city", "model"])["rainfall"].ffill().bfill().fillna(0.0)
-    df["wind_speed"] = df.groupby(["city", "model"])["wind_speed"].ffill().bfill().fillna(10.0)
+    # Impute missing values within each (city, model) group; fail explicitly if NaN remains
+    for col in ["temperature", "rainfall", "wind_speed"]:
+        df[col] = df.groupby(["city", "model"])[col].ffill().bfill()
+        if df[col].isna().any():
+            culprits = df[df[col].isna()][["city", "model"]].drop_duplicates().to_dict(orient="records")
+            raise RuntimeError(
+                f"Missing data in column '{col}' after (city, model) ffill/bfill for: {culprits}. "
+                f"Never inventing fallback numbers."
+            )
 
     FORECAST_CURR_CSV.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(FORECAST_CURR_CSV, index=False)

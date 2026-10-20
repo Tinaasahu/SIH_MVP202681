@@ -37,6 +37,25 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
+import math
+
+def sanitize_nan(data):
+    """
+    Recursively replaces NaN and Infinity floats with None (JSON null)
+    for RFC 8259 compliant JSON responses.
+    """
+    if data is None:
+        return None
+    if isinstance(data, dict):
+        return {k: sanitize_nan(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_nan(item) for item in data]
+    elif isinstance(data, float):
+        if math.isnan(data) or math.isinf(data):
+            return None
+        return data
+    return data
+
 
 def load_csv_records(csv_path):
     """
@@ -224,7 +243,7 @@ def health_check():
     }
     if read_error:
         payload["error_detail"] = read_error
-    return jsonify(payload)
+    return jsonify(sanitize_nan(payload))
 
 
 @app.route('/api/metadata', methods=['GET'])
@@ -248,24 +267,15 @@ def get_metadata():
         except Exception:
             pass
         meta = {
-            "last_updated": now_ist_str,
+            "last_updated": None,
             "cities": 45,
             "models": 6,
             "city_count": 45,
             "model_count": 6,
             "model_names": ["ECMWF", "GFS", "ICON", "GEM", "UKMO", "JMA"]
         }
-    else:
-        # Keep timestamp fresh so frontend header always displays active synoptic sync
-        try:
-            if "last_updated" in meta:
-                meta_dt = datetime.fromisoformat(meta["last_updated"])
-                if (now_ist - meta_dt).total_seconds() > 7200:  # > 2h
-                    meta["last_updated"] = now_ist_str
-        except Exception:
-            meta["last_updated"] = now_ist_str
 
-    return jsonify(meta)
+    return jsonify(sanitize_nan(meta))
 
 
 @app.route('/api/admin/refresh', methods=['POST'])
@@ -274,87 +284,25 @@ def admin_refresh():
     Synchronously forces a forecast cache regeneration and runs RF model predictions.
     Protected by X-Refresh-Key header check.
     """
-    secret = os.environ.get("REFRESH_SECRET_KEY", "sih2026_refresh_secret")
+    secret = os.environ.get("REFRESH_SECRET_KEY")
+    if not secret:
+        print("[SECURITY WARNING] REFRESH_SECRET_KEY not set — using insecure default, admin refresh endpoint is PUBLICLY GUESSABLE. Set this in Render environment variables immediately.")
+        secret = "sih2026_refresh_secret"
+
     client_key = request.headers.get("X-Refresh-Key")
     if not client_key or client_key != secret:
         return jsonify({"error": "Unauthorized. Invalid or missing X-Refresh-Key header."}), 401
 
     try:
         meta = ensure_fresh_forecast(force=True)
-        return jsonify({
+        return jsonify(sanitize_nan({
             "status": "refreshed",
             "last_updated": meta.get("last_updated") if meta else None,
             "cities": meta.get("cities") if meta else 45,
             "models": meta.get("models") if meta else 6
-        }), 200
+        })), 200
     except Exception as e:
         return jsonify({"error": f"Forecast refresh failed: {str(e)}"}), 500
-
-
-def align_records_to_current_window(records, datetime_field='datetime'):
-    """
-    PERMANENT SELF-HEALING TIME ALIGNMENT:
-    Ensures forecast data is ALWAYS valid for the current hour and next 72 hours.
-    If the records have fallen into the past (e.g. server was offline, cold start,
-    or Open-Meteo external API was delayed), dynamically shifts all timestamps forward
-    by integer days so diurnal cycles (temperature curves, rainfall peaks, wind profiles)
-    seamlessly align with the current date/hour in Asia/Kolkata.
-    Guarantees:
-      1. Zero empty arrays returned to frontend.
-      2. Zero 'Demo data (backend unavailable)' fallbacks.
-      3. Complete 100% 24/7 uptime resilience under all calendar shifts.
-    """
-    if not records:
-        return records
-
-    from datetime import datetime, timezone, timedelta
-    kolkata_tz = timezone(timedelta(hours=5, minutes=30))
-    now_dt = datetime.now(kolkata_tz).replace(second=0, microsecond=0).replace(tzinfo=None)
-    current_hour_dt = now_dt.replace(minute=0)
-
-    max_dt = None
-    min_dt = None
-    for r in records:
-        val = r.get(datetime_field)
-        if not val:
-            continue
-        clean = str(val).replace('T', ' ')
-        if len(clean) == 16:
-            clean += ":00"
-        try:
-            parsed = datetime.strptime(clean[:19], "%Y-%m-%d %H:%M:%S")
-            if max_dt is None or parsed > max_dt:
-                max_dt = parsed
-            if min_dt is None or parsed < min_dt:
-                min_dt = parsed
-        except Exception:
-            pass
-
-    if max_dt and min_dt and max_dt < current_hour_dt:
-        days_behind = (current_hour_dt.date() - min_dt.date()).days
-        if days_behind > 0:
-            time_shift = timedelta(days=days_behind)
-            shifted = []
-            for r in records:
-                r_copy = dict(r)
-                val = r_copy.get(datetime_field)
-                if val:
-                    clean = str(val).replace('T', ' ')
-                    if len(clean) == 16:
-                        clean += ":00"
-                    try:
-                        p = datetime.strptime(clean[:19], "%Y-%m-%d %H:%M:%S")
-                        new_p = p + time_shift
-                        r_copy[datetime_field] = new_p.strftime("%Y-%m-%d %H:%M:%S")
-                        if 'lead_days' in r_copy:
-                            hours_diff = (new_p - current_hour_dt).total_seconds() / 3600.0
-                            r_copy['lead_days'] = max(1, min(3, int(hours_diff // 24) + 1))
-                    except Exception:
-                        pass
-                shifted.append(r_copy)
-            records = shifted
-
-    return records
 
 
 @app.route('/api/forecast', methods=['GET'])
@@ -401,9 +349,6 @@ def get_forecast():
         if 'blend_wind_speed' not in r or r['blend_wind_speed'] is None:
             r['blend_wind_speed'] = r.get('wind_speed')
 
-    # Permanent Self-Healing: Roll window to today if dataset has aged
-    records = align_records_to_current_window(records, 'datetime')
-
     # Keep only rows where datetime >= the current hour (floor of now to the hour, Asia/Kolkata)
     from datetime import datetime, timezone, timedelta
     kolkata_tz = timezone(timedelta(hours=5, minutes=30))
@@ -418,27 +363,30 @@ def get_forecast():
         if dt_val >= current_hour_str:
             filtered_time_records.append(r)
 
-    if filtered_time_records:
-        records = filtered_time_records
+    # C3: If no rows remain (data is in the past), return [] with HTTP 200 and stale headers
+    if not filtered_time_records:
+        resp = jsonify([])
+        resp.headers['stale'] = 'true'
+        resp.headers['X-Forecast-Stale'] = 'true'
+        return resp, 200
+
+    records = filtered_time_records
 
     city = request.args.get('city')
     lead_days = request.args.get('lead_days')
 
+    # M5: If city is specified, filter records strictly (returns [] if city not found)
     if city:
         city_lower = city.strip().lower()
-        matched = [r for r in records if str(r.get('city', '')).lower() == city_lower]
-        if matched:
-            records = matched
+        records = [r for r in records if str(r.get('city', '')).lower() == city_lower]
     if lead_days:
         try:
             ld = int(lead_days)
-            matched_ld = [r for r in records if r.get('lead_days') == ld]
-            if matched_ld:
-                records = matched_ld
+            records = [r for r in records if r.get('lead_days') == ld]
         except ValueError:
             pass
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/model_forecasts', methods=['GET'])
@@ -464,9 +412,6 @@ def get_model_forecasts():
     raw_records = load_csv_records(curr_csv_path)
     if raw_records is None:
         return jsonify({"error": "data/forecast_current.csv not found"}), 404
-
-    # Permanent self-healing: align timestamps to current window
-    raw_records = align_records_to_current_window(raw_records, 'datetime')
 
     # Determine file's first datetime
     first_dt = None
@@ -495,10 +440,6 @@ def get_model_forecasts():
 
     results = []
     valid_keys = set()
-    has_future_records = any(
-        (str(r.get('datetime', '')).replace('T', ' ') + (":00" if len(str(r.get('datetime', ''))) == 16 else "")) >= current_hour_str
-        for r in raw_records
-    )
 
     for r in raw_records:
         r_city = str(r.get('city', '')).strip()
@@ -508,7 +449,7 @@ def get_model_forecasts():
         dt_raw = str(r.get('datetime', '')).replace('T', ' ')
         if len(dt_raw) == 16:
             dt_raw += ":00"
-        if has_future_records and dt_raw < current_hour_str:
+        if dt_raw < current_hour_str:
             continue
 
         # lead_days = hours since the file's first datetime // 24 + 1
@@ -536,7 +477,6 @@ def get_model_forecasts():
 
     # Also include the hybrid values from outputs/hybrid_forecast.csv for the same rows
     hybrid_records = load_csv_records(hybrid_csv_path) or []
-    hybrid_records = align_records_to_current_window(hybrid_records, 'datetime')
     for hr in hybrid_records:
         h_city = str(hr.get('city', '')).strip()
         h_dt = str(hr.get('datetime', '')).replace('T', ' ')
@@ -569,7 +509,7 @@ def get_model_forecasts():
                 "wind_speed": hr.get('wind_speed')
             })
 
-    return jsonify(results)
+    return jsonify(sanitize_nan(results))
 
 
 @app.route('/api/weights', methods=['GET'])
@@ -606,7 +546,7 @@ def get_weights():
         except ValueError:
             pass
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/skill', methods=['GET'])
@@ -641,7 +581,7 @@ def get_skill():
         except ValueError:
             pass
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/performance', methods=['GET'])
@@ -679,7 +619,7 @@ def get_performance():
         method_lower = method.strip().lower()
         records = [r for r in records if str(r.get('method', '')).lower() == method_lower]
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/contingency', methods=['GET'])
@@ -710,20 +650,7 @@ def get_contingency():
             or str(r.get('threshold_mm', '')).lower() == thresh_lower
         ]
 
-    import math
-    cleaned = []
-    for r in records:
-        cleaned_row = {}
-        for k, v in r.items():
-            if v is None:
-                cleaned_row[k] = None
-            elif isinstance(v, float) and math.isnan(v):
-                cleaned_row[k] = None
-            else:
-                cleaned_row[k] = v
-        cleaned.append(cleaned_row)
-
-    return jsonify(cleaned)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/alerts', methods=['GET'])
@@ -739,14 +666,12 @@ def get_alerts():
     if records is None:
         return jsonify({"error": "extreme_alerts.csv not found"}), 404
 
-    records = align_records_to_current_window(records, 'datetime')
-
     city = request.args.get('city')
     if city:
         city_lower = city.strip().lower()
         records = [r for r in records if str(r.get('city', '')).lower() == city_lower]
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/cities', methods=['GET'])
@@ -761,12 +686,12 @@ def get_cities():
 
     cities = load_csv_records(cities_path)
     if cities is not None:
-        return jsonify(cities)
+        return jsonify(sanitize_nan(cities))
 
     forecast_records = load_csv_records(forecast_path)
     if forecast_records is not None:
         unique_cities = sorted(list({r['city'] for r in forecast_records if 'city' in r}))
-        return jsonify([{"city": c} for c in unique_cities])
+        return jsonify(sanitize_nan([{"city": c} for c in unique_cities]))
 
     return jsonify([])
 
@@ -785,8 +710,6 @@ def get_confidence():
     if records is None:
         return jsonify({"error": "confidence_scores.csv not found"}), 404
 
-    records = align_records_to_current_window(records, 'datetime')
-
     city = request.args.get('city')
     lead_day = request.args.get('lead_day') or request.args.get('lead_days')
 
@@ -800,7 +723,7 @@ def get_confidence():
         except ValueError:
             pass
 
-    return jsonify(records)
+    return jsonify(sanitize_nan(records))
 
 
 @app.route('/api/rpi', methods=['GET'])
@@ -808,12 +731,13 @@ def get_confidence():
 def get_rpi():
     """
     Risk Priority Index (RPI) - Government Emergency Operations Decision Support.
-    Formula: RPI = 35% Rain Risk + 25% Heat Risk + 20% Wind Risk + 20% Confidence
+    Formula: Hazard Score = 70% Max Hazard + 30% Mean Hazard (rain, heat, wind),
+    with decoupled Confidence Badge for emergency action directives.
     Priority:
-      0-30: Low
-      31-55: Moderate
-      56-75: High
-      76-100: Critical
+      0-30: Low (Green)
+      31-55: Moderate (Yellow)
+      56-74: High (Orange)
+      75-100: Critical (Red)
     Optional query parameter:
       - city: filter by city name (e.g. ?city=Kanpur)
     """
@@ -826,8 +750,6 @@ def get_rpi():
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []
-    forecast_records = align_records_to_current_window(forecast_records, 'datetime')
-    confidence_records = align_records_to_current_window(confidence_records, 'datetime')
     city_records = load_csv_records(cities_path) or []
     weights_records = load_csv_records(weights_path) or []
 
@@ -886,6 +808,11 @@ def get_rpi():
     else:
         target_keys = sorted(list(set(list(city_forecasts.keys()) + list(city_meta.keys()))))
 
+    meta_info = load_metadata() or {}
+    source_updated_at = meta_info.get("last_updated")
+    if not source_updated_at and forecast_records:
+        source_updated_at = max((str(r.get('datetime', '')) for r in forecast_records if r.get('datetime')), default=None)
+
     results = []
     for c_key in target_keys:
         f = city_forecasts.get(c_key, {})
@@ -939,17 +866,15 @@ def get_rpi():
             confidence_badge = None
             action_directive = 'Routine Synoptic Surveillance, Standard Sensor Telemetry'
 
-        # Real model weights from outputs/model_weights_6model.csv
+        # Real model weights from outputs/model_weights_6model.csv (M2 & H8)
         real_w = city_model_weights.get(c_key)
         if real_w and len(real_w) >= 4:
             weights = real_w
             best_model_name = max(real_w.items(), key=lambda x: x[1])[0]
             dom_model = best_model_name.upper()
         else:
-            dom_model = c.get('dominant_model') or ('ECMWF' if rain > 40 else 'ICON' if temp > 35 else 'GFS')
-            if dom_model == 'AI':
-                dom_model = 'ECMWF'
-            weights = {'ecmwf': 22.0, 'icon': 18.0, 'gfs': 16.0, 'gem': 15.0, 'ukmo': 15.0, 'jma': 14.0}
+            dom_model = c.get('dominant_model') or None
+            weights = None
 
         # Real-time quantitative resource estimations based on synoptic thresholds
         # Real-time quantitative resource estimations based on synoptic thresholds for all 3 disaster domains
@@ -1194,15 +1119,15 @@ def get_rpi():
             'dominantModel': dom_model,
             'modelWeights': weights,
             'recommendations': recommendations,
-            'updatedAt': get_now_ist().strftime('%Y-%m-%dT%H:%M:%S')
+            'updatedAt': source_updated_at
         })
 
     if target_city:
         if results:
-            return jsonify(results[0])
+            return jsonify(sanitize_nan(results[0]))
         return jsonify({'error': f'City {target_city} not found'}), 404
 
-    return jsonify(results)
+    return jsonify(sanitize_nan(results))
 
 
 @app.route('/api/rpi/map', methods=['GET'])
@@ -1221,8 +1146,6 @@ def get_rpi_map():
 
     forecast_records = load_csv_records(forecast_path) or []
     confidence_records = load_csv_records(confidence_path) or []
-    forecast_records = align_records_to_current_window(forecast_records, 'datetime')
-    confidence_records = align_records_to_current_window(confidence_records, 'datetime')
     city_records = load_csv_records(cities_path) or []
     weights_records = load_csv_records(weights_path) or []
 
@@ -1273,6 +1196,11 @@ def get_rpi_map():
         c_key = c_name.lower()
         if c_key not in city_conf:
             city_conf[c_key] = r
+
+    meta_map = load_metadata() or {}
+    source_map_generated_at = meta_map.get("last_updated")
+    if not source_map_generated_at and forecast_records:
+        source_map_generated_at = max((str(r.get('datetime', '')) for r in forecast_records if r.get('datetime')), default=None)
 
     features = []
     target_keys = sorted(list(set(list(city_forecasts.keys()) + list(city_meta.keys()))))
@@ -1363,15 +1291,15 @@ def get_rpi_map():
             }
         })
 
-    return jsonify({
+    return jsonify(sanitize_nan({
         "type": "FeatureCollection",
         "features": features,
         "metadata": {
             "totalStations": len(features),
-            "generatedAt": get_now_ist().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "generatedAt": source_map_generated_at,
             "crs": "EPSG:4326"
         }
-    })
+    }))
 
 
 @app.errorhandler(404)

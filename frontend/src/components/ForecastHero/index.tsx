@@ -46,15 +46,16 @@ function ConfidenceRing({
   dominantModel,
   explanation,
 }: {
-  value: number;
+  value?: number;
   label?: string;
   dominantModel?: string;
   explanation?: string;
 }) {
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-  const color = value >= 80 ? '#34d399' : value >= 60 ? '#fbbf24' : '#f87171';
+  const numVal = value != null ? Math.min(100, Math.max(0, value)) : 0;
+  const offset = value != null ? circumference - (numVal / 100) * circumference : circumference;
+  const color = value != null ? (value >= 80 ? '#34d399' : value >= 60 ? '#fbbf24' : '#f87171') : '#94a3b8';
 
   return (
     <Tooltip
@@ -337,7 +338,7 @@ export function ForecastHero({ selectedCity = 'Kanpur' }: ForecastHeroProps) {
               {lastUpdatedDisplay ? (
                 <span>Last Updated: {lastUpdatedDisplay}</span>
               ) : lastUpdatedError ? (
-                <span>Last Updated: {formatLastUpdated()}</span>
+                <span>Last Updated: <span className="text-amber-400">Unavailable</span></span>
               ) : (
                 <span className="inline-block w-28 h-3.5 bg-white/10 animate-pulse rounded" aria-label="Loading last updated time" />
               )}

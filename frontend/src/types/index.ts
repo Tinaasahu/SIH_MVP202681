@@ -8,14 +8,15 @@ export interface ForecastMetrics {
   rainfall: number;
   temperature: number;
   wind: number;
-  confidence: number;
+  confidence?: number;
   confidenceLabel?: string;
   dominantModel?: string;
   explanation?: string;
   rainfallUncertainty: number;
   temperatureUncertainty: number;
   windUncertainty: number;
-  updatedMinutesAgo: number;
+  updatedMinutesAgo?: number;
+  isFallback?: boolean;
 }
 
 export interface ModelWeight {
@@ -26,6 +27,7 @@ export interface ModelWeight {
   rmse: number | null;
   mae: number | null;
   skillAvailable?: boolean;
+  isFallback?: boolean;
 }
 
 export interface TimelinePoint {
@@ -42,16 +44,18 @@ export interface TimelinePoint {
   temperatureUncertaintyLow?: number;
   windUncertaintyHigh?: number;
   windUncertaintyLow?: number;
+  isFallback?: boolean;
 }
 
 export interface ExtremeEvent {
   type: 'heavy_rainfall' | 'heatwave' | 'high_wind' | 'cyclone' | 'cold_wave';
   label: string;
-  probability: number;
+  probability?: number;
   window: string;
   confidence: number;
   severity: 'watch' | 'warning' | 'alert';
   description: string;
+  isFallback?: boolean;
 }
 
 export interface Alert {
@@ -62,6 +66,7 @@ export interface Alert {
   state?: string;
   window: string;
   timestamp: string;
+  isFallback?: boolean;
 }
 
 export interface DataSource {
@@ -85,6 +90,7 @@ export interface RegionModelDominance {
   dominantModel: string;
   modelId: string;
   confidence: number;
+  isFallback?: boolean;
 }
 
 export interface CityForecast {
@@ -100,6 +106,7 @@ export interface CityForecast {
   risk: 'low' | 'moderate' | 'high' | 'severe';
   confidenceLabel?: string;
   explanation?: string;
+  isFallback?: boolean;
 }
 
 export interface ConfidenceRecord {
@@ -121,7 +128,12 @@ export interface SkillMetric {
   ai: number;
   nwpA: number;
   nwpB: number;
+  icon?: number;
+  gem?: number;
+  ukmo?: number;
+  jma?: number;
   ensemble: number;
+  isFallback?: boolean;
 }
 
 export type RpiPriority = 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -213,17 +225,18 @@ export interface RpiData {
   confidenceBadge?: string | null;
   actionDirective?: string;
   priority: RpiPriority;
-  dominantModel: string;
-  modelWeights: {
-    ecmwf: number;
-    icon: number;
-    gfs: number;
-    gem: number;
+  dominantModel?: string;
+  modelWeights?: {
+    ecmwf?: number;
+    icon?: number;
+    gfs?: number;
+    gem?: number;
     ukmo?: number;
     jma?: number;
   };
   recommendations: ResourceAction[];
-  updatedAt: string;
+  updatedAt?: string;
+  isFallback?: boolean;
 }
 
 export interface PerformanceSummaryRecord {
@@ -245,5 +258,6 @@ export interface ContingencyMetricRecord {
   pod: number | null;
   far: number | null;
   csi: number | null;
+  isFallback?: boolean;
 }
 

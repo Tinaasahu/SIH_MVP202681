@@ -20,17 +20,50 @@ export function ModelIntelligencePage() {
       .then((records) => {
         if (mounted) {
           if (records && records.length > 0) {
-            setIsLoading(false);
+            // Compute real region dominance from weights records
+            const regionMap: Record<string, string[]> = {
+              'North India': ['delhi', 'kanpur', 'lucknow', 'chandigarh', 'dehradun', 'shimla', 'srinagar', 'amritsar', 'jaipur', 'jodhpur', 'kota', 'agra', 'varanasi', 'ghaziabad'],
+              'Peninsular South': ['chennai', 'bengaluru', 'hyderabad', 'thiruvananthapuram', 'kochi', 'coimbatore', 'madurai', 'vijayawada', 'visakhapatnam'],
+              'Western Arid': ['mumbai', 'pune', 'ahmedabad', 'surat', 'vadodara', 'nagpur', 'indore', 'bhopal', 'nashik', 'thane'],
+              'Eastern Monsoon': ['kolkata', 'patna', 'ranchi', 'bhubaneswar', 'guwahati', 'imphal', 'shillong', 'agartala', 'raipur'],
+            };
+            const computedDominance: RegionModelDominance[] = Object.entries(regionMap).map(([region, cityList]) => {
+              const regionWeights = records.filter(r => cityList.includes((r.city || '').toLowerCase()));
+              const modelAverages: Record<string, { sum: number; count: number }> = {};
+              for (const r of regionWeights) {
+                const m = (r.model || '').toUpperCase();
+                if (!modelAverages[m]) modelAverages[m] = { sum: 0, count: 0 };
+                modelAverages[m].sum += r.weight;
+                modelAverages[m].count += 1;
+              }
+              const sorted = Object.entries(modelAverages).map(([model, data]) => ({
+                model,
+                avgWeight: data.count > 0 ? data.sum / data.count : 0,
+              })).sort((a, b) => b.avgWeight - a.avgWeight);
+              const totalAvg = sorted.reduce((sum, s) => sum + s.avgWeight, 0) || 1;
+              const top = sorted[0] || { model: 'ECMWF', avgWeight: 0.35 };
+              const second = sorted[1] || { model: 'GFS', avgWeight: 0.25 };
+              return {
+                region,
+                dominantModel: top.model,
+                modelId: top.model.toLowerCase(),
+                confidence: Math.round((top.avgWeight / totalAvg) * 100),
+                isFallback: false,
+              };
+            });
+            setDominance(computedDominance);
             setIsFallback(false);
           } else {
+            setDominance(MOCK_REGION_DOMINANCE);
             setIsFallback(true);
-            setIsLoading(false);
           }
+          setIsLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setIsError(true);
+          setDominance(MOCK_REGION_DOMINANCE);
           setIsFallback(true);
           setIsLoading(false);
         }
@@ -50,6 +83,12 @@ export function ModelIntelligencePage() {
           <p className="text-xs text-slate-400">Adaptive weighting logic, dominance mapping, and cross-model comparison</p>
         </div>
       </div>
+
+      {isFallback && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium">
+          <span>Displaying baseline model dominance (live weights unavailable from backend)</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ModelContribution />

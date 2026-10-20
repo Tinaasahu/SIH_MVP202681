@@ -28,6 +28,7 @@ export interface PerformanceMatrixData {
   variable: string;
   unit: string;
   cells: PerformanceCell[];
+  isFallback?: boolean;
 }
 
 export const MODELS = ['Hybrid (Final)', 'ECMWF IFS', 'GFS', 'Ensemble', 'Blended'] as const;
@@ -61,7 +62,8 @@ const VARIABLE_CONFIG: Record<string, { label: string; unit: string; key: string
  */
 export function buildMatrix(
   variableKey: string,
-  records: PerformanceSummaryRecord[]
+  records: PerformanceSummaryRecord[],
+  isFallback = false
 ): PerformanceMatrixData | null {
   const cfg = VARIABLE_CONFIG[variableKey.toLowerCase()] || {
     label: variableKey,
@@ -112,6 +114,7 @@ export function buildMatrix(
     variable: cfg.label,
     unit: cfg.unit,
     cells,
+    isFallback,
   };
 }
 
@@ -168,9 +171,9 @@ export const DEFAULT_PERFORMANCE_RECORDS: PerformanceSummaryRecord[] = [
 
 export function getDefaultMatrices(): Record<string, PerformanceMatrixData> {
   return {
-    rainfall: buildMatrix('rainfall', DEFAULT_PERFORMANCE_RECORDS)!,
-    temperature: buildMatrix('temperature', DEFAULT_PERFORMANCE_RECORDS)!,
-    wind: buildMatrix('wind', DEFAULT_PERFORMANCE_RECORDS)!,
+    rainfall: buildMatrix('rainfall', DEFAULT_PERFORMANCE_RECORDS, true)!,
+    temperature: buildMatrix('temperature', DEFAULT_PERFORMANCE_RECORDS, true)!,
+    wind: buildMatrix('wind', DEFAULT_PERFORMANCE_RECORDS, true)!,
   };
 }
 

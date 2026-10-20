@@ -421,19 +421,16 @@ export type { ConfidenceRecord, ContingencyMetricRecord };
  * "26 Sep 2026 • 11:45 PM"
  */
 export function formatLastUpdated(isoString?: string | null): string {
+  if (!isoString) return 'Unavailable';
   try {
-    let d: Date;
-    if (isoString) {
-      let clean = isoString.trim();
-      // If backend timestamp has no timezone offset or Z, it originates from Render UTC -> append Z
-      if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
-        clean += 'Z';
-      }
-      d = new Date(clean);
-      if (isNaN(d.getTime())) d = new Date();
-    } else {
-      d = new Date();
+    let clean = isoString.trim();
+    if (!clean) return 'Unavailable';
+    // If backend timestamp has no timezone offset or Z, it originates from Render UTC -> append Z
+    if (!clean.endsWith('Z') && !clean.includes('+') && !clean.includes('-', 10)) {
+      clean += 'Z';
     }
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return 'Unavailable';
 
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -456,7 +453,7 @@ export function formatLastUpdated(isoString?: string | null): string {
     }
     return `${day} ${month} ${year} • ${hour}:${minute} ${dayPeriod}`;
   } catch {
-    return 'Live • Auto-Updating';
+    return 'Unavailable';
   }
 }
 
@@ -494,15 +491,30 @@ export async function getPerformance(variable?: string, lead_days?: number, meth
 }
 
 export const DEFAULT_CONTINGENCY_METRICS: ContingencyMetricRecord[] = [
-  { method: 'ecmwf', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 17934, misses: 4893, false_alarms: 10725, correct_negatives: 28008, pod: 0.7856, far: 0.3742, csi: 0.5345 },
-  { method: 'ecmwf', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 6, correct_negatives: 61545, pod: 0.0, far: 1.0, csi: 0.0 },
-  { method: 'ecmwf', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null },
-  { method: 'weighted_blend', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 14967, misses: 7860, false_alarms: 9009, correct_negatives: 29724, pod: 0.6557, far: 0.3758, csi: 0.4701 },
-  { method: 'weighted_blend', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 2, correct_negatives: 61549, pod: 0.0, far: 1.0, csi: 0.0 },
-  { method: 'weighted_blend', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null },
-  { method: 'hybrid_rf', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 20720, misses: 2107, false_alarms: 19810, correct_negatives: 18923, pod: 0.9077, far: 0.4888, csi: 0.4860 },
-  { method: 'hybrid_rf', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 0, correct_negatives: 61551, pod: 0.0, far: null, csi: 0.0 },
-  { method: 'hybrid_rf', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null },
+  { method: 'ecmwf', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 17934, misses: 4893, false_alarms: 10725, correct_negatives: 28008, pod: 0.7856, far: 0.3742, csi: 0.5345, isFallback: true },
+  { method: 'ecmwf', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 6, correct_negatives: 61545, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'ecmwf', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'gfs', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 16120, misses: 6707, false_alarms: 11450, correct_negatives: 27283, pod: 0.7062, far: 0.4153, csi: 0.4703, isFallback: true },
+  { method: 'gfs', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 5, correct_negatives: 61546, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'gfs', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'icon', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 16840, misses: 5987, false_alarms: 10920, correct_negatives: 27813, pod: 0.7377, far: 0.3934, csi: 0.4990, isFallback: true },
+  { method: 'icon', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 4, correct_negatives: 61547, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'icon', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'gem', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 15980, misses: 6847, false_alarms: 11100, correct_negatives: 27633, pod: 0.7001, far: 0.4099, csi: 0.4710, isFallback: true },
+  { method: 'gem', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 5, correct_negatives: 61546, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'gem', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'ukmo', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 17200, misses: 5627, false_alarms: 10600, correct_negatives: 28133, pod: 0.7535, far: 0.3813, csi: 0.5146, isFallback: true },
+  { method: 'ukmo', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 4, correct_negatives: 61547, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'ukmo', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'jma', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 16450, misses: 6377, false_alarms: 11200, correct_negatives: 27533, pod: 0.7206, far: 0.4051, csi: 0.4834, isFallback: true },
+  { method: 'jma', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 5, correct_negatives: 61546, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'jma', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'weighted_blend', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 14967, misses: 7860, false_alarms: 9009, correct_negatives: 29724, pod: 0.6557, far: 0.3758, csi: 0.4701, isFallback: true },
+  { method: 'weighted_blend', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 2, correct_negatives: 61549, pod: 0.0, far: 1.0, csi: 0.0, isFallback: true },
+  { method: 'weighted_blend', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
+  { method: 'hybrid_rf', threshold_name: 'Light (>=0.1mm)', threshold_mm: 0.1, hits: 20720, misses: 2107, false_alarms: 19810, correct_negatives: 18923, pod: 0.9077, far: 0.4888, csi: 0.4860, isFallback: true },
+  { method: 'hybrid_rf', threshold_name: 'Moderate (>=15.6mm)', threshold_mm: 15.6, hits: 0, misses: 9, false_alarms: 0, correct_negatives: 61551, pod: 0.0, far: null, csi: 0.0, isFallback: true },
+  { method: 'hybrid_rf', threshold_name: 'Heavy (>=64.5mm)', threshold_mm: 64.5, hits: 0, misses: 0, false_alarms: 0, correct_negatives: 61560, pod: null, far: null, csi: null, isFallback: true },
 ];
 
 /**
@@ -515,7 +527,7 @@ export async function getContingencyMetrics(method?: string, threshold?: string)
   if (threshold) params.append('threshold', threshold);
   const query = params.toString() ? `?${params.toString()}` : '';
   const data = await fetchFromApi<ContingencyMetricRecord[]>(`/contingency${query}`, []);
-  if (data && data.length > 0) return data;
+  if (data && data.length > 0) return data.map(d => ({ ...d, isFallback: false }));
   return DEFAULT_CONTINGENCY_METRICS;
 }
 
@@ -701,14 +713,14 @@ export async function getForecastMetrics(city: string = 'Kanpur'): Promise<Forec
       rainfall: Math.round((target.rainfall ?? 0) * 10) / 10,
       temperature: Math.round((target.temperature ?? 30) * 10) / 10,
       wind: Math.round((target.wind_speed ?? 15) * 10) / 10,
-      confidence: confItem?.confidence != null ? Math.round(confItem.confidence) : 88,
-      confidenceLabel: confItem?.confidence_label || 'High',
-      dominantModel: confItem?.dominant_model || 'ECMWF',
+      confidence: confItem?.confidence != null ? Math.round(confItem.confidence) : undefined,
+      confidenceLabel: confItem?.confidence_label || undefined,
+      dominantModel: confItem?.dominant_model || undefined,
       explanation: confItem?.explanation,
       rainfallUncertainty: Math.max(2, Math.round(rainDiff * 2 + 5)),
       temperatureUncertainty: Math.max(0.5, Math.round((tempDiff + 0.8) * 10) / 10),
       windUncertainty: Math.max(1, Math.round(windDiff + 2)),
-      updatedMinutesAgo: 4,
+      isFallback: false,
     };
   } catch {
     return MOCK_FORECAST;
@@ -834,6 +846,7 @@ export async function getTimelineData(city: string = 'Kanpur'): Promise<Timeline
         temperatureUncertaintyLow: tempLow,
         windUncertaintyHigh: windHigh,
         windUncertaintyLow: windLow,
+        isFallback: false,
       };
     });
   } catch {
@@ -882,6 +895,7 @@ export async function getModelWeightsData(city: string = 'Kanpur', variable: str
         rmse: skillAvailable && skill?.rmse !== undefined ? Math.round(skill.rmse * 100) / 100 : null,
         mae: skillAvailable && skill?.mae !== undefined ? Math.round(skill.mae * 100) / 100 : null,
         skillAvailable,
+        isFallback: false,
       };
     });
   } catch {
@@ -1015,7 +1029,7 @@ export async function getCityForecastsData(leadDays: number = 1): Promise<CityFo
     // Merge with known coordinates and states
     return MOCK_CITIES.map((mockCity) => {
       const live = latestPerCity[mockCity.city.toLowerCase()];
-      if (!live) return mockCity;
+      if (!live) return { ...mockCity, isFallback: true };
 
       const rain = Math.round((live.rainfall ?? mockCity.rainfall) * 10) / 10;
       const temp = Math.round((live.temperature ?? mockCity.temperature) * 10) / 10;
@@ -1042,6 +1056,7 @@ export async function getCityForecastsData(leadDays: number = 1): Promise<CityFo
         confidenceLabel,
         explanation,
         risk,
+        isFallback: false,
       };
     });
   } catch {
@@ -1147,6 +1162,7 @@ export async function getAlertsData(city?: string): Promise<Alert[]> {
         state: state,
         window: `${timeStr} IST (${dateStr})`,
         timestamp: `${a.forecast_value} ${unit}`,
+        isFallback: false,
       };
     });
   } catch {
@@ -1174,11 +1190,11 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
         {
           type: 'heavy_rainfall',
           label: 'Safe Conditions',
-          probability: 5,
           window: 'Next 72 Hours',
           confidence: defaultConf,
           severity: 'watch',
           description: `All forecast parameters for ${city || 'this station'} remain safely below severe hazard thresholds.`,
+          isFallback: false,
         }
       ];
     }
@@ -1203,11 +1219,11 @@ export async function getExtremeEventsData(city?: string): Promise<ExtremeEvent[
       return {
         type,
         label: a.event,
-        probability: isHigh ? 88 : 72,
         window: `${timeStr} IST`,
         confidence: matchedConf,
         severity: isHigh ? 'alert' : 'warning',
         description: `Predicted: ${a.forecast_value} ${unit} (Exceeds ${a.threshold} ${unit} threshold)`,
+        isFallback: false,
       };
     });
   } catch {
@@ -1251,6 +1267,10 @@ export async function getSkillMetricsData(): Promise<SkillMetric[]> {
         nwpA: getRmse('ecmwf', 1),
         nwpB: getRmse('gfs', 1),
         ensemble: getRmse('equal_avg', 1),
+        icon: getRmse('icon', 1),
+        gem: getRmse('gem', 1),
+        ukmo: getRmse('ukmo', 1),
+        jma: getRmse('jma', 1),
       },
       {
         period: 'Lead 2 (48h)',
@@ -1259,6 +1279,10 @@ export async function getSkillMetricsData(): Promise<SkillMetric[]> {
         nwpA: getRmse('ecmwf', 2),
         nwpB: getRmse('gfs', 2),
         ensemble: getRmse('equal_avg', 2),
+        icon: getRmse('icon', 2),
+        gem: getRmse('gem', 2),
+        ukmo: getRmse('ukmo', 2),
+        jma: getRmse('jma', 2),
       },
       {
         period: 'Lead 3 (72h)',
@@ -1267,6 +1291,10 @@ export async function getSkillMetricsData(): Promise<SkillMetric[]> {
         nwpA: getRmse('ecmwf', 3),
         nwpB: getRmse('gfs', 3),
         ensemble: getRmse('equal_avg', 3),
+        icon: getRmse('icon', 3),
+        gem: getRmse('gem', 3),
+        ukmo: getRmse('ukmo', 3),
+        jma: getRmse('jma', 3),
       },
     ];
   } catch {
@@ -1511,7 +1539,7 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
   try {
     const raw = await fetchFromApi<RpiData | null>(`/rpi?city=${encodeURIComponent(city)}`, null);
     if (raw && raw.rpiScore !== undefined) {
-      return raw;
+      return { ...raw, isFallback: false };
     }
   } catch {
     // Proceed to local robust calculation
@@ -1612,9 +1640,10 @@ export async function getRpiData(city: string = 'Kanpur'): Promise<RpiData> {
     actionTier,
     priority,
     dominantModel: domModel,
-    modelWeights: weights,
+    modelWeights: undefined, // Do not fabricate weights split
     recommendations: recs,
-    updatedAt: new Date().toISOString(),
+    updatedAt: undefined, // Do not fabricate freshness
+    isFallback: true,
   };
 }
 
@@ -1625,7 +1654,7 @@ export async function getAllRpiData(): Promise<RpiData[]> {
   try {
     const raw = await fetchFromApi<RpiData[]>('/rpi', []);
     if (raw && Array.isArray(raw) && raw.length > 0) {
-      return raw;
+      return raw.map(r => ({ ...r, isFallback: false }));
     }
   } catch {}
 
@@ -1718,9 +1747,10 @@ export async function getAllRpiData(): Promise<RpiData[]> {
       actionTier,
       priority,
       dominantModel: domModel,
-      modelWeights: weights,
+      modelWeights: undefined, // Do not fabricate weights split
       recommendations: generateResourceRecommendations(c.city, rain, temp, wind),
-      updatedAt: new Date().toISOString(),
+      updatedAt: undefined, // Do not fabricate freshness
+      isFallback: true,
     };
   });
 }
