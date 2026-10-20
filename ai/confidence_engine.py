@@ -100,7 +100,7 @@ def std_to_agreement(std_dev: float | np.ndarray) -> float | np.ndarray:
 
 def compute_agreement_scores(
     hybrid_forecast_path: str,
-    forecast_current_path: str = 'data/forecast_current_6model.csv'
+    forecast_current_path: str = 'data/forecast_current.csv'
 ) -> pd.DataFrame:
     """
     Step 2: Agreement Score
@@ -111,9 +111,9 @@ def compute_agreement_scores(
       Computes composite agreement score across the variables.
     Returns DataFrame with [city, datetime, agreement_score].
     """
-    # 1. Load multi-model forecasts (ECMWF, GFS, ICON, GEM, UKMO, JMA)
+    # 1. Load multi-model forecasts (ECMWF, GFS, ICON, GEM, UKMO, JMA) from live forecast file
     if not os.path.exists(forecast_current_path):
-        fallback_path = 'data/forecast_current.csv'
+        fallback_path = 'data/forecast_current_6model.csv'
         if os.path.exists(fallback_path):
             forecast_current_path = fallback_path
         else:
@@ -288,9 +288,11 @@ def generate_confidence_dataset(
     skill_path = os.path.join(output_dir, 'skill_scores_6model.csv')
     if not os.path.exists(skill_path):
         skill_path = os.path.join(output_dir, 'skill_scores_lead.csv')
-    current_path = os.path.join(data_dir, 'forecast_current_6model.csv')
+    current_path = os.path.join(data_dir, 'forecast_current.csv')
     if not os.path.exists(current_path):
-        current_path = os.path.join(data_dir, 'forecast_current.csv')
+        current_path = os.path.join(data_dir, 'forecast_current_6model.csv')
+        if not os.path.exists(current_path):
+            raise FileNotFoundError(f"Multi-model forecast file not found in {data_dir}")
 
     # Read base target hybrid forecast
     df_hybrid = pd.read_csv(hybrid_path)
@@ -314,6 +316,20 @@ def generate_confidence_dataset(
     df_conf = pd.merge(df_conf, df_agreement, on=['city', 'datetime'], how='left')
     df_conf = pd.merge(df_conf, df_dominant, on=['city', 'lead_day'], how='left')
 
+    # Fail-loud validation: ensure datetime overlap was found
+    overlap_count = df_conf['agreement_score'].notna().sum()
+    if len(df_conf) > 0 and overlap_count == 0:
+        raise RuntimeError(
+            f"[ConfidenceEngine] Zero datetime overlap between hybrid forecast ({hybrid_path}) "
+            f"and multi-model forecast ({current_path}). Agreement scores could not be merged!"
+        )
+
+    nan_agreement = df_conf['agreement_score'].isna().sum()
+    if nan_agreement > 0:
+        raise RuntimeError(
+            f"[ConfidenceEngine] {nan_agreement}/{len(df_conf)} rows have missing agreement_score after datetime merge."
+        )
+
     # 4. Lead Score
     df_conf['lead_score'] = df_conf['lead_day'].apply(get_lead_score)
 
@@ -325,6 +341,13 @@ def generate_confidence_dataset(
     )
     # Clip between 0 and 100
     df_conf['confidence'] = np.clip(np.round(raw_confidence, 1), 0.0, 100.0)
+
+    # Fail-loud validation: ensure no NaN confidence values
+    nan_conf = df_conf['confidence'].isna().sum()
+    if nan_conf > 0:
+        raise RuntimeError(
+            f"[ConfidenceEngine] {nan_conf}/{len(df_conf)} rows have NaN confidence values after calculation."
+        )
 
     # 6. Confidence Labels
     df_conf['confidence_label'] = df_conf['confidence'].apply(get_confidence_label)

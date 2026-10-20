@@ -42,7 +42,7 @@ for event, cfg in THRESHOLDS.items():
     high     = cfg['high']         # upper threshold (determines severity)
 
     # Keep only rows that exceed the moderate threshold
-    flagged = df[df[col] > moderate].copy()
+    flagged = df[df[col].round(2) > moderate].copy()
 
     if flagged.empty:
         continue  # no alerts for this event; skip to avoid concat issues
