@@ -22,9 +22,10 @@ def main():
 
     # 1. Load data/cities.csv
     df = pd.read_csv(input_path)
-    expected_cols = ['city', 'latitude', 'longitude']
-    if list(df.columns) != expected_cols:
-        raise ValueError(f"Unexpected columns in {input_path}. Expected {expected_cols}, got {list(df.columns)}")
+    required_cols = {'city', 'latitude', 'longitude'}
+    if not required_cols.issubset(df.columns):
+        missing = required_cols - set(df.columns)
+        raise ValueError(f"Missing required columns in {input_path}: {missing}")
 
     initial_len = len(df)
     if initial_len != 45:

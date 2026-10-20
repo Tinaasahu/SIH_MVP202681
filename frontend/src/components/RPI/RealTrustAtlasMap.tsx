@@ -212,7 +212,7 @@ export default function RealTrustAtlasMap({
         <div style="font-family: inherit; min-width: 195px; padding: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
             <strong style="font-size: 13px; color: #0f172a; text-transform: uppercase;">${st.city}</strong>
-            <span style="font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 9999px;">${st.state}</span>
+            ${st.state ? `<span style="font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 9999px;">${st.state}</span>` : ''}
           </div>
           <div style="margin-bottom: 6px;">
             <span style="font-size: 10px; color: #64748b; display: block;">Dominant NWP Model:</span>

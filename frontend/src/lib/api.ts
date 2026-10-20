@@ -1099,7 +1099,7 @@ export const CITY_TO_STATE: Record<string, string> = {
   Madurai: 'Tamil Nadu',
   Raipur: 'Chhattisgarh',
   Kota: 'Rajasthan',
-  Chandigarh: 'Punjab',
+  Chandigarh: 'Chandigarh',
   Dehradun: 'Uttarakhand',
   Shimla: 'Himachal Pradesh',
   Thiruvananthapuram: 'Kerala',
@@ -1729,7 +1729,7 @@ export async function getAllRpiData(): Promise<RpiData[]> {
 
     return {
       city: c.city,
-      state: c.state || 'India',
+      state: c.state || null,
       lat: c.lat,
       lon: c.lon,
       rainfall: rain,

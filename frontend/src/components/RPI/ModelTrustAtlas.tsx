@@ -99,7 +99,7 @@ export function ModelTrustAtlas({ rpiData, stations, onSelectCity }: ModelTrustA
         <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
           <MapPin size={13} className="text-blue-600" />
           <span>
-            Active Station: <strong className="text-slate-900">{rpiData.city}</strong> ({rpiData.state})
+            Active Station: <strong className="text-slate-900">{rpiData.city}</strong>{rpiData.state ? ` (${rpiData.state})` : ''}
           </span>
         </div>
       </div>

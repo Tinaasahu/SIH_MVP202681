@@ -100,12 +100,14 @@ export function RpiHero({ rpiData }: RpiHeroProps) {
               >
                 {rpiData.city}
               </h1>
-              <span
-                className="text-sm font-semibold"
-                style={{ color: 'var(--text-secondary, #A9B2C8)' }}
-              >
-                · {rpiData.state}
-              </span>
+              {rpiData.state && (
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--text-secondary, #A9B2C8)' }}
+                >
+                  · {rpiData.state}
+                </span>
+              )}
             </div>
           </div>
 

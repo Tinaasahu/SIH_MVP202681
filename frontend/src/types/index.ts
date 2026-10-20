@@ -208,7 +208,7 @@ export interface ResourceAction {
 
 export interface RpiData {
   city: string;
-  state: string;
+  state: string | null;
   lat: number;
   lon: number;
   rainfall: number;

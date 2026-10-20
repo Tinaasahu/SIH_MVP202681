@@ -779,7 +779,7 @@ def get_rpi():
     city_meta = {}
     for c in city_records:
         city_meta[str(c.get('city', '')).lower()] = {
-            'state': c.get('state', 'India'),
+            'state': c.get('state') or None,
             'lat': c.get('latitude'),
             'lon': c.get('longitude')
         }
@@ -1099,7 +1099,7 @@ def get_rpi():
 
         results.append({
             'city': c_display,
-            'state': meta.get('state', 'India'),
+            'state': meta.get('state') or None,
             'lat': meta.get('lat', 20.5937),
             'lon': meta.get('lon', 78.9629),
             'rainfall': round(rain, 1),
@@ -1174,7 +1174,7 @@ def get_rpi_map():
     city_meta = {}
     for c in city_records:
         city_meta[str(c.get('city', '')).lower()] = {
-            'state': c.get('state', 'India'),
+            'state': c.get('state') or None,
             'lat': c.get('latitude'),
             'lon': c.get('longitude')
         }
@@ -1275,7 +1275,7 @@ def get_rpi_map():
             },
             "properties": {
                 "city": c_display,
-                "state": meta.get('state', 'India'),
+                "state": meta.get('state') or None,
                 "rpi": rpi,
                 "rpiScore": rpi,
                 "tierLevel": tier_level,
